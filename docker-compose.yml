@@ -4,42 +4,73 @@ services:
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=family_app_network"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - app_network
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
 
-  watchtower:
-    image: containrrr/watchtower
+  db:
+    image: postgres:15-alpine
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 60 --cleanup
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-family_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     networks:
       - app_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   backend:
-    image: ghcr.io/dezuze/family-backend:latest
+    image: 127.0.0.1:5000/family-backend:latest
     build: 
       context: ./Backend
     volumes:
       - ./Backend:/app
+    depends_on:
+      - db
     env_file:
       - .env
+    environment:
+      POSTGRES_HOST: db
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`localhost`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/media`) || PathPrefix(`/static`))"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      - "com.centurylinklabs.watchtower.enable=true"
     networks:
       - app_network
+    deploy:
+      replicas: 2
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      restart_policy:
+        condition: on-failure
 
   frontend:
-    image: ghcr.io/dezuze/family-frontend:latest
+    image: 127.0.0.1:5000/family-frontend:latest
     build:
       context: ./Frontend
     env_file:
@@ -47,13 +78,25 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-      - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
       - backend
     networks:
       - app_network
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  postgres_data:
 
 networks:
   app_network:
-    driver: bridge
+    driver: overlay
+    name: family_app_network

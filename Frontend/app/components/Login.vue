@@ -11,11 +11,13 @@ const open = ref(false)
 const email = ref('')
 const password = ref('')
 const sponsorId = ref('')
+const showPassword = ref(false)
 
 const registering = ref(false)
 const regName = ref('')
 const regEmail = ref('')
 const regPassword = ref('')
+const showRegPassword = ref(false)
 const error = ref('')
 
 const menuOpen = ref(false)
@@ -43,6 +45,35 @@ const initials = computed<string>(() => {
   const a = parts[0]?.charAt(0) ?? ''
   const b = parts[parts.length - 1]?.charAt(0) ?? ''
   return (a + b).toUpperCase()
+  return (a + b).toUpperCase()
+})
+
+const passwordStrength = computed(() => {
+  const p = regPassword.value
+  let score = 0
+  if (!p) return 0
+  if (p.length > 7) score++
+  if (/[A-Z]/.test(p)) score++
+  if (/[0-9]/.test(p)) score++
+  if (/[^A-Za-z0-9]/.test(p)) score++
+  return score
+})
+
+const passwordStrengthColor = computed(() => {
+  const s = passwordStrength.value
+  if (s <= 1) return 'bg-red-500'
+  if (s === 2) return 'bg-orange-500'
+  if (s === 3) return 'bg-yellow-500'
+  return 'bg-lime-500'
+})
+
+const passwordStrengthLabel = computed(() => {
+  const s = passwordStrength.value
+  if (s === 0) return ''
+  if (s <= 1) return 'Weak'
+  if (s === 2) return 'Fair'
+  if (s === 3) return 'Good'
+  return 'Strong'
 })
 
 const userPhoto = computed<string>(() => {
@@ -180,12 +211,29 @@ defineExpose({ toggle })
           class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]"
         />
 
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Password"
-          class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]"
-        />
+        <div class="relative mb-3">
+          <input
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Password"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050] pr-10"
+          />
+          <button
+            @click.prevent="showPassword = !showPassword"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            type="button"
+          >
+            <!-- Eye Icon -->
+            <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <!-- Eye Slash Icon -->
+            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
 
         <div v-if="error" class="text-sm text-red-600 mb-2">{{ error }}</div>
 
@@ -212,7 +260,44 @@ defineExpose({ toggle })
         <input v-model="sponsorId" placeholder="Sponsor Member ID" class="w-full mb-3 px-3 py-2 border rounded-lg border-amber-500 bg-amber-50" />
         <input v-model="regName" placeholder="Full name" class="w-full mb-3 px-3 py-2 border rounded-lg" />
         <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg" />
-        <input v-model="regPassword" type="password" placeholder="Password" class="w-full mb-3 px-3 py-2 border rounded-lg" />
+        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg" />
+        
+        <div class="relative mb-1">
+          <input
+            v-model="regPassword"
+            :type="showRegPassword ? 'text' : 'password'"
+            placeholder="Password"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050] pr-10"
+          />
+          <button
+            @click.prevent="showRegPassword = !showRegPassword"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            type="button"
+          >
+            <svg v-if="!showRegPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+             <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Password Strength Meter -->
+        <div v-if="regPassword" class="mb-3">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-gray-500">Security</span>
+            <span :class="passwordStrength >= 3 ? 'text-lime-600 font-bold' : 'text-gray-500'">{{ passwordStrengthLabel }}</span>
+          </div>
+          <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+             <div 
+               class="h-full transition-all duration-300 rounded-full" 
+               :class="passwordStrengthColor" 
+               :style="{ width: (passwordStrength / 4) * 100 + '%' }"
+             ></div>
+          </div>
+        </div>
 
         <div v-if="error" class="text-sm text-red-600 mb-2">{{ error }}</div>
 
