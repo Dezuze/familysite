@@ -3,3 +3,4 @@ djangorestframework
 Pillow
 whitenoise
 psycopg2-binary
+Faker

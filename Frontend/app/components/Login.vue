@@ -18,6 +18,7 @@ const regName = ref('')
 const regEmail = ref('')
 const regPassword = ref('')
 const showRegPassword = ref(false)
+const regAvatar = ref<File | null>(null)
 const error = ref('')
 
 const menuOpen = ref(false)
@@ -130,12 +131,16 @@ const register = async () => {
     return
   }
 
-  const signupResult = await (auth as any).signup({ 
-      username: regName.value || regEmail.value, 
-      email: regEmail.value, 
-      sponsor_id: sponsorId.value, 
-      password: regPassword.value 
-  })
+  const formData = new FormData()
+  formData.append('username', regName.value || regEmail.value)
+  formData.append('email', regEmail.value)
+  formData.append('sponsor_id', sponsorId.value)
+  formData.append('password', regPassword.value)
+  if (regAvatar.value) {
+      formData.append('avatar', regAvatar.value)
+  }
+
+  const signupResult = await (auth as any).signup(formData)
 
   if (!signupResult || !signupResult.ok) {
     const msg = (signupResult && signupResult.error && signupResult.error.error) || 'Signup failed'
@@ -261,6 +266,16 @@ defineExpose({ toggle })
         <input v-model="regName" placeholder="Full name" class="w-full mb-3 px-3 py-2 border rounded-lg" />
         <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg" />
         <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg" />
+        
+        <div class="mb-3">
+            <label class="block text-xs text-gray-500 mb-1">Profile Photo (Optional)</label>
+            <input 
+                type="file" 
+                @change="(e: any) => regAvatar = e.target.files[0]"
+                accept="image/*"
+                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-lime-50 file:text-lime-700 hover:file:bg-lime-100"
+            />
+        </div>
         
         <div class="relative mb-1">
           <input

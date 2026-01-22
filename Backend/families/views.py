@@ -45,6 +45,15 @@ class UserProfileView(APIView):
         if 'blood_group' in data: member.blood_group = data['blood_group']
         if 'address_if_different' in data: member.address_if_different = data['address_if_different']
 
+        # Update User Avatar if provided
+        # (Handling FormData, 'avatar' key)
+        if 'avatar' in request.FILES:
+            user.avatar = request.FILES['avatar']
+            user.save()
+        elif 'avatar' in data and data['avatar']:
+            # If it's sent as not a file (rare with formData but possible)
+             pass
+
         # Handle parents logic (simplistic text lookup or ID link)
         # For a real app, you'd search by ID or strict Name+DOB. 
         # Here we just look for existing unlinked members by name or create ghosts.

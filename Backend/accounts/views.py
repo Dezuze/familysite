@@ -52,8 +52,11 @@ class LoginView(APIView):
         return Response(UserSerializer(user).data)
 
 
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
 class SignupView(APIView):
     permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
         data = request.data
@@ -62,6 +65,7 @@ class SignupView(APIView):
         email = data.get('email')
         password = data.get('password')
         sponsor_id = data.get('sponsor_id')
+        avatar = data.get('avatar')
 
         if not (username and email and password and sponsor_id):
             return Response({"error": "missing fields (sponsor_id required)"}, status=status.HTTP_400_BAD_REQUEST)
@@ -80,6 +84,12 @@ class SignupView(APIView):
              new_member_id = f"MEM{random.randint(10000, 99999)}"
 
         user = User.objects.create_user(username=username, email=email, member_id=new_member_id, password=password)
+        
+        # Handle Avatar
+        if avatar:
+            user.avatar = avatar
+            user.save()
+
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 

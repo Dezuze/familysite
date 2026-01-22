@@ -17,6 +17,20 @@
                 
                 <!-- Step 1: Personal Info -->
                 <div v-if="step === 1" class="space-y-6">
+                    <!-- Avatar Upload -->
+                    <div class="flex justify-center">
+                        <div class="relative w-24 h-24">
+                           <input type="file" @change="onFileChange" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                           <div class="w-full h-full rounded-full bg-slate-700 border-2 border-dashed border-slate-500 flex items-center justify-center overflow-hidden">
+                               <img v-if="form.avatar" :src="typeof form.avatar === 'string' ? form.avatar : URL.createObjectURL(form.avatar)" class="w-full h-full object-cover" />
+                               <span v-else class="text-gray-400 text-xs text-center p-2">Upload Photo</span>
+                           </div>
+                           <div class="absolute bottom-0 right-0 bg-amber-500 text-black rounded-full p-1 text-xs">
+                               +
+                           </div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm text-gray-400 mb-2">Given Name</label>
@@ -65,7 +79,7 @@
                     <div v-else></div> <!-- spacer -->
 
                     <button v-if="step < 2" type="button" @click="step++" class="bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg">Next</button>
-                    <button v-else type="submit" class="bg-gradient-to-r from-amber-600 to-amber-500 hover:brightness-110 text-white px-8 py-3 rounded-lg font-bold shadow-lg">
+                    <button v-else type="submit" class="bg-linear-to-r from-amber-600 to-amber-500 hover:brightness-110 text-white px-8 py-3 rounded-lg font-bold shadow-lg">
                         {{ loading ? 'Saving...' : 'Finish Profile' }}
                     </button>
                 </div>
@@ -92,19 +106,41 @@ const form = ref({
     bio: '',
     blood_group: 'O+',
     occupation: '',
-    father_name: ''
+    father_name: '',
+    avatar: null 
 })
+
+const onFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+        form.value.avatar = file
+    }
+}
 
 const saveProfile = async () => {
     loading.value = true
     try {
+        const formData = new FormData()
+        // Append all simple fields
+        Object.keys(form.value).forEach(key => {
+            if (key !== 'avatar' && form.value[key]) {
+                formData.append(key, form.value[key])
+            }
+        })
+        // Append avatar if present
+        if (form.value.avatar) {
+             formData.append('avatar', form.value.avatar)
+        }
+
+        // We use fetch directly but auth store helper would be better. 
+        // Need to ensure we don't set Content-Type to json
         const res = await fetch('http://localhost:8000/api/families/profile/', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.token}` // Assuming token store
+                'Authorization': `Bearer ${auth.token}` 
+                // No Content-Type for FormData
             },
-            body: JSON.stringify(form.value)
+            body: formData
         })
         
         if (res.ok) {

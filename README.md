@@ -11,41 +11,52 @@ A modern, private social platform and directory for the Kollaparambil family. Th
 *   **Secure Access**: Invite-only registration system using unique Sponsor IDs.
 *   **Media Gallery**: Photo sharing and gallery view.
 *   **Committee Management**: View current committee members.
-*   **Responsive Design**: Premium, mobile-first UI built with Nuxt 3 and Tailwind CSS.
+*   **Security**: HTTPS, Secure Cookies, Password Strength Meter, and Role-based access.
 
 ## 🛠️ Tech Stack
 
 *   **Frontend**: Nuxt 3 (Vue 3), Tailwind CSS, D3.js, Pinia.
-*   **Backend**: Django REST Framework (Python), SQLite (Dev) / PostgreSQL (Prod ready).
-*   **Infrastructure**: Docker, Docker Compose, Traefik (Reverse Proxy), Watchtower (Auto-updates).
-*   **CI/CD**: GitHub Actions (Changes auto-pushed to GHCR).
+*   **Backend**: Django REST Framework (Python), PostgreSQL.
+*   **Infrastructure**: Docker Swarm, Traefik (Reverse Proxy), Local Registry.
+*   **Deployment**: Zero-downtime rolling updates via automated script.
 
 ## 📦 Getting Started
 
 ### Prerequisites
-*   Docker & Docker Compose
+*   Docker Desktop (with Swarm enabled or initialized by script)
+*   PowerShell (for deployment script)
 
-### Running Locally
-```bash
-# Clone the repository
-git clone https://github.com/Dezuze/family-backend.git
-cd family-backend
+### Running Locally (Zero Downtime Mode)
+We use a **deployment script** that handles building images, pushing to a local registry, and deploying to the Docker Swarm.
 
-# Start with Docker Compose
-docker-compose up -d --build
+```powershell
+# 1. Run the deployment script
+.\deploy.ps1
 ```
+
 The application will be available at:
-*   **Frontend**: http://localhost
-*   **Backend API**: http://localhost/api
+*   **Frontend**: https://localhost (Accept the self-signed certificate warning)
+*   **Backend API**: https://localhost/api
 *   **Traefik Dashboard**: http://localhost:8080
 
-## 🔄 CI/CD & Deployment
+### Stopping the App
+To remove the stack and stop all containers:
+```powershell
+docker stack rm family_app
+```
 
-This project uses **GitHub Actions** for Continuous Integration and Continuous Deployment.
-1.  **Push to `main`**: Triggers the workflow.
-2.  **Tests**: Backend tests are executed.
-3.  **Build**: Docker images are built and pushed to GitHub Container Registry (`ghcr.io`).
-4.  **Deploy**: `Watchtower` service on the server detects the new image and automatically restarts the application with the latest changes.
+## 🔄 Development Guidelines
+
+### Database (PostgreSQL)
+The application now uses PostgreSQL. Data is persisted in a Docker volume `family_app_postgres_data`. To reset the database, you must remove this volume:
+```powershell
+docker volume rm family_app_postgres_data
+```
+
+### Making Changes
+1.  Modify the code in `Frontend/` or `Backend/`.
+2.  Run `.\deploy.ps1` again.
+3.  Docker Swarm will perform a **rolling update** (Start-First strategy), ensuring the app remains available during the update.
 
 ## 🛡️ License
 

@@ -14,14 +14,20 @@ function getCookie(name: string) {
   return matches ? matches[2] : null
 }
 
+interface AuthState {
+  user: null | {
+    id: number
+    email: string
+    name?: string
+  }
+  token: string | null
+  isAuthenticated: boolean
+}
+
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: null as null | {
-      id: number
-      email: string
-      name?: string
-    },
-    token: null as string | null,
+  state: (): AuthState => ({
+    user: null,
+    token: null,
     isAuthenticated: false,
   }),
 
@@ -29,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
     // Login: uses frontend local users when localAuth enabled; otherwise hits backend
     async login(email: string, password: string) {
       if (useLocalAuth()) {
-        const u = users.find((x) => x.email.toLowerCase() === email.toLowerCase() && x.password === password)
+        const u = users.find((x: any) => x.email.toLowerCase() === email.toLowerCase() && x.password === password)
         if (!u) return false
         this.setAuth({ id: u.id, email: u.email, name: u.name }, 'local')
         return { ok: true, data: { id: u.id, email: u.email, name: u.name } }
@@ -56,18 +62,18 @@ export const useAuthStore = defineStore('auth', {
         }
 
         const data = await res.json()
-        this.setAuth(data, null)
+        this.setAuth(data)
         return { ok: true, data }
       } catch (e) {
         return { ok: false, error: String(e) }
       }
     },
 
-    async signup(payload: { username: string; email: string; sponsor_id: string; password: string }) {
+    async signup(payload: any) {
       if (useLocalAuth()) {
-        const exists = users.find((u) => u.email.toLowerCase() === payload.email.toLowerCase())
+        const exists = users.find((u: any) => u.email.toLowerCase() === payload.email.toLowerCase())
         if (exists) return { ok: false, error: { error: 'User already exists' } }
-        const nextId = users.reduce((m, x) => Math.max(m, x.id), 0) + 1
+        const nextId = users.reduce((m: number, x: any) => Math.max(m, x.id), 0) + 1
         users.push({ id: nextId, email: payload.email, password: payload.password, name: payload.username })
         this.setAuth({ id: nextId, email: payload.email, name: payload.username }, 'local')
         return { ok: true, data: { id: nextId, email: payload.email, name: payload.username } }
@@ -77,28 +83,34 @@ export const useAuthStore = defineStore('auth', {
       try {
         await fetch(base + '/api/csrf/', { credentials: 'include' })
         const csrftoken = getCookie('csrftoken')
+        
+        const isFormData = payload instanceof FormData
+        const headers: any = {
+           ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+        }
+        if (!isFormData) {
+            headers['Content-Type'] = 'application/json'
+        }
+
         const res = await fetch(base + '/api/auth/signup/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
-          },
+          headers,
           credentials: 'include',
-          body: JSON.stringify(payload),
+          body: isFormData ? payload : JSON.stringify(payload),
         })
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
           return { ok: false, error: err }
         }
         const data = await res.json()
-        this.setAuth(data, null)
+        this.setAuth(data)
         return { ok: true, data }
       } catch (e) {
         return { ok: false, error: e }
       }
     },
 
-    setAuth(user: any, token?: string) {
+    setAuth(user: any, token?: string | null) {
       this.user = user
       this.token = token ?? null
       this.isAuthenticated = true
@@ -113,7 +125,7 @@ export const useAuthStore = defineStore('auth', {
         const res = await fetch(base + '/api/auth/me/', { credentials: 'include' })
         if (!res.ok) return null
         const data = await res.json()
-        this.setAuth(data, null)
+        this.setAuth(data)
         return data
       } catch (e) {
         return null
@@ -156,5 +168,6 @@ export const useAuthStore = defineStore('auth', {
     },
   },
 
-  persist: true, // 🔑 persistence
+  // @ts-ignore
+  persist: true, 
 })
