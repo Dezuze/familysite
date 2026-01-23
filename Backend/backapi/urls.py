@@ -10,14 +10,4 @@ urlpatterns = [
     path('api/auth/', include('accounts.urls')),
     # CSRF init endpoint expected by frontend
     path('api/csrf/', CsrfInitView.as_view()),
-    # App endpoints
-    path('api/news/', include('news.urls')),
-    path('api/profiles/', include('profiles.urls')),
-
 ]
-
-from django.conf import settings
-from django.conf.urls.static import static
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

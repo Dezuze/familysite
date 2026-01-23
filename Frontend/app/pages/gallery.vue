@@ -103,12 +103,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-800 font-sans pt-32">
+  <div class="min-h-screen bg-slate-100 font-sans pt-32">
     <div class="page-container">
       <header class="gallery-header text-center py-8">
-        <h1 class="text-3xl md:text-4xl font-serif font-bold text-white mb-2">Gallery</h1>
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-2">Gallery</h1>
         <div class="h-1 w-16 bg-amber-500 mx-auto rounded-full mb-4"></div>
-        <p class="muted text-gray-400">Latest images from our family gatherings and events.</p>
+        <p class="muted text-slate-500 font-medium">Latest images from our family gatherings and events.</p>
       </header>
 
       <main>

@@ -9,9 +9,20 @@ class GallerySerializer(serializers.ModelSerializer):
 
 
 class CommitteeSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='user.username', read_only=True)
-    # Ideally link to FamilyMember name if possible, but username is okay for now.
+    name = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
     
+    def get_name(self, obj):
+        # Try to find family member linked to this user
+        if hasattr(obj.user, 'member') and obj.user.member:
+             return obj.user.member.name
+        return obj.user.get_full_name() or obj.user.username
+
+    def get_age(self, obj):
+        if hasattr(obj.user, 'member') and obj.user.member:
+             return obj.user.member.age
+        return None
+
     class Meta:
         model = Committee
-        fields = ('id', 'user', 'name', 'pic', 'role', 'created_at')
+        fields = ('id', 'user', 'name', 'pic', 'role', 'age', 'created_at')

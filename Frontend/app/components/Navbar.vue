@@ -20,12 +20,11 @@ const initials = computed(() => {
 })
 
 const links = [
-  { name: 'Contact', to: '/contact' },  
-  // { name: 'Donation', to: '/donation' },
-  { name: 'Gallery', to: '/gallery' },
-  { name: 'Committee Members', to: '/members' },
-  { name: 'Family History', to: '/history' },
   { name: 'Family Tree', to: '/familytree' },
+  { name: 'Gallery', to: '/gallery' },
+  { name: 'Family History', to: '/history' },
+  { name: 'Committee Members', to: '/committee' },
+  { name: 'Contact', to: '/contact' },
 ]
 
 const restricted = ['Gallery', 'Family Tree', 'Donation']
@@ -60,7 +59,7 @@ onUnmounted(() => {
 <template>
   <!-- NAVBAR -->
   <nav 
-    class="fixed font-itim top-0 left-0 right-0 w-full lg:w-190 z-20 bg-transparent transition-transform duration-300 ease-in-out"
+    class="fixed top-0 left-0 right-0 w-full lg:w-190 z-20 bg-transparent transition-transform duration-300 ease-in-out"
     :class="[ showNavbar ? 'translate-y-0' : '-translate-y-full' ]"
   >
       <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15">
@@ -73,7 +72,7 @@ onUnmounted(() => {
               v-for="link in visibleLinks"
               :key="link.to"
               :to="link.to"
-              class="py-2 rounded-md text-sm font-bold text-brand.dark/90 hover:bg-brand.light hover:shadow-md transition"
+              class="py-2 rounded-md text-sm font-bold text-slate-800 hover:bg-amber-50 hover:text-amber-600 hover:shadow-md transition"
             >
               {{ link.name }}
             </NuxtLink>
@@ -95,13 +94,13 @@ onUnmounted(() => {
         <div class="flex items-center gap-2">
           <button
             @click="mobileOpen = !mobileOpen"
-            class="flex items-center gap-3 text-base font-semibold text-brand.slate pr-6 py-1 rounded transition"
+            class="flex items-center gap-3 text-base font-semibold text-slate-800 pr-6 py-1 rounded transition"
           >
             <template v-if="auth.isAuthenticated">
-              <span class="h-8 w-8 rounded-full bg-brand.olive text-white flex items-center justify-center font-bold">{{ initials }}</span>
+              <span class="h-8 w-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold">{{ initials }}</span>
             </template>
             <template v-else>
-              ☰
+               <svg class="w-8 h-8 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </template>
           </button>
         </div>
@@ -123,7 +122,7 @@ onUnmounted(() => {
             :key="link.to"
             :to="link.to"
             @click="mobileOpen = false"
-            class="w-full text-center py-3 rounded-md font-semibold text-brand.slate hover:bg-white transition"
+            class="w-full text-center py-3 rounded-md font-semibold text-slate-800 hover:bg-slate-50 transition"
           >
             {{ link.name }}
           </NuxtLink>

@@ -80,7 +80,7 @@
           <button 
             type="submit" 
             :disabled="loading"
-            class="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-medium shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-95 transition-all disabled:opacity-50"
+            class="px-6 py-2 rounded-xl bg-linear-to-r from-amber-500 to-orange-600 text-white font-medium shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-95 transition-all disabled:opacity-50"
           >
             {{ loading ? 'Posting...' : 'Post' }}
           </button>
@@ -141,7 +141,7 @@ async function submit() {
     const formData = new FormData()
     formData.append('title', form.title)
     formData.append('description', form.description)
-    formData.append('type', props.type)
+    formData.append('post_type', props.type)
     
     if (props.type === 'event') {
       formData.append('event_date', form.event_date)

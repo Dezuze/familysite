@@ -1,18 +1,17 @@
-```
 <template>
-  <div class="min-h-screen bg-slate-800 font-sans text-gray-100 overflow-x-hidden">
+  <div class="min-h-screen bg-black/80 font-sans text-slate-800 overflow-x-hidden">
     <!-- Hero Section -->
     <div class="relative w-full h-[110vh] overflow-hidden">
       <!-- Background Image -->
       <img src="/images/family.jpg" alt="Family Gathering" class="absolute inset-0 w-full h-full object-cover" />
       
-      <!-- Gradient Overlay (Dark Teal Fade to Slate) -->
-      <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-slate-800"></div>
+      <!-- Gradient Overlay (Dark Fade to Slate-100) -->
+      <div class="absolute inset-0 bg-linear-to-b from-black/30 to-black/80"></div>
 
       <!-- Hero Content -->
       <div class="absolute top-0 left-0 w-full h-screen flex flex-col items-center md:items-start justify-end px-4 pb-40 md:px-24 md:pb-24">
         
-        <div class="bg-black/80 shadow-[0_0_40px_40px_rgba(0,0,0,0.8)] absolute left-0 bottom-0 p-8 md:p-12 rounded-2xl max-w-3.5xl text-center md:text-left">
+        <div class="bg-black/80 backdrop-blur-md shadow-[0_0_40px_40px_rgba(0,0,0,0.8)] absolute left-0 bottom-0 p-8 md:p-10 rounded-tr-3xl max-w-3xl text-center md:text-left">
             <h1 class="font-fleur text-6xl md:text-8xl lg:text-8xl lg:text-nowrap text-white mb-4 drop-shadow-2xl mx-auto md:mx-0 leading-tight">
                 Kollaparambil Family
             </h1>
@@ -20,9 +19,9 @@
             <!-- Malayalam Verse -->
             <div class="flex flex-col mt-2">
                 <p class="text-sm md:text-base font-bold text-white leading-relaxed drop-shadow-md">
-                    "മക്കളുടെ മക്കൾ വൃദ്ധന്മാർക്കു കിരീടം; മക്കളുടെ മഹത്വമോ അവരുടെ അപ്പന്മാർ തന്നെ."
+                    "മക്കളുടെ മക്കള്‍ വൃദ്ധന്മാര്‍ക്കും കിരീടമാകുന്നു; മക്കളുടെ മഹത്വം അവരുടെ അപ്പന്മാര്‍ തന്നേ."
                 </p>
-                <p class="text-xs md:text-sm text-gray-200 mt-1 font-medium place-self-end">
+                <p class="text-xs md:text-sm text-gray-300 mt-1 font-medium place-self-end">
                     - സദൃശ്യവാക്യങ്ങൾ 17:6
                 </p>
             </div>
@@ -33,23 +32,22 @@
 
     <!-- Navigation Buttons (Intersection Layout) -->
     <!-- Negative margin to pull it up over the hero image -->
-    <div class="relative z-20 -mt-10 px-4 md:px-12 pb-12">
+    <!-- Navigation Buttons (Intersection Layout) -->
+    <div class="relative z-20 -mt-20 px-4 md:px-12 pb-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-6xl mx-auto">
             
             <!-- Button 1: Family Directory (Restricted) -->
             <div 
                 @click="handleRestrictedNavigation('/members')" 
-                class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer"
+                class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
-                <div class="absolute inset-0 bg-gradient-to-b from-gray-200 to-gray-400"></div>
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight">Family<br>Directory</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-amber-600 transition-colors">Family<br>Directory</h3>
                 </div>
             </div>
 
             <!-- Button 2: Events (Public) -->
-            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1">
-                <div class="absolute inset-0 bg-gradient-to-b from-[#A08050] to-[#6d5030]"></div> <!-- Bronze color -->
+            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-amber-500">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
                     <h3 class="text-lg md:text-xl font-bold text-white uppercase tracking-wide leading-tight">Events</h3>
                 </div>
@@ -58,11 +56,10 @@
             <!-- Button 3: Annual Kudumbayogam (Restricted) -->
              <div 
                 @click="handleRestrictedNavigation('/kudumbayogam')"
-                class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer"
+                class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
-                <div class="absolute inset-0 bg-gradient-to-b from-gray-200 to-gray-400"></div>
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight">Annual<br>Kudumbayogam</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-amber-600 transition-colors">Annual<br>Kudumbayogam</h3>
                 </div>
             </div>
 
@@ -70,49 +67,49 @@
     </div>
 
     <!-- News Section -->
-    <div class="bg-slate-800 py-16 px-4 md:px-12">
+    <div class="bg-slate-100 py-16 px-4 md:px-12">
         <div class="max-w-7xl mx-auto">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-white uppercase tracking-widest decoration-amber-500 underline underline-offset-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 uppercase tracking-widest decoration-amber-500 underline underline-offset-8">
                     Latest News & Events
                 </h2>
                 <button 
                   v-if="auth.isAuthenticated"
                   @click="isAddModalOpen = true"
-                  class="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2"
+                  class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 shadow-md"
                 >
                   <span class="text-xl">+</span> Add News
                 </button>
             </div>
             
             <!-- Horizontal Scroll Container -->
-            <div class="flex overflow-x-auto gap-6 pb-8 snap-x scrollbar-hide">
+            <div class="flex overflow-x-auto gap-6 pb-8 snap-x custom-scrollbar">
                 
                 <!-- Real News Card -->
                 <div 
                     v-for="item in newsList" 
                     :key="item.id" 
                     @click="openDetails(item)"
-                    class="snap-start min-w-[260px] w-[260px] bg-slate-700 rounded-xl overflow-hidden shadow-lg hover:shadow-amber-500/10 transition-all cursor-pointer flex-shrink-0 group hover:-translate-y-1"
+                    class="snap-start min-w-[260px] w-[260px] bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer shrink-0 group hover:-translate-y-1 border border-slate-200"
                 >
                     <div class="relative h-36 overflow-hidden">
-                        <img :src="resolveImage(item.image) || 'https://placehold.co/600x400/2d3748/cbd5e0?text=News'" :alt="item.title" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded shadow">
+                        <img :src="resolveImage(item.image) || 'https://placehold.co/600x400/f1f5f9/64748b?text=News'" :alt="item.title" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow">
                             EVENT
                         </div>
                     </div>
                     <div class="p-4">
-                        <h3 class="text-lg font-bold text-white mb-2 line-clamp-2 leading-tight group-hover:text-amber-400 transition-colors">{{ item.title }}</h3>
-                        <p class="text-slate-400 text-sm line-clamp-2">{{ item.description }}</p>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2 line-clamp-2 leading-tight group-hover:text-amber-600 transition-colors">{{ item.title }}</h3>
+                        <p class="text-slate-500 text-sm line-clamp-2">{{ item.description }}</p>
                         <div class="mt-3 flex justify-between items-center">
-                            <span class="text-xs text-slate-500 uppercase tracking-wider">{{ getDay(item.created_at) }} {{ getMonth(item.created_at) }}</span>
-                            <span class="text-amber-500 text-xs font-bold uppercase tracking-wide group-hover:underline">Read More</span>
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">{{ getDay(item.created_at) }} {{ getMonth(item.created_at) }}</span>
+                            <span class="text-amber-600 text-xs font-bold uppercase tracking-wide group-hover:underline">Read More</span>
                         </div>
                     </div>
                 </div>
                 <div v-if="newsList.length === 0" class="flex gap-6">
-                    <div v-for="i in 3" :key="i" class="snap-start min-w-[300px] w-[300px] bg-slate-700/50 rounded-xl h-80 animate-pulse flex items-center justify-center">
-                        <span class="text-slate-500">Loading News...</span>
+                    <div v-for="i in 3" :key="i" class="snap-start min-w-[300px] w-[300px] bg-white rounded-xl h-80 animate-pulse flex items-center justify-center border border-slate-200">
+                        <span class="text-slate-400">Loading News...</span>
                     </div>
                 </div>
             </div>
@@ -122,11 +119,11 @@
     <!-- Details Modal -->
     <Transition name="fade">
         <div v-if="selectedItem" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="closeDetails">
-            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-            <div class="relative bg-[#1A3C3B] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10 flex flex-col">
+            <div class="relative bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
                 <!-- Close Button -->
-                <button @click="closeDetails" class="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors">
+                <button @click="closeDetails" class="absolute top-4 right-4 z-10 p-2 bg-black/10 hover:bg-black/20 rounded-full text-white transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -134,30 +131,30 @@
 
                 <!-- Modal Image -->
                 <div class="relative h-64 sm:h-80 shrink-0">
-                    <img :src="resolveImage(selectedItem.image) || 'https://placehold.co/800x600/122b2a/d4af37?text=News'" class="w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#1A3C3B] to-transparent"></div>
+                    <img :src="resolveImage(selectedItem.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=News'" class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
 
                     <div class="absolute bottom-4 left-6">
-                        <span class="inline-block px-3 py-1 bg-amber-500 text-[#1A3C3B] text-xs font-bold uppercase tracking-wider rounded-md mb-2">
+                        <span class="inline-block px-3 py-1 bg-amber-500 text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">
                             {{ getMonth(selectedItem.created_at) }} {{ getDay(selectedItem.created_at) }}, {{ getYear(selectedItem.created_at) }}
                         </span>
-                        <h2 class="text-3xl font-serif font-bold text-white leading-tight mt-1">{{ selectedItem.title }}</h2>
-                        <p v-if="selectedItem.author_name" class="text-amber-200/80 text-sm mt-1">Posted by {{ selectedItem.author_name }}</p>
+                        <h2 class="text-3xl font-serif font-bold text-white leading-tight mt-1 drop-shadow-md">{{ selectedItem.title }}</h2>
+                        <p v-if="selectedItem.author_name" class="text-amber-200 text-sm mt-1 font-medium">Posted by {{ selectedItem.author_name }}</p>
                     </div>
                 </div>
 
                 <!-- Modal Body -->
                 <div class="p-6 space-y-6">
                     <!-- Description -->
-                    <div class="prose prose-invert max-w-none text-gray-300 font-sans">
+                    <div class="prose prose-slate max-w-none text-slate-600 font-sans">
                         <p>{{ selectedItem.description }}</p>
                         <p class="opacity-75">Full article content would go here. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                     </div>
 
                     <!-- Actions -->
-                    <div class="pt-4 border-t border-white/10 flex items-center justify-between">
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
                          <div class="flex items-center gap-4">
-                             <span class="text-sm text-gray-400 uppercase font-bold tracking-wider">Share:</span>
+                             <span class="text-sm text-slate-400 uppercase font-bold tracking-wider">Share:</span>
                              <ShareButtons :title="selectedItem.title" :description="selectedItem.description" />
                          </div>
                          
@@ -165,7 +162,7 @@
                          <button 
                             v-if="selectedItem.author_id === auth.user?.id"
                             @click="deleteNews(selectedItem.id)"
-                            class="text-red-400 hover:text-red-300 text-sm font-bold uppercase tracking-wide hover:underline"
+                            class="text-red-500 hover:text-red-700 text-sm font-bold uppercase tracking-wide hover:underline"
                         >
                             Delete
                         </button>
@@ -185,23 +182,23 @@
     />
 
     <!-- Footer -->
-    <footer class="bg-[#e4e4e4] text-[#4a4a4a] py-16 px-6">
+    <footer class="bg-slate-200 text-slate-600 py-16 px-6 border-t border-slate-300">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-10">
             <!-- Logo Section -->
             <div class="flex flex-col items-center md:items-start">
-                <img src="/images/logo.png" alt="Family Logo" class="w-48 mb-6 opacity-80 grayscale hover:grayscale-0 transition-all" />
+                <img src="/images/logo.png" alt="Family Logo" class="w-48 mb-6 opacity-80 mix-blend-multiply hover:opacity-100 transition-all" />
             </div>
 
             <!-- Links -->
             <div class="grid grid-cols-2 gap-x-12 gap-y-4 font-semibold text-lg">
-                <NuxtLink v-if="auth.isAuthenticated" to="/familytree" class="hover:underline">Family Tree</NuxtLink>
-                <NuxtLink to="/history" class="hover:underline">Family History</NuxtLink>
-                <NuxtLink to="/events" class="hover:underline">Events</NuxtLink>
-                <NuxtLink v-if="auth.isAuthenticated" to="/committee" class="hover:underline">Commitee Member</NuxtLink>
-                <NuxtLink v-if="auth.isAuthenticated" to="/directory" class="hover:underline">Directory</NuxtLink>
-                <NuxtLink v-if="auth.isAuthenticated" to="/gallery" class="hover:underline">Gallery</NuxtLink>
-                <NuxtLink to="/donate" class="hover:underline">Donations</NuxtLink>
-                <NuxtLink to="/contact" class="hover:underline">Contact</NuxtLink>
+                <NuxtLink v-if="auth.isAuthenticated" to="/familytree" class="hover:text-amber-600 hover:underline">Family Tree</NuxtLink>
+                <NuxtLink to="/history" class="hover:text-amber-600 hover:underline">Family History</NuxtLink>
+                <NuxtLink to="/events" class="hover:text-amber-600 hover:underline">Events</NuxtLink>
+                <NuxtLink v-if="auth.isAuthenticated" to="/committee" class="hover:text-amber-600 hover:underline">Commitee Member</NuxtLink>
+                <NuxtLink v-if="auth.isAuthenticated" to="/directory" class="hover:text-amber-600 hover:underline">Directory</NuxtLink>
+                <NuxtLink v-if="auth.isAuthenticated" to="/gallery" class="hover:text-amber-600 hover:underline">Gallery</NuxtLink>
+                <NuxtLink to="/donate" class="hover:text-amber-600 hover:underline">Donations</NuxtLink>
+                <NuxtLink to="/contact" class="hover:text-amber-600 hover:underline">Contact</NuxtLink>
             </div>
         </div>
     </footer>
@@ -327,5 +324,33 @@ useHead({
   font-family: 'Fleur De Leah', cursive !important;
 }
 
-/* No extra css needed, Tailwind handles it */
+/* Animations */
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out forwards;
+}
+
+@keyframes fade-up {
+  from { transform: translateY(15px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+  opacity: 0; /* ensure hidden initially */
+}
+.animate-fade-up-stagger {
+  animation: fade-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
 </style>

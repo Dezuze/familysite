@@ -1,31 +1,31 @@
 <template>
-  <div class="min-h-screen bg-slate-800 text-gray-100 font-sans pt-32 pb-8">
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-slate-100 text-slate-800 font-sans pt-32 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Header -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">Family Directory</h1>
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Family Directory</h1>
         <div class="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
       </div>
 
       <!-- Controls -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 bg-slate-700/50 p-4 rounded-xl border border-white/5 shadow-lg">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-md">
         
         <!-- Search -->
         <div class="flex items-center gap-3 w-full md:w-auto flex-1">
           <div class="relative w-full max-w-md">
              <input v-model="query" @input="onSearch" type="search" placeholder="Search members..." 
-                    class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-800 border border-slate-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all" />
-             <svg class="w-5 h-5 text-gray-500 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all" />
+             <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </div>
-          <button @click="clear" class="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors text-sm font-bold">Clear</button>
+          <button @click="clear" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors text-sm font-bold">Clear</button>
         </div>
 
         <!-- Controls -->
-        <div class="flex items-center gap-4 text-sm text-gray-400">
+        <div class="flex items-center gap-4 text-sm text-slate-500 font-medium">
           <div class="flex items-center gap-2">
               <label>Layout</label>
-              <select v-model="layout" class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+              <select v-model="layout" class="bg-slate-50 border border-slate-300 rounded px-2 py-1 text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
                 <option value="grid">Grid</option>
                 <option value="list">List</option>
                 <option value="compact">Compact</option>
@@ -34,12 +34,12 @@
           
           <div class="hidden sm:flex items-center gap-2">
             <label>Size</label>
-            <input type="range" min="160" max="420" v-model.number="minWidth" class="w-24 accent-amber-500" />
+            <input type="range" min="160" max="420" v-model.number="minWidth" class="w-24 accent-amber-500 cursor-pointer" />
           </div>
         </div>
       </div>
 
-    <div v-if="filtered.length === 0" class="text-center text-gray-500 py-10">No members found</div>
+    <div v-if="filtered.length === 0" class="text-center text-slate-500 py-10">No members found</div>
 
     <div v-else :class="containerClass" :style="containerStyle">
       <component
@@ -55,18 +55,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useFamilyStore } from '~/stores/family'
-import { users } from '~/data/users'
 import type { FamilyMember } from '~/types/family'
 
 const family = useFamilyStore()
 
-// combine users and family flat list into a common array
-const fromFamily = family.flatList()
-const fromUsers = users.map(u => ({ id: u.id, name: u.name ?? u.email, photo: undefined })) as FamilyMember[]
+onMounted(() => {
+    family.fetchFamily()
+})
 
-const all = ref<FamilyMember[]>([...fromFamily, ...fromUsers].filter(Boolean))
+const all = computed(() => family.flatList())
 
 // UI state
 const query = ref('')
@@ -114,10 +113,7 @@ const containerStyle = computed(() => {
   return { gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth.value}px, 1fr))` }
 })
 
-// watch family store so changes are reflected
-watch(() => family.root, () => {
-  all.value = [...family.flatList(), ...users.map(u => ({ id: u.id, name: u.name ?? u.email }))]
-}, { deep: true })
+
 </script>
 
 <style scoped>

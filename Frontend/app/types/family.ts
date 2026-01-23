@@ -1,9 +1,26 @@
 export interface FamilyMember {
   id: number
-  name: string
-  photo?: string
+  name: string // Full name property
+  first_name?: string
+  last_name?: string
+  photo?: string // from FamilyTreeView
+  profile_pic?: string // from FamilyMemberSerializer
   age?: number
-  relation?: string
+  gender?: string
+  date_of_birth?: string
+  relation?: string // from FamilyTreeView (role)
   children?: FamilyMember[]
-  parents?: number[]
+  parents?: number[] | any[]
+  role?: string
+  
+  // Details
+  email_id?: string
+  phone_no?: string
+  address?: string
+  bio?: string
+  occupation?: string
+  education?: string
+  blood_group?: string
+  place_of_work?: string
+  spouse?: any // ID or name depending on view
 }

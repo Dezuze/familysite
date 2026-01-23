@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-slate-800 text-gray-100 font-sans pt-32 pb-16 px-4 md:px-12">
+  <div class="min-h-screen bg-slate-100 text-slate-800 font-sans pt-32 pb-16 px-4 md:px-12">
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
       <div class="text-center mb-16">
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">Contact Us</h1>
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Contact Us</h1>
         <div class="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
-        <p class="mt-6 text-lg text-gray-400">
+        <p class="mt-6 text-lg text-slate-500">
           Have questions or want to get in touch? We'd love to hear from you.
         </p>
       </div>
@@ -15,26 +15,26 @@
         
         <!-- Contact Info -->
         <div class="space-y-8">
-          <div class="bg-slate-700/50 p-8 rounded-2xl border border-white/5 shadow-xl hover:bg-slate-700 transition-colors">
-            <h3 class="text-xl font-bold text-amber-500 mb-4 uppercase tracking-wide">Address</h3>
-            <p class="text-gray-300 leading-relaxed">
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all">
+            <h3 class="text-xl font-bold text-amber-600 mb-4 uppercase tracking-wide">Address</h3>
+            <p class="text-slate-600 leading-relaxed font-medium">
               Kollaparambil Family Association<br>
               Near St. Mary's Church,<br>
               Kochi, Kerala - 682001
             </p>
           </div>
 
-          <div class="bg-slate-700/50 p-8 rounded-2xl border border-white/5 shadow-xl hover:bg-slate-700 transition-colors">
-            <h3 class="text-xl font-bold text-amber-500 mb-4 uppercase tracking-wide">Email</h3>
-            <a href="mailto:contact@kollaparambil.com" class="text-gray-300 hover:text-white transition-colors flex items-center gap-2">
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all">
+            <h3 class="text-xl font-bold text-amber-600 mb-4 uppercase tracking-wide">Email</h3>
+            <a href="mailto:contact@kollaparambil.com" class="text-slate-600 hover:text-amber-600 transition-colors flex items-center gap-2 font-medium">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
               contact@kollaparambil.com
             </a>
           </div>
 
-          <div class="bg-slate-700/50 p-8 rounded-2xl border border-white/5 shadow-xl hover:bg-slate-700 transition-colors">
-            <h3 class="text-xl font-bold text-amber-500 mb-4 uppercase tracking-wide">Phone</h3>
-             <a href="tel:+919876543210" class="text-gray-300 hover:text-white transition-colors flex items-center gap-2">
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all">
+            <h3 class="text-xl font-bold text-amber-600 mb-4 uppercase tracking-wide">Phone</h3>
+             <a href="tel:+919876543210" class="text-slate-600 hover:text-amber-600 transition-colors flex items-center gap-2 font-medium">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
               +91 98765 43210
             </a>
@@ -42,22 +42,22 @@
         </div>
 
         <!-- Message Form -->
-        <div class="bg-slate-700/30 p-8 rounded-2xl border border-white/5 shadow-xl">
-          <h3 class="text-2xl font-bold text-white mb-6">Send Message</h3>
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl">
+          <h3 class="text-2xl font-bold text-slate-800 mb-6">Send Message</h3>
           <form class="space-y-6" @submit.prevent>
             <div>
-              <label class="block text-sm font-medium text-gray-400 mb-2">Your Name</label>
-              <input type="text" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder-gray-500" placeholder="John Doe" />
+              <label class="block text-sm font-bold text-slate-500 mb-2">Your Name</label>
+              <input type="text" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder-slate-400" placeholder="John Doe" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
-              <input type="email" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder-gray-500" placeholder="john@example.com" />
+              <label class="block text-sm font-bold text-slate-500 mb-2">Email Address</label>
+              <input type="email" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder-slate-400" placeholder="john@example.com" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-400 mb-2">Message</label>
-              <textarea rows="4" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder-gray-500" placeholder="How can we help you?"></textarea>
+              <label class="block text-sm font-bold text-slate-500 mb-2">Message</label>
+              <textarea rows="4" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder-slate-400" placeholder="How can we help you?"></textarea>
             </div>
-            <button class="w-full bg-gradient-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white font-bold py-3 rounded-lg shadow-lg transform transition active:scale-95">
+            <button class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg shadow-md transform transition active:scale-95">
               Send Message
             </button>
           </form>

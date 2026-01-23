@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'families',
     'news',
     'profiles',
-
 ]
 
 MIDDLEWARE = [

@@ -3,9 +3,6 @@ declare const process: any;
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  app: {
-    pageTransition: { name: 'page', mode: 'out-in' }
-  },
   // point to the Tailwind entry in the Nuxt app folder
   css: ['/assets/css/tailwind.css'],
   postcss: {
@@ -16,10 +13,8 @@ export default defineNuxtConfig({
   googleFonts: {
     fontsDir: './assets/fonts',
     families: {
-      Cinzel: [400, 500, 600, 700],
-      Lato: [300, 400, 700],
-      'Great Vibes': [400],
-      'Fleur De Leah': [400],
+      Arima: [400, 700],
+      Itim: [400, 700],
     },
     display: 'swap',
     prefetch: true,
@@ -41,4 +36,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
   ],
+  build: {
+    transpile: ['vue-advanced-cropper'],
+  },
 })

@@ -52,44 +52,24 @@ class LoginView(APIView):
         return Response(UserSerializer(user).data)
 
 
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-
 class SignupView(APIView):
     permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
         data = request.data
         User = get_user_model()
         username = data.get('username')
         email = data.get('email')
+        member_id = data.get('member_id')
         password = data.get('password')
-        sponsor_id = data.get('sponsor_id')
-        avatar = data.get('avatar')
 
-        if not (username and email and password and sponsor_id):
-            return Response({"error": "missing fields (sponsor_id required)"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validate Sponsor
-        if not User.objects.filter(member_id=sponsor_id).exists():
-             return Response({"error": "Invalid Sponsor ID"}, status=status.HTTP_400_BAD_REQUEST)
+        if not (username and email and member_id and password):
+            return Response({"error": "missing fields"}, status=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(username=username).exists():
             return Response({"error": "username taken"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate new Member ID
-        import random
-        new_member_id = f"MEM{random.randint(10000, 99999)}"
-        while User.objects.filter(member_id=new_member_id).exists():
-             new_member_id = f"MEM{random.randint(10000, 99999)}"
-
-        user = User.objects.create_user(username=username, email=email, member_id=new_member_id, password=password)
-        
-        # Handle Avatar
-        if avatar:
-            user.avatar = avatar
-            user.save()
-
+        user = User.objects.create_user(username=username, email=email, member_id=member_id, password=password)
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 

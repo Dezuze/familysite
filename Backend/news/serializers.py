@@ -1,22 +1,34 @@
 from rest_framework import serializers
-from .models import News
+from .models import Post, Media
 
-class NewsSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(required=False)
-    author_name = serializers.CharField(source='author.username', read_only=True)
-    author_id = serializers.IntegerField(source='author.id', read_only=True)
+class MediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Media
+        fields = '__all__'
+
+class PostSerializer(serializers.ModelSerializer):
+    # Include media if needed
+    media = MediaSerializer(many=True, read_only=True)
+    creator_name = serializers.CharField(source='creator.name', read_only=True)
+    image = serializers.SerializerMethodField()
+    
+    def get_image(self, obj):
+        # Return first image from media if exists
+        first_media = obj.media.filter(media_type='image').first()
+        if first_media and first_media.media_url:
+            return first_media.media_url.url
+        return None
 
     class Meta:
-        model = News
+        model = Post
         fields = (
             'id',
             'title',
             'description',
-            'image',
-            'type',
+            'post_type',
             'event_date',
-            'location',
             'created_at',
-            'author_name',
-            'author_id'
+            'creator_name',
+            'media',
+            'image'
         )

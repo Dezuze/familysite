@@ -173,7 +173,7 @@ defineExpose({ toggle })
         </button>
       </div>
 
-      <div v-else class="flex items-center justify-end pr-4 w-full h-full">
+      <div v-else class="flex items-center justify-end pr-10 w-full h-full">
         <div class="relative flex items-center gap-3">
           <!-- Name (Visible on Mobile, Hidden on Desktop to keep pill shape clean) -->
           <span class="text-white font-bold text-sm md:text-base lg:hidden drop-shadow-md">{{ displayName }}</span>
@@ -183,7 +183,7 @@ defineExpose({ toggle })
              <span v-else>{{ initials }}</span>
           </button>
 
-          <div v-if="menuOpen" class="absolute z-50 top-12 right-0 w-48 bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
+          <div v-if="menuOpen" class="absolute z-50 top-12 right-0 w-auto bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
             <div class="px-2 py-1.5 font-bold text-[#1A3C3B] border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
             <button @click="copyInvite" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-amber-600 font-bold">Invite Member</button>
             <button @click="openEdit" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors">Edit profile</button>

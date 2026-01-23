@@ -1,80 +1,58 @@
 import { defineStore } from 'pinia'
-import { familyData } from '~/data/family'
 import type { FamilyMember } from '~/types/family'
-
-function clone<T>(v: T): T { return JSON.parse(JSON.stringify(v)) }
+import { useRuntimeConfig } from '#imports'
 
 export const useFamilyStore = defineStore('family', {
   state: () => ({
-    root: clone<FamilyMember>(familyData),
+    members: [] as FamilyMember[],
+    loading: false,
+    error: null as string | null
   }),
 
   actions: {
-    // find member by id (DFS)
-    findById(id: number, node: FamilyMember | null = null): FamilyMember | null {
-      const n = node ?? this.root
-      if (!n) return null
-      if (n.id === id) return n
-      if (!n.children) return null
-      for (const c of n.children) {
-        const found = this.findById(id, c)
-        if (found) return found
+    async fetchFamily() {
+      // Prevent multiple fetches if already loaded (unless forced? for now simple check)
+      if (this.members.length > 0) return
+
+      this.loading = true
+      this.error = null
+      
+      const config = useRuntimeConfig()
+      const apiBase = config.public.apiBase || 'http://localhost:8000'
+
+      try {
+        const response = await fetch(`${apiBase}/api/families/tree/`, {
+             // Add Auth header if needed, but tree might be public or read-only
+             // credentials: 'include' 
+        })
+        if (response.ok) {
+            const data = await response.json()
+            // Data is { nodes: [], links: [] }
+            // We store nodes as the flat list
+            this.members = data.nodes
+        } else {
+            this.error = 'Failed to load family data'
+        }
+      } catch (err) {
+        this.error = 'Error loading family data'
+        console.error(err)
+      } finally {
+        this.loading = false
       }
-      return null
     },
 
-    // find member by name + age (or dob stored in relation/age) - simple match
-    findByNameDob(name: string, age?: number): FamilyMember | null {
-      const flat = this.flatList()
-      return flat.find((m) => m.name.toLowerCase() === name.trim().toLowerCase() && (age == null || m.age === age)) ?? null
+    // find member by id
+    findById(id: number): FamilyMember | undefined {
+      return this.members.find(m => m.id === id)
     },
 
-    // get flat list of members for selects
+    // flat list accessor
     flatList(): FamilyMember[] {
-      const out: FamilyMember[] = []
-      const walk = (n: FamilyMember) => {
-        out.push({ id: n.id, name: n.name, relation: n.relation, age: n.age, photo: n.photo })
-        if (n.children) n.children.forEach(walk)
-      }
-      walk(this.root)
-      return out
+      return this.members
     },
-
-    // Adds a new member under parentId. If parentId is null, push as child of root.
-    // `member` may include `parents` array of parent ids; if provided, the new member is appended
-    // to each parent.children array as well.
-    addMember(parentId: number | null, member: Omit<FamilyMember, 'id' | 'children'> & { parents?: number[] }) {
-      // compute next id by scanning flat list
-      const flat = this.flatList()
-      const maxId = flat.reduce((m, x) => Math.max(m, x.id), 0)
-      const newMember: FamilyMember = { id: maxId + 1, ...member }
-
-      // attach to parentId if given
-      if (parentId) {
-        const parent = this.findById(parentId)
-        if (parent) {
-          if (!parent.children) parent.children = []
-          parent.children.push(newMember)
-        }
-      } else {
-        if (!this.root.children) this.root.children = []
-        this.root.children.push(newMember)
-      }
-
-      // also attach to any parents listed
-      if (member.parents && member.parents.length) {
-        for (const pid of member.parents) {
-          const p = this.findById(pid)
-          if (p) {
-            if (!p.children) p.children = []
-            // avoid duplicates
-            if (!p.children.find((c) => c.id === newMember.id)) p.children.push(newMember)
-          }
-        }
-      }
-
-      return newMember
-    }
+    
+    // Legacy support or helper
+    // addMember logic moved to backend/onboarding
   },
 
   persist: true,

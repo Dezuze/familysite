@@ -57,20 +57,16 @@ class FamilyMember(models.Model):
 
     blood_group = models.CharField(max_length=5)
 
-    bio = models.TextField(blank=True, null=True)
+    photo = models.ImageField(upload_to="members/photos/", blank=True, null=True)
 
-    # Relationship fields
-    spouse = models.OneToOneField('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='husband_or_wife')
-    
+    # Link to other FamilyMember instances to represent parent/child relationships.
+    # Use `symmetrical=False` so `parents` and `children` are distinct.
     parents = models.ManyToManyField(
         'self',
         symmetrical=False,
         related_name='children',
         blank=True,
     )
-
-    def __str__(self):
-        return f"{self.name} ({self.id})"
 
 
 class DeceasedMember(models.Model):
