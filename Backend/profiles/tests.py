@@ -24,7 +24,7 @@ class ProfilesAPITestCase(TestCase):
 
         User = get_user_model()
         self.family = Family.objects.create(sl_no='P1', branch='ProBranch', member_no='PMem1')
-        self.member = FamilyMember.objects.create(family=self.family, name="Profile User", date_of_birth="2000-01-01", relation="Self")
+        self.member = FamilyMember.objects.create(family=self.family, first_name="Profile", last_name="User", date_of_birth="2000-01-01")
         self.user = User.objects.create_user(username='puser', email='p@example.com', member=self.member, password='pw')
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)

@@ -351,6 +351,8 @@ const saveProfile = async () => {
             const updated = await res.json()
             // Update local auth store with new basics
             auth.updateProfile({ 
+                first_name: updated.first_name,
+                last_name: updated.last_name,
                 name: `${updated.first_name} ${updated.last_name}`,
             })
             router.push('/familytree')

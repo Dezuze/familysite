@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 import tempfile
 import shutil
 from django.core.files.uploadedfile import SimpleUploadedFile
-from families.models import Family, FamilyMedia
+from families.models import Family, FamilyMedia, FamilyMember
 
 User = get_user_model()
 
@@ -16,8 +16,13 @@ class FamilyMediaAPITest(APITestCase):
         self._tmp_media = tempfile.mkdtemp()
         settings.MEDIA_ROOT = self._tmp_media
 
-        self.user = User.objects.create_user(username='testuser', password='pass')
         self.family = Family.objects.create(sl_no='S1', branch='B', member_no='Mtest')
+        self.member = FamilyMember.objects.create(
+            family=self.family, 
+            first_name="Test", 
+            last_name="User"
+        )
+        self.user = User.objects.create_user(username='testuser', password='pass', member=self.member)
         self.client = APIClient()
 
     def tearDown(self):
@@ -81,3 +86,6 @@ class ApiSmokeTests(TestCase):
         # families base endpoint (GET may be not allowed but should not 500)
         r = client.get('/api/families/')
         self.assertNotEqual(r.status_code, 500)
+        # Tree endpoint
+        r = client.get('/api/families/tree/')
+        self.assertEqual(r.status_code, 200)

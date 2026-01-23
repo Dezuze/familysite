@@ -43,56 +43,62 @@ class FamilyMember(models.Model):
     # temporary id for unregistered persons
     temp_member_id = models.CharField(max_length=50, blank=True, null=True)
 
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     nickname = models.CharField(max_length=50, blank=True, null=True)
-    age = models.PositiveIntegerField(default=0) # Make age optional or default? Existing has it.
-
-    gender = models.CharField(max_length=1, choices=[("M", "Male"), ("F", "Female"), ("O", "Other")], default='M')
     
-    relation = models.CharField(max_length=50)
-    date_of_birth = models.DateField()
+    gender = models.CharField(max_length=10, choices=[("M", "Male"), ("F", "Female"), ("O", "Other")], default='M')
     
-    bio = models.TextField(blank=True, null=True)
-
-    address_if_different = models.TextField(blank=True, null=True)
-
+    date_of_birth = models.DateField(null=True, blank=True)
+    
+    is_deceased = models.BooleanField(default=False)
+    date_of_death = models.DateField(null=True, blank=True)
+    crematory = models.CharField(max_length=255, blank=True, null=True)
+    
+    address = models.TextField(blank=True, null=True) # schema says address TEXT
     phone_no = models.CharField(max_length=20, blank=True, null=True)
-    email_id = models.EmailField(blank=True, null=True)
+    email_id = models.EmailField(max_length=100, blank=True, null=True)
     
-    education = models.CharField(max_length=100, blank=True)
-    occupation = models.CharField(max_length=100, blank=True)
-    place_of_work = models.CharField(max_length=100, blank=True, null=True)
+    church_parish = models.CharField(max_length=255, blank=True, null=True)
+    education = models.CharField(max_length=255, blank=True, null=True)
+    occupation = models.CharField(max_length=255, blank=True, null=True)
+    place_of_work = models.CharField(max_length=255, blank=True, null=True)
+    blood_group = models.CharField(max_length=5, blank=True, null=True)
     
-    church_parish = models.CharField(max_length=100, blank=True, null=True)
-
-    blood_group = models.CharField(max_length=5)
-
+    # profile_pic_url in schema, mapped to ImageField here
     photo = models.ImageField(upload_to="members/photos/", blank=True, null=True)
 
-    # Link to other FamilyMember instances to represent parent/child relationships.
-    # Use `symmetrical=False` so `parents` and `children` are distinct.
-    parents = models.ManyToManyField(
-        'self',
-        symmetrical=False,
-        related_name='children',
-        blank=True,
-    )
+    # SELF-REFERENCING RELATIONSHIP (The Tree)
+    # Points to the parent member. Allows multiple children per parent.
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
+    
+    # SPOUSAL RELATIONSHIP
+    spouse = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='spouse_ref')
 
+    # Old bio field, keeping for backward compat or remove? Schema doesn't explicitly have bio but has address/education etc. 
+    # Schema doesn't have 'bio'. I will remove 'bio' to strictly follow schema or keep as extra? 
+    # User said "matching this structure". I'll keep bio if it's not conflicting, but I'll remove it if strictly matching.
+    # I'll keep bio as extra field for now unless it causes issues.
+    bio = models.TextField(blank=True, null=True)
 
-class DeceasedMember(models.Model):
-    family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name="deceased")
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    name = models.CharField(max_length=100)
-    age_at_death = models.PositiveIntegerField()
+    @property
+    def age(self):
+        from datetime import date
+        today = date.today()
+        if self.date_of_death:
+            end_date = self.date_of_death
+        else:
+            end_date = today
+        
+        if not self.date_of_birth:
+            return 0
+            
+        return end_date.year - self.date_of_birth.year - ((end_date.month, end_date.day) < (self.date_of_birth.month, self.date_of_birth.day))
 
-    relation = models.CharField(max_length=50)
-
-    date_of_birth = models.DateField()
-    date_of_death = models.DateField()
-
-    crematory = models.CharField(max_length=100)
-
-    photo = models.ImageField(upload_to="deceased/photos/", blank=True, null=True)
+    def __str__(self):
+        return f"{self.first_name} {self.last_name or ''}".strip()
 
 
 class FamilyMedia(models.Model):

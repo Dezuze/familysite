@@ -23,4 +23,10 @@ export interface FamilyMember {
   blood_group?: string
   place_of_work?: string
   spouse?: any // ID or name depending on view
+  
+  // New fields
+  is_deceased?: boolean
+  date_of_death?: string
+  crematory?: string
+  parent?: any // FK object or ID
 }

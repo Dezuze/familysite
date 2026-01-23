@@ -6,12 +6,11 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     
     # One-to-One link between 'members' and 'users'. Only family members can have accounts.
+    # One-to-One link between 'members' and 'users'. Only family members can have accounts.
     member = models.OneToOneField(
         'families.FamilyMember', 
         on_delete=models.CASCADE, 
-        related_name='user_account',
-        null=True, 
-        blank=True
+        related_name='user_account'
     )
     
     role = models.CharField(max_length=20, default='member') # 'admin', 'member'

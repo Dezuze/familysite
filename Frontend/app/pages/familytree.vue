@@ -281,8 +281,9 @@ const openMember = (m) => { selectedMember.value = m }
             .attr("rx", 12)
             .attr("fill", isUser ? "#fffbeb" : "#ffffff") // Amber tint (very light) or white
             .attr("stroke", isUser ? "#f59e0b" : "#cbd5e1") // Slate 300 border
+            .attr("stroke", isUser ? "#f59e0b" : "#cbd5e1") // Slate 300 border
             .attr("stroke-width", isUser ? 2 : 1)
-            .attr("filter", "drop-shadow(0 10px 15px rgba(0,0,0,0.1))") // Stronger shadow for depth
+            .attr("filter", d.is_deceased ? "grayscale(100%)" : "drop-shadow(0 10px 15px rgba(0,0,0,0.1))") // Grayscale if deceased
             .style("cursor", "pointer")
             .on("click", () => openMember(d))
 

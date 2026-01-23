@@ -15,7 +15,7 @@ class CommitteeSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         # Try to find family member linked to this user
         if hasattr(obj.user, 'member') and obj.user.member:
-             return obj.user.member.name
+             return f"{obj.user.member.first_name} {obj.user.member.last_name or ''}".strip()
         return obj.user.get_full_name() or obj.user.username
 
     def get_age(self, obj):

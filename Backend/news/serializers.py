@@ -9,8 +9,13 @@ class MediaSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     # Include media if needed
     media = MediaSerializer(many=True, read_only=True)
-    creator_name = serializers.CharField(source='creator.name', read_only=True)
+    creator_name = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    
+    def get_creator_name(self, obj):
+        if obj.creator:
+            return f"{obj.creator.first_name} {obj.creator.last_name or ''}".strip()
+        return "Unknown"
     
     def get_image(self, obj):
         # Return first image from media if exists

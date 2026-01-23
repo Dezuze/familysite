@@ -34,7 +34,7 @@ class NewsAPITestCase(TestCase):
         
         self.client = APIClient()
         self.family = Family.objects.create(sl_no='N1', branch='NewsBranch', member_no='NMem1')
-        self.member = FamilyMember.objects.create(family=self.family, name="NewsWriter", date_of_birth="2000-01-01", relation="Self")
+        self.member = FamilyMember.objects.create(family=self.family, first_name="News", last_name="Writer", date_of_birth="2000-01-01")
         
         for i in range(3):
             Post.objects.create(creator=self.member, title=f'News {i}', description='desc', post_type='news')

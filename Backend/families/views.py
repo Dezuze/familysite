@@ -27,28 +27,22 @@ class UserProfileView(APIView):
         
         if not member:
              # Create new member if not exists
-             name = f"{data.get('first_name', user.username)} {data.get('last_name', '')}".strip()
+             first_name = data.get('first_name', user.username)
+             last_name = data.get('last_name', '')
              member = FamilyMember.objects.create(
                  user=user,
-                 name=name,
+                 first_name=first_name,
+                 last_name=last_name,
                  gender=data.get('gender', 'M'),
-                 age=0, # Default
-                 date_of_birth='2000-01-01', # Default
-                 relation='Self', # Default
+                 date_of_birth=data.get('date_of_birth', '2000-01-01'),
                  blood_group='Unknown', # Default
                  education='',
                  occupation=''
              )
 
         # Update fields
-        first_name = data.get('first_name')
-        last_name = data.get('last_name')
-        if first_name or last_name:
-            # If only one provided, we might need to be careful, but assuming frontend sends both
-            current_names = member.name.split(' ') if member.name else ["", ""]
-            new_first = first_name if first_name is not None else (current_names[0] if current_names else "")
-            new_last = last_name if last_name is not None else (" ".join(current_names[1:]) if len(current_names) > 1 else "")
-            member.name = f"{new_first} {new_last}".strip()
+        if 'first_name' in data: member.first_name = data['first_name']
+        if 'last_name' in data: member.last_name = data['last_name']
 
         if 'nickname' in data: member.nickname = data['nickname']
         
@@ -61,7 +55,7 @@ class UserProfileView(APIView):
         if 'occupation' in data: member.occupation = data['occupation']
         if 'place_of_work' in data: member.place_of_work = data['place_of_work']
         if 'blood_group' in data: member.blood_group = data['blood_group']
-        if 'address' in data: member.address_if_different = data['address']
+        if 'address' in data: member.address = data['address']
         
         if 'phone_no' in data: member.phone_no = data['phone_no']
         if 'email_id' in data: member.email_id = data['email_id']
@@ -69,7 +63,7 @@ class UserProfileView(APIView):
         
         # Update Profile Pic
         if 'profile_pic' in request.FILES:
-            member.photo = request.FILES['profile_pic'] # Model has 'photo', view was using 'profile_pic'
+            member.photo = request.FILES['profile_pic']
         
         member.save()
         
@@ -86,24 +80,22 @@ class FamilyTreeView(APIView):
         links = []
         
         for m in members:
-            # Calculate Age
-            age = 0
-            if m.date_of_birth:
-                today = date.today()
-                dob = m.date_of_birth
-                age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-            if m.is_deceased and m.date_of_death:
-                 # Age at death
-                 drun = m.date_of_death
-                 age = drun.year - m.date_of_birth.year - ((drun.month, drun.day) < (m.date_of_birth.month, m.date_of_birth.day))
+            # Calculate Age using property
+            age = m.age
 
             user_acc = getattr(m, 'user_account', None)
             
+            # Combine name
+            full_name = f"{m.first_name} {m.last_name or ''}".strip()
+            spouse_name = None
+            if m.spouse:
+                spouse_name = f"{m.spouse.first_name} {m.spouse.last_name or ''}".strip()
+
             nodes.append({
                 "id": m.id,
-                "name": m.name, # Property
-                "photo": m.profile_pic.url if m.profile_pic else None,
-                "role": "Member", # Default, or derive 'Father'/'Son' via tree traversal if needed? Frontend card uses 'relation'. Using 'Member' for now.
+                "name": full_name,
+                "photo": m.photo.url if m.photo else None,
+                "role": "Member",
                 "gender": m.gender,
                 "username": user_acc.username if user_acc else None,
                 "age": age,
@@ -119,9 +111,9 @@ class FamilyTreeView(APIView):
                 "phone_no": m.phone_no,
                 "is_deceased": m.is_deceased,
                 "date_of_death": m.date_of_death,
-                "spouse": m.spouse.name if m.spouse else None,
-                "parents": [{"name": p.first_name, "age": 0} for p in m.parents.all()],
-                "children": [{"name": c.first_name, "age": c.age} for c in FamilyMember.objects.filter(parent=m)],
+                "spouse": spouse_name,
+                "parents": [{"name": f"{m.parent.first_name} {m.parent.last_name or ''}".strip(), "age": 0}] if m.parent else [],
+                "children": [{"name": f"{c.first_name} {c.last_name or ''}".strip(), "age": c.age} for c in FamilyMember.objects.filter(parent=m)],
                 "is_committee": user_acc.committee_entries.exists() if user_acc else False,
                 "committee_role": user_acc.committee_entries.first().role if (user_acc and user_acc.committee_entries.exists()) else None
             })
@@ -131,18 +123,9 @@ class FamilyTreeView(APIView):
                 if m.id < m.spouse.id:
                     links.append({"source": m.id, "target": m.spouse.id, "type": "spouse"})
 
-            # Parent child link
-            # Use 'parent' FK (Tree) and 'parents' M2M (Bio) -> User wants Tree primarily?
-            # User request: "Points to the parent member... Recursive self-reference".
-            # If I use 'parent' FK, I get a clear tree.
+            # Parent child link (Tree)
             if m.parent:
                  links.append({"source": m.parent.id, "target": m.id, "type": "parent"})
-            
-            # Also legacy parents M2M?
-            for p in m.parents.all():
-                 # Avoid duplicating if same as parent FK
-                 if not m.parent or p.id != m.parent.id:
-                     links.append({"source": p.id, "target": m.id, "type": "parent"})
 
         return Response({"nodes": nodes, "links": links})
 

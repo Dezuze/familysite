@@ -20,6 +20,9 @@ export const useAuthStore = defineStore('auth', {
       id: number
       email: string
       name?: string
+      first_name?: string
+      last_name?: string
+      member_id?: number
     },
     token: null as string | null,
     isAuthenticated: false,
@@ -150,7 +153,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Update profile fields locally (e.g., name)
-    updateProfile(partial: { name?: string }) {
+    updateProfile(partial: { name?: string; first_name?: string; last_name?: string }) {
       if (!this.user) return
       this.user = { ...this.user, ...partial }
     },
