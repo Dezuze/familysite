@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import FamilyMember
-from .serializers import FamilyMemberSerializer, FamilyTreeSerializer
+from .models import FamilyMember, FamilyMedia
+from .serializers import FamilyMemberSerializer, FamilyTreeSerializer, FamilyMediaSerializer
+from rest_framework import generics
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from datetime import date
@@ -144,3 +145,19 @@ class FamilyTreeView(APIView):
                      links.append({"source": p.id, "target": m.id, "type": "parent"})
 
         return Response({"nodes": nodes, "links": links})
+
+
+class FamilyMediaList(generics.ListCreateAPIView):
+    queryset = FamilyMedia.objects.all()
+    serializer_class = FamilyMediaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Determine family? The serializer expects 'family' field or we derive it?
+        # The test sends 'family' ID in data. So serializer handles it.
+        serializer.save()
+
+class FamilyMediaDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = FamilyMedia.objects.all()
+    serializer_class = FamilyMediaSerializer
+    permission_classes = [permissions.IsAuthenticated]

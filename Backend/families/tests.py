@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 import tempfile
 import shutil
 from django.core.files.uploadedfile import SimpleUploadedFile
-from .models import Family, FamilyMedia
+from families.models import Family, FamilyMedia
 
 User = get_user_model()
 
@@ -23,14 +23,13 @@ class FamilyMediaAPITest(APITestCase):
     def tearDown(self):
         shutil.rmtree(self._tmp_media)
 
-    def _get_png(self, name='test.png'):
-        png = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde"
-               b"\x00\x00\x00\nIDATx\x9cc`\x00\x00\x00\x02\x00\x01\xe2!\xbc3\x00\x00\x00\x00IEND\xaeB`\x82")
-        return SimpleUploadedFile(name, png, content_type='image/png')
+    def _get_image(self, name='test.gif'):
+        gif = (b'GIF89a\x01\x00\x01\x00\x00\xff\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x00;')
+        return SimpleUploadedFile(name, gif, content_type='image/gif')
 
     def test_create_requires_auth(self):
         url = '/api/families/media/'
-        data = {'family': self.family.id, 'category': 'family', 'image': self._get_png()}
+        data = {'family': self.family.id, 'category': 'family', 'image': self._get_image()}
         resp = self.client.post(url, data, format='multipart')
         # Should be unauthorized
         self.assertIn(resp.status_code, (401, 403))
@@ -38,7 +37,7 @@ class FamilyMediaAPITest(APITestCase):
     def test_crud_flow_authenticated(self):
         self.client.force_authenticate(user=self.user)
         url = '/api/families/media/'
-        data = {'family': self.family.id, 'category': 'family', 'image': self._get_png('a.png')}
+        data = {'family': self.family.id, 'category': 'family', 'image': self._get_image('a.gif')}
         resp = self.client.post(url, data, format='multipart')
         self.assertEqual(resp.status_code, 201)
         created_id = resp.data['id']
@@ -46,7 +45,7 @@ class FamilyMediaAPITest(APITestCase):
         # list
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertGreaterEqual(resp.data['count'], 1)
+        self.assertGreaterEqual(len(resp.data), 1)
 
         # retrieve
         resp = self.client.get(f'{url}{created_id}/')

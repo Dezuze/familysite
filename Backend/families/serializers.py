@@ -16,3 +16,9 @@ class FamilyTreeSerializer(serializers.ModelSerializer):
         model = FamilyMember
         fields = ['id', 'name', 'parents', 'spouse', 'children']
         depth = 1 # Simple depth to see Names of related objects
+
+from .models import FamilyMedia
+class FamilyMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FamilyMedia
+        fields = '__all__'
