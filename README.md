@@ -18,46 +18,97 @@ A modern, private social platform and directory for the Kollaparambil family. Th
 
 *   **Frontend**: Nuxt 3 (Vue 3), Tailwind CSS, D3.js, Pinia.
 *   **Backend**: Django REST Framework (Python), PostgreSQL.
-*   **Infrastructure**: Docker Swarm, Traefik (Reverse Proxy), Local Registry.
-*   **Deployment**: Zero-downtime rolling updates via automated script.
+*   **Deployment**: cPanel Hosting (Python Passenger + Node.js) with Rolling Releases.
 
 ## 📦 Getting Started
 
 ### Prerequisites
-*   Docker Desktop (with Swarm enabled or initialized by script)
-*   PowerShell (for deployment script)
+*   Node.js (v20+)
+*   Python (v3.10+)
+*   PostgreSQL
 
-### Running Locally (Zero Downtime Mode)
-We use a **deployment script** that handles building images, pushing to a local registry, and deploying to the Docker Swarm.
+### Running Locally
 
-```powershell
-# 1. Run the deployment script
-.\deploy.ps1
+**1. Backend**
+```bash
+cd Backend
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+**2. Frontend**
+```bash
+cd Frontend
+npm install
+npm run dev
 ```
 
 The application will be available at:
-*   **Frontend**: https://localhost (Accept the self-signed certificate warning)
-*   **Backend API**: https://localhost/api
-*   **Traefik Dashboard**: http://localhost:8080
+*   **Frontend**: http://localhost:3000
+*   **Backend API**: http://localhost:8000
 
-### Stopping the App
-To remove the stack and stop all containers:
-```powershell
-docker stack rm family_app
-```
+## 🚀 Deployment Guide (cPanel)
+
+<details>
+<summary><strong>Click to expand Deployment Instructions</strong></summary>
+
+### 1. Prerequisites
+- **cPanel Account** with support for **Python Apps** (via CloudLinux/Passenger) and **Node.js Apps**.
+- **PostgreSQL Database** created in cPanel.
+- **SSH Access** (recommended).
+
+### 2. Database Setup
+1.  Log in to cPanel -> **PostgreSQL Databases**.
+2.  Create a new database (e.g., `username_family_db`).
+3.  Create a new user (e.g., `username_family_user`) and password.
+4.  Add the user to the database with **All Privileges**.
+
+### 3. Rolling Release Setup (Automated)
+We use a **Rolling Release** strategy. Pushing to GitHub triggers cPanel to build in a new folder and swap the live site instantly.
+
+1.  **Server Preparation**:
+    ```bash
+    # SSH into your server
+    mkdir -p ~/www/family_app
+    # Ensure you have a virtualenv ready or let 'Setup Python App' create one first
+    ```
+
+2.  **Configure Script**:
+    - Edit `cpanel_deploy.sh` in the repository.
+    - Update `APP_BASE` and `VENV_PATH` to match your server paths.
+
+3.  **cPanel Git Control**:
+    - Go to **Git™ Version Control** in cPanel.
+    - Clone this repository.
+    - The `.cpanel.yml` file will automatically trigger `cpanel_deploy.sh` on push.
+
+### 4. Manual Configuration (First Time)
+**Backend (Python App)**:
+- **Application Root**: `~/www/family_app/current/Backend`
+- **Startup File**: `passenger_wsgi.py`
+- **Environment Variables** (Set in cPanel):
+    - `django_secret_key`, `debug` (False), `allowed_hosts`, `postgres_db`, etc.
+
+**Frontend (Node.js App)**:
+- **Application Root**: `~/www/family_app/current/Frontend`
+- **Startup File**: `.output/server/index.mjs`
+- **Environment Variables**:
+    - `API_BASE`: `https://api.yourdomain.com`
+    - `NITRO_PRESET`: `node_server`
+
+</details>
 
 ## 🔄 Development Guidelines
 
-### Database (PostgreSQL)
-The application now uses PostgreSQL. Data is persisted in a Docker volume `family_app_postgres_data`. To reset the database, you must remove this volume:
-```powershell
-docker volume rm family_app_postgres_data
-```
-
 ### Making Changes
 1.  Modify the code in `Frontend/` or `Backend/`.
-2.  Run `.\deploy.ps1` again.
-3.  Docker Swarm will perform a **rolling update** (Start-First strategy), ensuring the app remains available during the update.
+2.  Test locally using the verification commands above.
+3.  Push to `main`.
+4.  The **CI/CD Pipeline** will run tests.
+5.  **cPanel** will pull the changes and execute the Rolling Release script.
 
 ## 🛡️ License
 

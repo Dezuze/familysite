@@ -36,7 +36,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
   ],
-  build: {
-    transpile: ['vue-advanced-cropper'],
+  nitro: {
+    preset: process.env.NITRO_PRESET || 'node-server',
   },
 })

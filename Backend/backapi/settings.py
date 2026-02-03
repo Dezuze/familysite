@@ -1,8 +1,16 @@
 from pathlib import Path
 import os
+import sys
 
 # Base directory (Backend/)
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
 
 # Security: Trust the 'X-Forwarded-Proto' header for determining SSL (Traefik handles this)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
