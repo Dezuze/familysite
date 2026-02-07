@@ -38,14 +38,16 @@ echo "Setting up Backend..."
 cd "$NEW_RELEASE_DIR/Backend"
 
 # Try to find the virtualenv path from an environment variable or default
-VENV_PATH="${PYTHON_VENV_PATH:-/home/$USER/virtualenv/family_app_venv/3.10/bin/activate}"
+# In cPanel, this is typically /home/USER/virtualenv/APP_NAME/PYTHON_VERSION/bin/activate
+VENV_PATH="${PYTHON_VENV_PATH:-/home/$USER/virtualenv/family_app_venv/3.13/bin/activate}"
 
 if [ -f "$VENV_PATH" ]; then
-    source "$VENV_PATH"
+    echo "Activating virtualenv at $VENV_PATH..."
+    source "$VENV_PATH" || { echo "ERROR: Failed to source $VENV_PATH"; exit 1; }
     pip install --upgrade pip
-    pip install -r requirements.txt
-    python manage.py migrate
-    python manage.py collectstatic --noinput
+    pip install -r requirements.txt || { echo "ERROR: Failed to install backend requirements"; exit 1; }
+    python manage.py migrate || { echo "ERROR: Database migration failed"; exit 1; }
+    python manage.py collectstatic --noinput || { echo "ERROR: Collectstatic failed"; exit 1; }
 else
     echo "WARNING: Virtualenv not found at $VENV_PATH. Skipping Backend dependencies."
 fi
@@ -58,8 +60,8 @@ cd "$NEW_RELEASE_DIR/Frontend"
 
 # Ensure we are using a stable node version if available via NVM or similar, 
 # otherwise rely on the cPanel Node setup which usually handles this.
-npm install --legacy-peer-deps
-npm run build 
+npm install --legacy-peer-deps || { echo "ERROR: npm install failed"; exit 1; }
+npm run build || { echo "ERROR: npm build failed"; exit 1; }
 
 # -----------------------------------------------------------------------------
 # ACTIVATE RELEASE (Symlink Swap)
