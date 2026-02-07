@@ -80,7 +80,7 @@ jobs:
           port: ${{ secrets.CPANEL_SSH_PORT || 22 }}
           fingerprint: "SHA256:0hSe+m2puf7mmDuPnzhZnBXjOUCPcPxFA32A3osK0WY"
           script: |
-            cd /home/${{ secrets.CPANEL_USERNAME }}/repositories/family_app_repo
+            cd /home/${{ secrets.CPANEL_USERNAME }}/repositories/familysite
             git pull origin main
             /bin/bash cpanel_deploy.sh
 
