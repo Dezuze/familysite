@@ -20,3 +20,7 @@ dist/
 # Virtualenv
 venv/
 **/venv/
+
+# Deployment Keys
+github-actions
+github-actions.pub
