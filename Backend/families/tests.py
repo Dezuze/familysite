@@ -143,9 +143,13 @@ class UserProfileAPITest(APITestCase):
         self.member.refresh_from_db()
         self.assertEqual(self.member.name, 'Updated Person')
         self.assertEqual(self.member.gender, 'F')
+        self.assertEqual(self.member.bio, 'My Bio')
+        self.assertEqual(self.member.email_id, 'updated@test.com')
         self.assertTrue(bool(self.member.photo))
         
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data['name'], 'Updated Person')
+        self.assertEqual(resp.data['gender'], 'F')
+        self.assertEqual(resp.data['bio'], 'My Bio')
         self.assertIn('new_pic', resp.data['photo'])

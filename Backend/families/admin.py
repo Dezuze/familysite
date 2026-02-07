@@ -14,4 +14,4 @@ class FamilyHeadAdmin(admin.ModelAdmin):
 
 @admin.register(models.FamilyMember)
 class FamilyMemberAdmin(admin.ModelAdmin):
-    list_display = ('name', 'family', 'relation', 'age')
+    list_display = ('name', 'family', 'relation', 'age', 'is_deceased')
