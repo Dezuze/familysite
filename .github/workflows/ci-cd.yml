@@ -70,7 +70,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Deploy to cPanel via SSH
+      - name: Upload files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: repositories/familysite/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/venv/**
+            **/__pycache__/**
+
+      - name: Execute Deployment Script via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.CPANEL_HOST }}
@@ -81,7 +95,6 @@ jobs:
           fingerprint: "SHA256:0hSe+m2puf7mmDuPnzhZnBXjOUCPcPxFA32A3osK0WY"
           script: |
             cd /home/${{ secrets.CPANEL_USERNAME }}/repositories/familysite
-            git pull origin main
             /bin/bash cpanel_deploy.sh
 
 
