@@ -1,5 +1,4 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/$USER/repositories/familysite
     - /bin/bash cpanel_deploy.sh
