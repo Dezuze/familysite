@@ -44,46 +44,23 @@ class FamilyMember(models.Model):
     temp_member_id = models.CharField(max_length=50, blank=True, null=True)
 
     name = models.CharField(max_length=100)
-    nickname = models.CharField(max_length=50, blank=True, null=True)
-    gender = models.CharField(max_length=10, choices=[("M", "Male"), ("F", "Female"), ("O", "Other")], default="M")
-    
     age = models.PositiveIntegerField()
+
     relation = models.CharField(max_length=50)
     date_of_birth = models.DateField()
-    
-    is_deceased = models.BooleanField(default=False)
-    date_of_death = models.DateField(blank=True, null=True)
 
-    address = models.TextField(blank=True, null=True)
-    phone_no = models.CharField(max_length=20, blank=True, null=True)
-    email_id = models.CharField(max_length=100, blank=True, null=True)
-    church_parish = models.CharField(max_length=255, blank=True, null=True)
+    address_if_different = models.TextField(blank=True, null=True)
 
     education = models.CharField(max_length=100)
     occupation = models.CharField(max_length=100)
     place_of_work = models.CharField(max_length=100, blank=True, null=True)
+
     blood_group = models.CharField(max_length=5)
-    
-    bio = models.TextField(blank=True, null=True)
+
     photo = models.ImageField(upload_to="members/photos/", blank=True, null=True)
 
-    # Tree relationships
-    spouse = models.OneToOneField(
-        'self',
-        on_delete=models.SET_NULL,
-        related_name='husband_or_wife',
-        null=True,
-        blank=True
-    )
-    parent = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        related_name='children_node',
-        null=True,
-        blank=True
-    )
-
-    # Legacy/Group relationships
+    # Link to other FamilyMember instances to represent parent/child relationships.
+    # Use `symmetrical=False` so `parents` and `children` are distinct.
     parents = models.ManyToManyField(
         'self',
         symmetrical=False,

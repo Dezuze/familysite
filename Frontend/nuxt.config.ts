@@ -36,7 +36,4 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
   ],
-  nitro: {
-    preset: process.env.NITRO_PRESET || 'node-server',
-  },
 })
