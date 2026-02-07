@@ -14,7 +14,7 @@ class PostSerializer(serializers.ModelSerializer):
     
     def get_creator_name(self, obj):
         if obj.creator:
-            return f"{obj.creator.first_name} {obj.creator.last_name or ''}".strip()
+            return obj.creator.name
         return "Unknown"
     
     def get_image(self, obj):

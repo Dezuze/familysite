@@ -37,7 +37,16 @@ class NewsAPITestCase(TestCase):
         
         self.client = APIClient()
         self.family = Family.objects.create(sl_no='N1', branch='NewsBranch', member_no='NMem1')
-        self.member = FamilyMember.objects.create(family=self.family, first_name="News", last_name="Writer", date_of_birth="2000-01-01")
+        self.member = FamilyMember.objects.create(
+            family=self.family, 
+            name="News Writer", 
+            age=30,
+            relation="Head",
+            date_of_birth="2000-01-01",
+            education="PhD",
+            occupation="Writer",
+            blood_group="A+"
+        )
         self.user = User.objects.create_user(username='newsuser', password='password', member=self.member)
         
         for i in range(3):

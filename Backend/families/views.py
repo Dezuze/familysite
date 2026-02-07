@@ -27,12 +27,11 @@ class UserProfileView(APIView):
         
         if not member:
              # Create new member if not exists
-             first_name = data.get('first_name', user.username)
-             last_name = data.get('last_name', '')
+             # Create new member if not exists
+             name = data.get('name', user.username)
              member = FamilyMember.objects.create(
                  user=user,
-                 first_name=first_name,
-                 last_name=last_name,
+                 name=name,
                  gender=data.get('gender', 'M'),
                  date_of_birth=data.get('date_of_birth', '2000-01-01'),
                  blood_group='Unknown', # Default
@@ -41,8 +40,7 @@ class UserProfileView(APIView):
              )
 
         # Update fields
-        if 'first_name' in data: member.first_name = data['first_name']
-        if 'last_name' in data: member.last_name = data['last_name']
+        if 'name' in data: member.name = data['name']
 
         if 'nickname' in data: member.nickname = data['nickname']
         
@@ -86,10 +84,11 @@ class FamilyTreeView(APIView):
             user_acc = getattr(m, 'user_account', None)
             
             # Combine name
-            full_name = f"{m.first_name} {m.last_name or ''}".strip()
+            # Combine name
+            full_name = m.name
             spouse_name = None
             if m.spouse:
-                spouse_name = f"{m.spouse.first_name} {m.spouse.last_name or ''}".strip()
+                spouse_name = m.spouse.name
 
             nodes.append({
                 "id": m.id,
@@ -112,8 +111,8 @@ class FamilyTreeView(APIView):
                 "is_deceased": m.is_deceased,
                 "date_of_death": m.date_of_death,
                 "spouse": spouse_name,
-                "parents": [{"name": f"{m.parent.first_name} {m.parent.last_name or ''}".strip(), "age": 0}] if m.parent else [],
-                "children": [{"name": f"{c.first_name} {c.last_name or ''}".strip(), "age": c.age} for c in FamilyMember.objects.filter(parent=m)],
+                "parents": [{"name": p.name, "age": 0} for p in m.parents.all()],
+                "children": [{"name": c.name, "age": c.age} for c in m.children.all()],
                 "is_committee": user_acc.committee_entries.exists() if user_acc else False,
                 "committee_role": user_acc.committee_entries.first().role if (user_acc and user_acc.committee_entries.exists()) else None
             })

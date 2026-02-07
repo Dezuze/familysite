@@ -15,10 +15,13 @@ class AccountsAPITestCase(TestCase):
 		self.family = Family.objects.create(sl_no='A1', branch='AccBranch', member_no='AMem1')
 		self.member = FamilyMember.objects.create(
 			family=self.family,
-			first_name="Test",
-			last_name="Member",
+			name="Test Member",
+			age=30,
+			relation="Head",
 			date_of_birth="2000-01-01",
-			occupation="Tester"
+			occupation="Tester",
+			blood_group="O+",
+			education="None"
 		)
 		
 		self.user = User.objects.create_user(
@@ -70,7 +73,7 @@ class AccountsAPITestCase(TestCase):
 
 	def test_signup(self):
 		f2 = Family.objects.create(sl_no='A2', branch='AccBranch2', member_no='AMem2')
-		m2 = FamilyMember.objects.create(family=f2, first_name="Member", last_name="Two", date_of_birth="1990-01-01")
+		m2 = FamilyMember.objects.create(family=f2, name="Member Two", age=25, relation="Son", date_of_birth="1990-01-01", blood_group="A+", education="None", occupation="None")
 		resp = self.client.post('/api/auth/signup/', {
 			'username': 'newuser',
 			'email': 'new@example.com',

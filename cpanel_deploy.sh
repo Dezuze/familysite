@@ -37,13 +37,12 @@ rsync -av --exclude '.git' --exclude 'node_modules' --exclude 'venv' --exclude '
 echo "Setting up Backend..."
 cd "$NEW_RELEASE_DIR/Backend"
 
-# Assuming a central virtualenv exists to save space/time, or create one per release.
-# Using a shared venv is easier for cPanel Python App limits.
-# UPDATE THIS PATH to your actual virtualenv path created by Setup Python App
-VENV_PATH="/home/$USER/virtualenv/family_app_venv/3.10/bin/activate"
+# Try to find the virtualenv path from an environment variable or default
+VENV_PATH="${PYTHON_VENV_PATH:-/home/$USER/virtualenv/family_app_venv/3.10/bin/activate}"
 
 if [ -f "$VENV_PATH" ]; then
     source "$VENV_PATH"
+    pip install --upgrade pip
     pip install -r requirements.txt
     python manage.py migrate
     python manage.py collectstatic --noinput
@@ -57,10 +56,10 @@ fi
 echo "Setting up Frontend..."
 cd "$NEW_RELEASE_DIR/Frontend"
 
-# Use specific node version if needed, or rely on system
+# Ensure we are using a stable node version if available via NVM or similar, 
+# otherwise rely on the cPanel Node setup which usually handles this.
 npm install
 npm run build 
-# For static site: npm run generate
 
 # -----------------------------------------------------------------------------
 # ACTIVATE RELEASE (Symlink Swap)
@@ -71,13 +70,13 @@ ln -sfn "$NEW_RELEASE_DIR" "$LIVE_LINK"
 # -----------------------------------------------------------------------------
 # RESTART SERVICES
 # -----------------------------------------------------------------------------
-# Touch the restart trigger for Passenger (Python)
-mkdir -p "$LIVE_LINK/tmp"
-touch "$LIVE_LINK/tmp/restart.txt"
+# Restart Backend (Passenger)
+mkdir -p "$LIVE_LINK/Backend/tmp"
+touch "$LIVE_LINK/Backend/tmp/restart.txt"
 
-# If using Node.js App selector, you might need to touch its restart file or rely on the symlink change being picked up (often requires manual restart or API call).
-# For standard Passenger/Node, touching restart.txt works.
-touch "$LIVE_LINK/Frontend/tmp/restart.txt" 2>/dev/null || true
+# Restart Frontend (Passenger/Node)
+mkdir -p "$LIVE_LINK/Frontend/tmp"
+touch "$LIVE_LINK/Frontend/tmp/restart.txt"
 
 echo "Deployment of release $TIMESTAMP complete!"
 echo "Live site is now pointing to $NEW_RELEASE_DIR"

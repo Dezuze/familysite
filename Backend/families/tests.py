@@ -19,8 +19,13 @@ class FamilyMediaAPITest(APITestCase):
         self.family = Family.objects.create(sl_no='S1', branch='B', member_no='Mtest')
         self.member = FamilyMember.objects.create(
             family=self.family, 
-            first_name="Test", 
-            last_name="User"
+            name="Test User",
+            age=30,
+            relation="Head",
+            date_of_birth="1990-01-01",
+            education="B.Tech",
+            occupation="Engineer",
+            blood_group="O+"
         )
         self.user = User.objects.create_user(username='testuser', password='pass', member=self.member)
         self.client = APIClient()
@@ -97,7 +102,16 @@ class UserProfileAPITest(APITestCase):
         settings.MEDIA_ROOT = self._tmp_media
         
         self.family = Family.objects.create(sl_no='S2', branch='B2', member_no='M2')
-        self.member = FamilyMember.objects.create(family=self.family, first_name="Init", last_name="Name")
+        self.member = FamilyMember.objects.create(
+            family=self.family, 
+            name="Init Name",
+            age=25,
+            relation="Son",
+            date_of_birth="2000-01-01",
+            education="Student",
+            occupation="None",
+            blood_group="A+"
+        )
         self.user = User.objects.create_user(username='newuser', password='pass', member=self.member)
         self.member.user = self.user
         self.member.save()
@@ -115,8 +129,7 @@ class UserProfileAPITest(APITestCase):
     def test_onboarding_update_persistence(self):
         url = '/api/families/profile/'
         data = {
-            'first_name': 'Updated',
-            'last_name': 'Person',
+            'name': 'Updated Person',
             'gender': 'F',
             'date_of_birth': '1995-05-05',
             'profile_pic': self._get_image('new_pic.jpg'),
@@ -128,12 +141,11 @@ class UserProfileAPITest(APITestCase):
         self.assertEqual(resp.status_code, 200)
         
         self.member.refresh_from_db()
-        self.assertEqual(self.member.first_name, 'Updated')
-        self.assertEqual(self.member.last_name, 'Person')
+        self.assertEqual(self.member.name, 'Updated Person')
         self.assertEqual(self.member.gender, 'F')
         self.assertTrue(bool(self.member.photo))
         
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.data['first_name'], 'Updated')
+        self.assertEqual(resp.data['name'], 'Updated Person')
         self.assertIn('new_pic', resp.data['photo'])

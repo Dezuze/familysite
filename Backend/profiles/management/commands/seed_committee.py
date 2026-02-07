@@ -70,10 +70,10 @@ class Command(BaseCommand):
                 Committee.objects.create(
                     user=user,
                     role=role,
-                    pic=member.profile_pic if member.profile_pic else None 
+                    pic=member.photo if member.photo else None 
                 )
                 # Use property name or first_name
-                member_name = getattr(member, 'name', f"{member.first_name} {member.last_name}")
+                member_name = member.name
                 self.stdout.write(f'Assigned {member_name} as {role}')
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'Error assigning {role}: {e}'))

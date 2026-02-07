@@ -63,4 +63,24 @@ jobs:
         env:
           NODE_ENV: production
 
+  deploy:
+    needs: [test-backend, test-frontend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to cPanel via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USERNAME }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          passphrase: ${{ secrets.CPANEL_SSH_PASSPHRASE }}
+          port: ${{ secrets.CPANEL_SSH_PORT || 22 }}
+          script: |
+            cd /home/${{ secrets.CPANEL_USERNAME }}/repositories/family_app_repo
+            git pull origin main
+            /bin/bash cpanel_deploy.sh
+
 
