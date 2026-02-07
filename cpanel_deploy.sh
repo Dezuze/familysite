@@ -58,7 +58,7 @@ cd "$NEW_RELEASE_DIR/Frontend"
 
 # Ensure we are using a stable node version if available via NVM or similar, 
 # otherwise rely on the cPanel Node setup which usually handles this.
-npm install
+npm install --legacy-peer-deps
 npm run build 
 
 # -----------------------------------------------------------------------------
