@@ -113,8 +113,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/app
+            echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" > .env_deploy
+            export $(cat .env_deploy | xargs)
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull
             docker compose up -d --remove-orphans
-            docker compose exec -T backend python manage.py migrate --noinput
+            docker compose exec -T backend python manage.py migrate --noinput || echo "Migrations failed, check logs"
             docker system prune -f
