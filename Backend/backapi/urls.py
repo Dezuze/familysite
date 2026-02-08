@@ -4,10 +4,14 @@ from accounts.views import CsrfInitView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # families API mounted at /api/families/
-    path('api/families/', include('families.urls')),
-    # accounts auth endpoints mounted at /api/auth/
-    path('api/auth/', include('accounts.urls')),
+    # families API mounted at /families/
+    path('families/', include('families.urls')),
+    # accounts auth endpoints mounted at /auth/
+    path('auth/', include('accounts.urls')),
+    # news API mounted at /news/
+    path('news/', include('news.urls')),
+    # profiles API mounted at /profiles/
+    path('profiles/', include('profiles.urls')),
     # CSRF init endpoint expected by frontend
-    path('api/csrf/', CsrfInitView.as_view()),
+    path('csrf/', CsrfInitView.as_view()),
 ]

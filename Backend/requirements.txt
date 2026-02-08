@@ -3,6 +3,7 @@ djangorestframework
 Pillow
 whitenoise
 psycopg2-binary
+PyMySQL
 Faker
 django-cors-headers
 python-dotenv

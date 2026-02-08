@@ -1,6 +1,9 @@
 from pathlib import Path
 import os
 import sys
+import pymysql
+
+pymysql.install_as_MySQLdb()
 
 # Base directory (Backend/)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -95,7 +98,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backapi.wsgi.application'
 
-if os.environ.get('POSTGRES_DB'):
+if os.environ.get('DB_ENGINE') == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
+    }
+elif os.environ.get('POSTGRES_DB'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

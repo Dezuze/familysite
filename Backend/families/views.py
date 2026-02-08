@@ -32,32 +32,21 @@ class UserProfileView(APIView):
              member = FamilyMember.objects.create(
                  user=user,
                  name=name,
-                 gender=data.get('gender', 'M'),
                  date_of_birth=data.get('date_of_birth', '2000-01-01'),
-                 blood_group='Unknown', # Default
+                 blood_group='U', # Default (fits in max_length=5)
                  education='',
                  occupation=''
              )
 
         # Update fields
         if 'name' in data: member.name = data['name']
-
-        if 'nickname' in data: member.nickname = data['nickname']
-        
-        if 'gender' in data: member.gender = data['gender']
-        
-        if 'bio' in data: member.bio = data['bio']
         
         if 'date_of_birth' in data: member.date_of_birth = data['date_of_birth']
         if 'education' in data: member.education = data['education']
         if 'occupation' in data: member.occupation = data['occupation']
         if 'place_of_work' in data: member.place_of_work = data['place_of_work']
         if 'blood_group' in data: member.blood_group = data['blood_group']
-        if 'address' in data: member.address = data['address']
-        
-        if 'phone_no' in data: member.phone_no = data['phone_no']
-        if 'email_id' in data: member.email_id = data['email_id']
-        if 'church_parish' in data: member.church_parish = data['church_parish']
+        if 'address' in data: member.address_if_different = data['address']
         
         # Update Profile Pic
         if 'profile_pic' in request.FILES:
@@ -95,21 +84,14 @@ class FamilyTreeView(APIView):
                 "name": full_name,
                 "photo": m.photo.url if m.photo else None,
                 "role": "Member",
-                "gender": m.gender,
                 "username": user_acc.username if user_acc else None,
                 "age": age,
                 "occupation": m.occupation,
                 "date_of_birth": m.date_of_birth,
                 "blood_group": m.blood_group,
-                "bio": m.bio,
                 "education": m.education,
-                "location": m.address,
+                "location": m.address_if_different,
                 "place_of_work": m.place_of_work,
-                "church_parish": m.church_parish,
-                "email_id": m.email_id,
-                "phone_no": m.phone_no,
-                "is_deceased": m.is_deceased,
-                "date_of_death": m.date_of_death,
                 "spouse": spouse_name,
                 "parents": [{"name": p.name, "age": 0} for p in m.parents.all()],
                 "children": [{"name": c.name, "age": c.age} for c in m.children.all()],
