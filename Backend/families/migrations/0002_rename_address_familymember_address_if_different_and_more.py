@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='familymember',
             name='blood_group',
-            field=models.CharField(default='Unknown', max_length=5),
+            field=models.CharField(default='U', max_length=5),
             preserve_default=False,
         ),
         migrations.AlterField(

@@ -87,13 +87,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='familymember',
             name='relation',
-            field=models.CharField(default=0, max_length=50),
+            field=models.CharField(default='None', max_length=50),
             preserve_default=False,
         ),
         migrations.AlterField(
             model_name='familymember',
             name='blood_group',
-            field=models.CharField(default=0, max_length=5),
+            field=models.CharField(default='U', max_length=5),
             preserve_default=False,
         ),
         migrations.AlterField(
@@ -105,13 +105,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='familymember',
             name='education',
-            field=models.CharField(default=0, max_length=100),
+            field=models.CharField(default='', max_length=100),
             preserve_default=False,
         ),
         migrations.AlterField(
             model_name='familymember',
             name='occupation',
-            field=models.CharField(default=0, max_length=100),
+            field=models.CharField(default='', max_length=100),
             preserve_default=False,
         ),
         migrations.AlterField(
