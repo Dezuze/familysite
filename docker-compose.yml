@@ -44,7 +44,7 @@ services:
     restart: always
 
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY}-backend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER_LC:-dezuze}/family-backend:latest
     build: ./Backend
     env_file: .env
     environment:
