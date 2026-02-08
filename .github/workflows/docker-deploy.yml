@@ -1,4 +1,4 @@
-name: Docker CI/CD
+name: Production Deploy
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository }}-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}-frontend
+  # Replace 'username/repo' if needed, but ${{ github.repository }} is dynamic
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -32,14 +32,14 @@ jobs:
         with:
           context: ./Backend
           push: true
-          tags: ${{ env.BACKEND_IMAGE }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
 
       - name: Build and push Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./Frontend
           push: true
-          tags: ${{ env.FRONTEND_IMAGE }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
 
   deploy:
     needs: build-and-push
@@ -48,16 +48,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose, .env, and traefik config via SCP
+      - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,traefik/traefik.yml"
           target: "~/app"
 
-      - name: Execute remote commands via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -68,4 +68,6 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull
             docker compose up -d --remove-orphans
+            # Explicitly run migrations just in case, though handled by entrypoint
+            docker compose exec -T backend python manage.py migrate --noinput
             docker system prune -f

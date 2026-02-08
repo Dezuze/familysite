@@ -1,28 +1,38 @@
 services:
   traefik:
     image: traefik:v3.1
-    command:
-      - "--api.insecure=false"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=${EMAIL}"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    # Settings moved to traefik/traefik.yml
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/traefik.yml:/etc/traefik/traefik.yml:ro"
       - "./traefik/letsencrypt:/letsencrypt"
     networks:
       - web
     restart: always
 
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ~/.docker/config.json:/config.json:ro 
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=600
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_LABEL_ENABLE=true
+    restart: always
+
   db:
     image: postgres:16-alpine
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -34,6 +44,7 @@ services:
     restart: always
 
   backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}-backend:latest
     build: ./Backend
     env_file: .env
     environment:
@@ -42,11 +53,23 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_HOST: db
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
     labels:
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`api.${DOMAIN}`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
     volumes:
       - ./Backend/media:/app/media
       - static_volume:/app/staticfiles
@@ -54,19 +77,37 @@ services:
       - web
       - internal
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
 
   frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY}-frontend:latest
     build: ./Frontend
     env_file: .env
     environment:
       NUXT_PUBLIC_API_BASE: https://api.${DOMAIN}
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3000/\", (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }).on(\"error\", () => process.exit(1))'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      update_config:
+        order: start-first
     labels:
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      # Listen for the domain
+      - "traefik.http.routers.frontend.rule=Host(`kollamparampil.com`) || Host(`www.kollamparampil.com`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
+      # Enable TLS (SSL)
+      - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      # Redirect HTTP to HTTPS automatically
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.frontend.middlewares=redirect-to-https"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     networks:
       - web
     restart: always
@@ -74,6 +115,7 @@ services:
 networks:
   web:
   internal:
+    internal: true
 
 volumes:
   postgres_data:
