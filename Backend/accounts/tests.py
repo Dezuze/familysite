@@ -34,7 +34,7 @@ class AccountsTests(TestCase):
         self.assertEqual(self.user.member, self.member)
 
     def test_login_success(self):
-        url = '/api/auth/login/'
+        url = '/auth/login/'
         data = {"identifier": "johndoe", "password": "ComplexPass123!"}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 200)

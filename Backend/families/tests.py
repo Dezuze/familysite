@@ -32,4 +32,4 @@ class FamiliesTests(TestCase):
         self.assertIn(self.member2, self.member1.children.all())
 
     def test_family_str(self):
-        self.assertEqual(str(self.family), "F100")
+        self.assertEqual(str(self.family), "F100-TEST")
