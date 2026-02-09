@@ -41,7 +41,7 @@ class AccountsTests(TestCase):
         self.assertEqual(response.data['username'], "johndoe")
 
     def test_login_fail(self):
-        url = '/api/auth/login/'
+        url = '/auth/login/'
         data = {"identifier": "johndoe", "password": "wrongpassword123!"}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 400)
