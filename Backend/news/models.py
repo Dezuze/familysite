@@ -14,6 +14,7 @@ class Post(models.Model):
     description = models.TextField(blank=True, null=True)
     
     event_date = models.DateTimeField(null=True, blank=True) # Null if post_type is 'news'
+    location = models.CharField(max_length=255, blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
 

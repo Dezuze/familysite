@@ -3,7 +3,7 @@ from .models import Post, Media
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'post_type', 'created_at')
+    list_display = ('title', 'post_type', 'location', 'created_at')
     list_filter = ('post_type', 'created_at')
     search_fields = ('title',)
     ordering = ('-created_at',)

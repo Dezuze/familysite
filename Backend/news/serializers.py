@@ -32,6 +32,7 @@ class PostSerializer(serializers.ModelSerializer):
             'description',
             'post_type',
             'event_date',
+            'location',
             'created_at',
             'creator_name',
             'media',
