@@ -96,6 +96,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Lowercase repository owner
+        run: |
+          echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -111,12 +115,21 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: OWNER_LC,GITHUB_ACTOR,GITHUB_TOKEN
           script: |
             cd ~/app
-            echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" > .env_deploy
-            export $(cat .env_deploy | xargs)
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose pull
-            docker compose up -d --remove-orphans
+            echo "OWNER_LC=${OWNER_LC}" > .env_deploy
+            # Ensure .env exists, or warn
+            if [ ! -f .env ]; then
+              echo "WARNING: .env file missing on server!"
+              # You might want to create a dummy one or fail here
+              # touch .env 
+            fi
+            echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${GITHUB_ACTOR} --password-stdin
+            docker compose --env-file .env --env-file .env_deploy pull
+            docker compose --env-file .env --env-file .env_deploy up -d --remove-orphans
             docker compose exec -T backend python manage.py migrate --noinput || echo "Migrations failed, check logs"
             docker system prune -f
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
