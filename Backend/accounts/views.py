@@ -37,7 +37,7 @@ class LoginView(APIView):
         if not user and identifier:
             try:
                 # Try member_id
-                candidate = User.objects.filter(member_id=identifier).first()
+                candidate = User.objects.filter(member__id=identifier).first()
                 if candidate:
                     user = authenticate(username=candidate.username, password=password)
             except Exception:
@@ -60,16 +60,16 @@ class SignupView(APIView):
         User = get_user_model()
         username = data.get('username')
         email = data.get('email')
-        member_id = data.get('member_id')
+        member = data.get('member_id')
         password = data.get('password')
 
-        if not (username and email and member_id and password):
+        if not (username and email and member and password):
             return Response({"error": "missing fields"}, status=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(username=username).exists():
             return Response({"error": "username taken"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.create_user(username=username, email=email, member_id=member_id, password=password)
+        user = User.objects.create_user(username=username, email=email, member=member, password=password)
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 

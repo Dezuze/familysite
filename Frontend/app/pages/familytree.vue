@@ -93,12 +93,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { computed, watch } from 'vue'
+import { useHead, useRuntimeConfig } from '#imports'
 import * as d3 from 'd3'
 import MemberDetailsModal from '~/components/MemberDetailsModal.vue'
 import { useAuthStore } from '~/stores/auth'
 
 const auth = useAuthStore()
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || 'http://localhost:8000'
 const viewMode = ref('visual')
 const loading = ref(true)
 const svgRef = ref(null)
@@ -437,7 +440,7 @@ const openMember = (m) => { selectedMember.value = m }
 
 onMounted(async () => {
     try {
-        const res = await fetch('http://localhost:8000/api/families/tree/')
+        const res = await fetch(`${apiBase}/api/families/tree/`)
         if (res.ok) {
             const data = await res.json()
             nodes.value = data.nodes

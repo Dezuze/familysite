@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest run"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",
@@ -37,6 +38,11 @@
   "devDependencies": {
     "@types/d3": "^7.4.3",
     "@types/node": "^25.0.8",
-    "typescript": "^5.9.3"
+    "@vitest/ui": "^4.0.18",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.5.3",
+    "jsdom": "^28.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

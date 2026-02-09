@@ -76,8 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useHead } from '#imports'
+import { useHead, useRuntimeConfig } from '#imports'
 import type { FamilyMember } from '~/types/family'
 
 useHead({
@@ -112,16 +111,19 @@ const getPriority = (role?: string) => {
     return rolePriority[cleanRole] || 100
 }
 
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || 'http://localhost:8000'
+
 // Fetch Data
 const resolveImage = (path: string) => {
     if (!path) return undefined
     if (path.startsWith('http')) return path
-    return `http://localhost:8000${path}`
+    return `${apiBase}${path}`
 }
 
 onMounted(async () => {
     try {
-        const res = await fetch('http://localhost:8000/api/profiles/committee/')
+        const res = await fetch(`${apiBase}/api/profiles/committee/`)
         if (res.ok) {
             const rawData = await res.json()
             // Map raw API data to FamilyMember interface

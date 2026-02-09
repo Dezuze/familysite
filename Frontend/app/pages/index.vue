@@ -206,7 +206,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { useHead, useRuntimeConfig } from '#imports'
 import { useAuthStore } from '~/stores/auth'
 import ShareButtons from '~/components/ShareButtons.vue'
@@ -249,7 +248,7 @@ const getYear = (dateStr: string) => new Date(dateStr).getFullYear()
 const resolveImage = (path: string) => {
     if (!path) return null
     if (path.startsWith('http')) return path
-    return `http://localhost:8000${path}`
+    return `${apiBase}${path}`
 }
 
 const handleRestrictedNavigation = (path: string) => {
