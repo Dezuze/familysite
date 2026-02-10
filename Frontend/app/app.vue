@@ -3,7 +3,7 @@ import { useHead } from '#imports'
 
 useHead({
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} - Kollaparambil Family` : 'Kollaparambil Family'
+    return titleChunk ? `${titleChunk} - Kollamparambil Family` : 'Kollamparambil Family'
   },
   link: [
     { rel: 'icon', type: 'image/png', href: '/favicon.png?v=3' },
@@ -13,7 +13,7 @@ useHead({
     { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' }
   ],
   meta: [
-    { name: 'description', content: 'Kollaparambil Family Association - Connecting our heritage and future.' }
+    { name: 'description', content: 'Kollamparambil Family Association - Connecting our heritage and future.' }
   ]
 })
 </script>

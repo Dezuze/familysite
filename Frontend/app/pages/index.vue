@@ -13,7 +13,7 @@
         
         <div class="bg-black/80 backdrop-blur-md shadow-[0_0_40px_40px_rgba(0,0,0,0.8)] absolute left-0 bottom-0 p-8 md:p-10 rounded-tr-3xl max-w-3xl text-center md:text-left">
             <h1 class="font-fleur text-6xl md:text-8xl lg:text-8xl lg:text-nowrap text-white mb-4 drop-shadow-2xl mx-auto md:mx-0 leading-tight">
-                Kollaparambil Family
+                Kollamparambil Family
             </h1>
 
             <!-- Malayalam Verse -->
@@ -47,7 +47,7 @@
             </div>
 
             <!-- Button 2: Events (Public) -->
-            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-amber-500">
+            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-linear-to-b from-[#A08050] to-[#6d5030]">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
                     <h3 class="text-lg md:text-xl font-bold text-white uppercase tracking-wide leading-tight">Events</h3>
                 </div>
@@ -206,6 +206,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useHead, useRuntimeConfig } from '#imports'
 import { useAuthStore } from '~/stores/auth'
 import ShareButtons from '~/components/ShareButtons.vue'
@@ -214,6 +215,8 @@ import AddPostModal from '~/components/AddPostModal.vue'
 const auth = useAuthStore()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || 'http://localhost:8000'
+
+const isAddModalOpen = ref(false)
 
 interface NewsItem {
   id: number;
@@ -228,7 +231,6 @@ interface NewsItem {
 
 const newsList = ref<NewsItem[]>([])
 const selectedItem = ref<NewsItem | null>(null)
-const isAddModalOpen = ref(false)
 
 const openDetails = (item: NewsItem) => {
   selectedItem.value = item
@@ -307,7 +309,7 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Kollaparambil Family',
+  title: 'Kollamparambil Family',
   link: [
     { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap' },
     { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap' },

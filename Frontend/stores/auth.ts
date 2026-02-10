@@ -19,7 +19,10 @@ export const useAuthStore = defineStore('auth', {
     user: null as null | {
       id: number
       email: string
+      first_name?: string
+      last_name?: string
       name?: string
+      profile_pic?: string | null
     },
     token: null as string | null,
     isAuthenticated: false,

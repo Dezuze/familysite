@@ -20,7 +20,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Quick development settings - replace for production
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev-key-change-in-prod')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # SSL/HTTPS & Cookies
@@ -34,6 +34,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -153,6 +154,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = str(BASE_DIR / 'media')
 
@@ -190,3 +194,91 @@ LOGGING = {
 
 # Use the custom user model defined in the `accounts` app
 AUTH_USER_MODEL = 'accounts.User'
+
+UNFOLD = {
+    "SITE_TITLE": "Kollamparambil Family Admin",
+    "SITE_HEADER": "Kollamparambil Family",
+    "SITE_SYMBOL": "family_restroom", # Material symbol
+    "ENVIRONMENT": "backapi.utils.get_environment",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "COLORS": {
+        "primary": {
+            "50": "250 245 239",
+            "100": "241 230 214",
+            "200": "225 204 172",
+            "300": "202 168 120",
+            "400": "179 133 79",
+            "500": "160 128 80", # #A08050
+            "600": "139 104 63",
+            "700": "116 82 51",
+            "800": "95 68 45",
+            "900": "79 57 39",
+            "950": "43 30 19",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Authentication",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "manage_accounts", 
+                        "link": "reverse:admin:accounts_user_changelist",
+                    },
+                ],
+            },
+            {
+                "title": "Core Directory",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Families",
+                        "icon": "family_restroom",
+                        "link": "reverse:admin:families_family_changelist",
+                    },
+                    {
+                        "title": "Heads of Family",
+                        "icon": "supervisor_account",
+                        "link": "reverse:admin:families_familyhead_changelist",
+                    },
+                    {
+                        "title": "Members",
+                        "icon": "group",
+                        "link": "reverse:admin:families_familymember_changelist",
+                    },
+                    {
+                        "title": "Deceased",
+                        "icon": "hourglass_empty",
+                        "link": "reverse:admin:families_deceasedmember_changelist",
+                    },
+                ],
+            },
+            {
+                "title": "Media & News",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "News & Events",
+                        "icon": "newspaper",
+                        "link": "reverse:admin:news_post_changelist",
+                    },
+                    {
+                        "title": "Gallery",
+                        "icon": "photo_library",
+                        "link": "reverse:admin:profiles_gallery_changelist",
+                    },
+                    {
+                        "title": "Committee",
+                        "icon": "work",
+                        "link": "reverse:admin:profiles_committee_changelist",
+                    },
+                ],
+            },
+        ],
+    },
+}

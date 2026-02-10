@@ -3,10 +3,16 @@ from .models import FamilyMember
 
 class FamilyMemberSerializer(serializers.ModelSerializer):
     role = serializers.ReadOnlyField()
+    profile_pic = serializers.SerializerMethodField()
 
     class Meta:
         model = FamilyMember
         fields = '__all__'
+
+    def get_profile_pic(self, obj):
+        if obj.photo:
+            return obj.photo.url
+        return None
 
 class FamilyTreeSerializer(serializers.ModelSerializer):
     class Meta:

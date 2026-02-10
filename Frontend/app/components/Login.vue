@@ -2,6 +2,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import { Cropper, CircleStencil } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
+import 'vue-advanced-cropper/dist/theme.classic.css'
 
 const router = useRouter()
 const route = useRoute()
@@ -19,6 +22,9 @@ const regEmail = ref('')
 const regPassword = ref('')
 const showRegPassword = ref(false)
 const regAvatar = ref<File | null>(null)
+const avatarSrc = ref<string | null>(null)
+const croppingAvatar = ref(false)
+const cropper = ref<any>(null)
 const error = ref('')
 
 const menuOpen = ref(false)
@@ -79,8 +85,14 @@ const passwordStrengthLabel = computed(() => {
 
 const userPhoto = computed<string>(() => {
   const u = auth.user as any
-  // Check for various photo fields
-  return u?.photo || u?.image || u?.profile_pic || ''
+  const photo = u?.photo || u?.image || u?.profile_pic || ''
+  if (!photo) return ''
+  // If it's already a full URL or blob, return it
+  if (photo.startsWith('http') || photo.startsWith('blob:')) return photo
+  // Otherwise prepend apiBase
+  const config = useRuntimeConfig()
+  const apiBase = (config.public.apiBase as string) || 'http://localhost:8000'
+  return `${apiBase}${photo}`
 })
 
 const toggle = () => (open.value = !open.value)
@@ -151,6 +163,38 @@ const register = async () => {
   // Success 
   close()
   router.push('/onboarding')
+}
+
+const handleAvatarChange = (e: any) => {
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (event: any) => {
+      avatarSrc.value = event.target.result
+      croppingAvatar.value = true
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const cropImage = () => {
+  if (cropper.value) {
+    const { canvas } = cropper.value.getResult()
+    canvas.toBlob((blob: Blob) => {
+      if (blob) {
+        regAvatar.value = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+        croppingAvatar.value = false
+        // Update avatarSrc to the cropped version for preview
+        avatarSrc.value = URL.createObjectURL(blob)
+      }
+    }, 'image/jpeg')
+  }
+}
+
+const cancelCrop = () => {
+  croppingAvatar.value = false
+  avatarSrc.value = null
+  regAvatar.value = null
 }
 
 defineExpose({ toggle })
@@ -256,7 +300,7 @@ defineExpose({ toggle })
       </template>
 
       <template v-else>
-        <h2 class="text-xl font-bold mb-4 text-lime-800">Create Account</h2>
+        <h2 class="text-xl font-bold mb-4 text-[#A08050]">Create Account</h2>
 
         <div class="mb-4 text-xs text-gray-500">
            Enter your Sponsor's Member ID to join.
@@ -264,17 +308,27 @@ defineExpose({ toggle })
 
         <input v-model="sponsorId" placeholder="Sponsor Member ID" class="w-full mb-3 px-3 py-2 border rounded-lg border-amber-500 bg-amber-50" />
         <input v-model="regName" placeholder="Full name" class="w-full mb-3 px-3 py-2 border rounded-lg" />
-        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg" />
-        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg" />
+        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]" />
         
         <div class="mb-3">
             <label class="block text-xs text-gray-500 mb-1">Profile Photo (Optional)</label>
+            
+            <div v-if="avatarSrc && !croppingAvatar" class="relative group w-20 h-20 mx-auto mb-2">
+                <img :src="avatarSrc" class="w-full h-full object-cover rounded-full border-2 border-[#A08050]" />
+                <button @click="avatarSrc = null; regAvatar = null" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
             <input 
+                v-if="!avatarSrc && !croppingAvatar"
                 type="file" 
-                @change="(e: any) => regAvatar = e.target.files[0]"
+                @change="handleAvatarChange"
                 accept="image/*"
-                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-lime-50 file:text-lime-700 hover:file:bg-lime-100"
+                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-[#A08050] hover:file:bg-amber-100"
             />
+
+            <!-- Cropper Overlay moved outside for better stacking -->
         </div>
         
         <div class="relative mb-1">
@@ -303,7 +357,7 @@ defineExpose({ toggle })
         <div v-if="regPassword" class="mb-3">
           <div class="flex justify-between text-xs mb-1">
             <span class="text-gray-500">Security</span>
-            <span :class="passwordStrength >= 3 ? 'text-lime-600 font-bold' : 'text-gray-500'">{{ passwordStrengthLabel }}</span>
+            <span :class="passwordStrength >= 3 ? 'text-amber-600 font-bold' : 'text-gray-500'">{{ passwordStrengthLabel }}</span>
           </div>
           <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
              <div 
@@ -317,11 +371,39 @@ defineExpose({ toggle })
         <div v-if="error" class="text-sm text-red-600 mb-2">{{ error }}</div>
 
         <div class="flex gap-2">
-          <button @click.prevent="register" class="flex-1 bg-lime-700 text-white py-2 rounded">Create</button>
+          <button @click.prevent="register" class="flex-1 bg-linear-to-b from-[#A08050] to-[#6d5030] text-white py-2 rounded font-bold hover:brightness-110 active:scale-95 transition-all">Create</button>
           <button @click.prevent="registering = false" class="flex-1 bg-slate-100 py-2 rounded">Cancel</button>
         </div>
       </template>
     </div>
+    </Transition>
+    <!-- Cropper Overlay (Siblings with modals for best stacking) -->
+    <Transition name="fade">
+      <div v-if="croppingAvatar" class="fixed inset-0 z-60 bg-black/90 flex flex-col items-center justify-center p-4">
+          <div class="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0">
+                  <span class="font-bold text-slate-800">Crop Profile Photo</span>
+                  <button @click="cancelCrop" class="text-slate-400 hover:text-slate-600">
+                       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+              </div>
+              <div class="bg-black flex-1 overflow-hidden min-h-[300px]">
+                  <Cropper
+                      ref="cropper"
+                      class="h-full w-full"
+                      :src="avatarSrc"
+                      :stencil-component="CircleStencil"
+                      :stencil-props="{
+                          aspectRatio: 1/1
+                      }"
+                  />
+              </div>
+              <div class="p-4 flex gap-3 shrink-0">
+                  <button @click="cropImage" class="flex-1 bg-[#A08050] text-white py-2 rounded-lg font-bold hover:brightness-110 active:scale-95 transition-all">Apply Crop</button>
+                  <button @click="cancelCrop" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg font-bold hover:bg-slate-200 active:scale-95 transition-all">Cancel</button>
+              </div>
+          </div>
+      </div>
     </Transition>
   </teleport>
 </template>

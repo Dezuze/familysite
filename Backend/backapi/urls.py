@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
@@ -8,16 +10,18 @@ def health_check(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # families API mounted at /families/
-    path('families/', include('families.urls')),
-    # accounts auth endpoints mounted at /auth/
-    path('auth/', include('accounts.urls')),
-    # news API mounted at /news/
-    path('news/', include('news.urls')),
-    # profiles API mounted at /profiles/
-    path('profiles/', include('profiles.urls')),
-    # CSRF init endpoint expected by frontend
-    path('csrf/', CsrfInitView.as_view()),
+    # Wrap all API endpoints in 'api/' to match frontend
+    path('api/', include([
+        path('families/', include('families.urls')),
+        path('auth/', include('accounts.urls')),
+        path('news/', include('news.urls')),
+        path('profiles/', include('profiles.urls')),
+        path('csrf/', CsrfInitView.as_view()),
+    ])),
     # Health check for Docker/Load balancer
     path('health/', health_check),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

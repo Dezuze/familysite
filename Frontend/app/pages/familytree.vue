@@ -185,7 +185,7 @@ const openMember = (m) => { selectedMember.value = m }
 
 // --- D3 Logic ---
 
-   // --- D3 Tree Logic ---
+   // --- D3 Forest Logic ---
    const initGraph = () => {
       if (!nodes.value.length) return
    
@@ -197,240 +197,185 @@ const openMember = (m) => { selectedMember.value = m }
       const zoom = d3.zoom().on("zoom", (event) => g.attr("transform", event.transform))
       svg.call(zoom)
       
-      // Store globals for search focus
       globalZoom = zoom
       globalSVG = svg
    
       svg.selectAll("*").remove()
-      const g = svg.append("g").attr("transform", `translate(${width/2}, 50)`) // Start top-center
-   
-      // 1. Build Hierarchy
+      const g = svg.append("g")
+
+      // 1. Identify all components (Forest)
       const hasParent = new Set(links.value.filter(l => l.type === 'parent').map(l => l.target))
-      const roots = nodes.value.filter(n => !hasParent.has(n.id))
-      const primaryRoot = roots.find(n => n.gender === 'M') || roots[0]
+      const potentialRoots = nodes.value.filter(n => !hasParent.has(n.id))
       
-      if (!primaryRoot) return 
-   
-      const getChildren = (parentId) => {
+      const getChildrenIds = (parentId) => {
          return links.value
             .filter(l => l.type === 'parent' && l.source === parentId)
             .map(l => l.target)
       }
-   
-      const buildHierarchy = (id) => {
-         const childrenIds = getChildren(id)
-         const uniqueChildren = [...new Set(childrenIds)]
+
+      const buildHierarchy = (id, visited = new Set()) => {
+         if (visited.has(id)) return null // Prevent cycles
+         visited.add(id)
          const node = nodes.value.find(n => n.id === id)
+         const childrenIds = getChildrenIds(id)
          return {
             ...node,
-            children: uniqueChildren.map(childId => buildHierarchy(childId))
+            children: childrenIds.map(cid => buildHierarchy(cid, visited)).filter(Boolean)
          }
       }
-   
-      const hierarchyData = buildHierarchy(primaryRoot.id)
-      const root = d3.hierarchy(hierarchyData)
-      globalRoot = root // Store for search
-      const treeLayout = d3.tree().nodeSize([180, 240]) 
-      treeLayout(root)
-   
-      // Helper for spouse
-      const getSpouse = (id) => {
+
+      // Group into trees
+      const forest = []
+      const globalVisited = new Set()
+      
+      // Sort potential roots to put the main high-count branch first
+      potentialRoots.sort((a,b) => {
+          const childrenA = getChildrenIds(a.id).length
+          const childrenB = getChildrenIds(b.id).length
+          return childrenB - childrenA
+      })
+
+      potentialRoots.forEach(rootNode => {
+          if (!globalVisited.has(rootNode.id)) {
+              const treeData = buildHierarchy(rootNode.id, globalVisited)
+              if (treeData) forest.push(treeData)
+          }
+      })
+
+      // Add remaining orphans just in case
+      nodes.value.forEach(node => {
+          if (!globalVisited.has(node.id)) {
+              forest.push({...node, children: []})
+              globalVisited.add(node.id)
+          }
+      })
+
+      // 2. Lay out each tree in the forest
+      const treeLayout = d3.tree().nodeSize([200, 300])
+      const forestGroups = forest.map((treeData, i) => {
+          const strategyRoot = d3.hierarchy(treeData)
+          treeLayout(strategyRoot)
+          return strategyRoot
+      })
+
+      // Position forest trees in a grid or horizontal spread
+      let currentXOffset = width / 2
+      forestGroups.forEach((root, i) => {
+          const xOffset = i * 800 // Spread trees out significantly
+          const treeG = g.append("g").attr("transform", `translate(${currentXOffset}, 100)`)
+          
+          if (i === 0) globalRoot = root // Store the main tree as default root
+
+          // Links
+          treeG.selectAll(".link")
+            .data(root.links())
+            .join("path")
+            .attr("class", "link")
+            .attr("fill", "none")
+            .attr("stroke", "#cbd5e1")
+            .attr("stroke-width", 2)
+            .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y))
+
+          // Nodes
+          const nodeGroup = treeG.selectAll(".node")
+            .data(root.descendants())
+            .join("g")
+            .attr("class", "node")
+            .attr("transform", d => `translate(${d.x},${d.y})`)
+
+          nodeGroup.each(function(d) {
+              renderCard(d3.select(this), 0, d.data)
+              const spouse = getSpouse(d.data.id)
+              if (spouse) {
+                  const sel = d3.select(this)
+                  const spouseOffset = 180 
+                  sel.append("line")
+                     .attr("x1", 70).attr("x2", spouseOffset - 70) 
+                     .attr("y1", 0).attr("y2", 0)
+                     .attr("stroke", "#ec4899").attr("stroke-width", 2).attr("stroke-dasharray", "4,2")
+                  renderCard(sel, spouseOffset, spouse)
+              }
+          })
+
+          currentXOffset += 1200 // Next tree offset
+      })
+
+      function renderCard(selection, dx=0, d) {
+          if (!d) return
+          const cardWidth = 140
+          const cardHeight = 180
+          const group = selection.append("g").attr("transform", `translate(${dx}, 0)`)
+          const isUser = auth.user && d.username === auth.user.username
+
+          group.append("rect")
+            .attr("x", -cardWidth/2).attr("y", -cardHeight/2)
+            .attr("width", cardWidth).attr("height", cardHeight).attr("rx", 12)
+            .attr("fill", isUser ? "#fffbeb" : "#ffffff")
+            .attr("stroke", isUser ? "#f59e0b" : "#cbd5e1")
+            .attr("stroke-width", isUser ? 2 : 1)
+            .attr("filter", d.is_deceased ? "grayscale(100%)" : "drop-shadow(0 10px 15px rgba(0,0,0,0.1))")
+            .style("cursor", "pointer")
+            .on("click", () => openMember(d))
+
+          group.append("circle").attr("cx", 0).attr("cy", -cardHeight/4).attr("r", 35).attr("fill", "#f1f5f9").attr("stroke", "#fff").attr("stroke-width", 2)
+          group.append("image")
+            .attr("xlink:href", d.photo || `https://ui-avatars.com/api/?name=${d.name}&background=f1f5f9&color=64748b`)
+            .attr("x", -35).attr("y", -cardHeight/4 - 35).attr("width", 70).attr("height", 70)
+            .attr("clip-path", `circle(35px at 0px ${-cardHeight/4}px)`)
+            .style("pointer-events", "none")
+
+          group.append("text").text(d.name.split(' ')[0]).attr("x", 0).attr("y", 15).attr("text-anchor", "middle").attr("fill", "#1e293b").attr("font-weight", "bold").attr("font-size", "14px").style("pointer-events", "none")
+          
+          group.append("text").text(d.gender === 'M' ? '♂' : '♀').attr("x", -15).attr("y", 35).attr("fill", d.gender === 'M' ? '#3b82f6' : '#ec4899').attr("font-size", "14px").attr("font-weight", "bold")
+          group.append("text").text(`${d.age} Yrs`).attr("x", 10).attr("y", 35).attr("text-anchor", "middle").attr("fill", "#64748b").attr("font-size", "12px")
+          
+          if (d.is_committee) {
+              group.append("text").text("★ Committee").attr("x", 0).attr("y", 65).attr("text-anchor", "middle").attr("fill", "#d97706").attr("font-size", "10px").attr("font-weight", "bold")
+          }
+      }
+
+      function getSpouse(id) {
           const l = links.value.find(l => l.type === 'spouse' && (l.source === id || l.target === id))
           if (!l) return null
           const spouseId = l.source === id ? l.target : l.source
           return nodes.value.find(n => n.id === spouseId)
       }
-   
-      // Draw Links
-      g.selectAll(".link")
-        .data(root.links())
-        .join("path")
-        .attr("class", "link")
-        .attr("fill", "none")
-        .attr("stroke", "#cbd5e1") // Slate 300 - lighter
-        .attr("stroke-width", 2)
-        .attr("d", d3.linkVertical()
-            .x(d => d.x)
-            .y(d => d.y)
-        )
-   
-      const nodeGroup = g.selectAll(".node")
-        .data(root.descendants())
-        .join("g")
-        .attr("class", "node")
-        .attr("transform", d => `translate(${d.x},${d.y})`)
-   
-      // Render Card Node (Light Theme)
-      const renderCard = (selection, dx=0, data=null) => {
-         const d = data || selection.datum().data 
-         if (!d) return
-
-         const cardWidth = 140
-         const cardHeight = 180
-         // Center card on x
-         const x = dx - cardWidth/2
-         const y = -cardHeight/2 
-
-         const group = selection.append("g").attr("transform", `translate(${dx}, 0)`)
-         
-         const isUser = auth.user && d.username === auth.user.username
-
-         // Card Background
-         group.append("rect")
-            .attr("x", -cardWidth/2)
-            .attr("y", -cardHeight/2)
-            .attr("width", cardWidth)
-            .attr("height", cardHeight)
-            .attr("rx", 12)
-            .attr("fill", isUser ? "#fffbeb" : "#ffffff") // Amber tint (very light) or white
-            .attr("stroke", isUser ? "#f59e0b" : "#cbd5e1") // Slate 300 border
-            .attr("stroke", isUser ? "#f59e0b" : "#cbd5e1") // Slate 300 border
-            .attr("stroke-width", isUser ? 2 : 1)
-            .attr("filter", d.is_deceased ? "grayscale(100%)" : "drop-shadow(0 10px 15px rgba(0,0,0,0.1))") // Grayscale if deceased
-            .style("cursor", "pointer")
-            .on("click", () => openMember(d))
-
-         // Image Container
-         group.append("circle")
-            .attr("cx", 0)
-            .attr("cy", -cardHeight/4) 
-            .attr("r", 35)
-            .attr("fill", "#f1f5f9") // Slate 100
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 2)
-         
-         // Image
-         group.append("image")
-            .attr("xlink:href", d.photo || `https://ui-avatars.com/api/?name=${d.name}&background=f1f5f9&color=64748b`)
-            .attr("x", -35)
-            .attr("y", -cardHeight/4 - 35)
-            .attr("width", 70)
-            .attr("height", 70)
-            .attr("clip-path", `circle(35px at 0px ${-cardHeight/4}px)`)
-            .style("pointer-events", "none")
-
-         // Name
-         group.append("text")
-            .text(d.name.split(' ')[0]) 
-            .attr("x", 0)
-            .attr("y", 15)
-            .attr("text-anchor", "middle")
-            .attr("fill", "#1e293b") // Slate 800
-            .attr("font-weight", "bold")
-            .attr("font-size", "14px")
-            .style("pointer-events", "none")
-         
-         // Gender Icon + Age
-         const genderIcon = d.gender === 'M' ? '♂' : '♀'
-         const genderColor = d.gender === 'M' ? '#3b82f6' : '#ec4899'
-         
-         group.append("text")
-             .text(genderIcon)
-             .attr("x", -15)
-             .attr("y", 35)
-             .attr("fill", genderColor)
-             .attr("font-size", "14px")
-             .attr("font-weight", "bold")
-
-         group.append("text")
-            .text(`${d.age} Yrs`)
-            .attr("x", 10) // Offset slightly right
-            .attr("y", 35)
-            .attr("text-anchor", "middle")
-            .attr("fill", "#64748b")
-            .attr("font-size", "12px")
-            
-         // Committee Badge
-         if (d.is_committee) {
-             group.append("rect")
-                 .attr("x", -cardWidth/2)
-                 .attr("y", cardHeight/2 - 24)
-                 .attr("width", cardWidth)
-                 .attr("height", 24)
-                 .attr("rx", 0) // Bottom strip? Or rounded bottom?
-                 // Let's do a pill
-             
-             // Actually, a star badge at top right or pill at bottom
-             group.append("text")
-                 .text("★ Committee")
-                 .attr("x", 0)
-                 .attr("y", 65)
-                 .attr("text-anchor", "middle")
-                 .attr("fill", "#d97706") // Amber 600
-                 .attr("font-size", "10px")
-                 .attr("font-weight", "bold")
-         }
-      }
-      
-      // Render Nodes
-      nodeGroup.each(function(d) {
-          renderCard(d3.select(this), 0, d.data)
-      })
-   
-      // Spouses
-      nodeGroup.each(function(d) {
-          const spouse = getSpouse(d.data.id)
-          if (spouse) {
-              const sel = d3.select(this)
-              const spouseOffset = 160 
-              sel.append("line")
-                 .attr("x1", 70) 
-                 .attr("x2", spouseOffset - 70) 
-                 .attr("y1", 0)
-                 .attr("y2", 0)
-                 .attr("stroke", "#ec4899")
-                 .attr("stroke-width", 2)
-                 .attr("stroke-dasharray", "4,2")
-              renderCard(sel, spouseOffset, spouse)
-          }
-      })
       
       // FOCUS ON USER
-      // Find coordinates of user
-      let userNode = null
-      let userX = 0
-      let userY = 0
+      let userCoords = {x: 0, y: 0, found: false}
+      forestGroups.forEach((root, i) => {
+          if (userCoords.found) return
+          
+          root.descendants().forEach(d => {
+              if (userCoords.found) return
+              
+              // Check the primary node (bloodline)
+              if (d.data.username === auth.user?.username) {
+                  userCoords = { x: (i * 1200) + width/2 + d.x, y: 100 + d.y, found: true }
+                  return
+              }
+              
+              // Check the spouse (rendered side-by-side)
+              const spouse = getSpouse(d.data.id)
+              if (spouse && spouse.username === auth.user?.username) {
+                  const spouseOffsetX = 180
+                  userCoords = { x: (i * 1200) + width/2 + d.x + spouseOffsetX, y: 100 + d.y, found: true }
+              }
+          })
+      })
       
-      // Search in hierarchy descendants
-      userNode = root.descendants().find(d => d.data.username === auth.user?.username)
-      if (userNode) {
-          userX = userNode.x
-          userY = userNode.y
-      } else {
-          // Check spouses?
-          // This is harder since spouses are not in 'descendants' list as distinct nodes usually in this layout?
-          // Actually no, our API returns all nodes, but Hierarchy filters only bloodline.
-          // Spouses are drawn manually.
-          // Loop through all members and check if spouse matches user
-          const userMember = nodes.value.find(n => n.username === auth.user?.username)
-          if (userMember && !userNode) {
-             // Maybe they are a spouse of someone in the tree?
-             // Find who they are spouse of
-             const partnerLink = links.value.find(l => l.type === 'spouse' && (l.source === userMember.id || l.target === userMember.id))
-             if (partnerLink) {
-                 const partnerId = partnerLink.source === userMember.id ? partnerLink.target : partnerLink.source
-                 const partnerNode = root.descendants().find(d => d.data.id === partnerId)
-                 if (partnerNode) {
-                     userX = partnerNode.x + 160 // Offset for spouse
-                     userY = partnerNode.y
-                     userNode = true // Marker found
-                 }
-             }
-          }
-      }
-      
-      if (userNode) {
-         // Focus animation
+      if (userCoords.found) {
+         // Focus with a slight zoom
          const scale = 1.2
          svg.transition().duration(1500).call(
              zoom.transform, 
-             d3.zoomIdentity.translate(width/2 - userX*scale, height/2 - userY*scale).scale(scale)
+             d3.zoomIdentity.translate(width/2 - userCoords.x*scale, height/2 - userCoords.y*scale).scale(scale)
          )
       } else {
-         // Default Center Top
+         // Default view
          svg.transition().duration(750).call(
              zoom.transform, 
-             d3.zoomIdentity.translate(width/2, 50).scale(0.8)
+             d3.zoomIdentity.translate(width/2, 50).scale(0.5)
          )
       }
    }

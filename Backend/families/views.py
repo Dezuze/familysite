@@ -19,42 +19,57 @@ class UserProfileView(APIView):
         return Response({"error": "Profile not linked"}, status=404)
 
     def post(self, request):
-        data = request.data
-        user = request.user
-        
-        # Check if member exists
-        member = FamilyMember.objects.filter(user=user).first()
-        
-        if not member:
-             # Create new member if not exists
-             # Create new member if not exists
-             name = data.get('name', user.username)
-             member = FamilyMember.objects.create(
-                 user=user,
-                 name=name,
-                 date_of_birth=data.get('date_of_birth', '2000-01-01'),
-                 blood_group='U', # Default (fits in max_length=5)
-                 education='',
-                 occupation=''
-             )
+        try:
+            data = request.data
+            user = request.user
+            
+            # Check if member exists
+            member = FamilyMember.objects.filter(user=user).first()
+            
+            if not member:
+                 # Create new member if not exists - needs a family
+                 family = Family.objects.first()
+                 if not family:
+                     return Response({"error": "No families found in database. Contact admin."}, status=400)
+                     
+                 member = FamilyMember.objects.create(
+                     user=user,
+                     family=family,
+                     name=f"{data.get('first_name', '')} {data.get('last_name', '')}".strip() or user.username,
+                     age=30,
+                     date_of_birth=data.get('date_of_birth', '1994-01-01'),
+                     blood_group='O+',
+                     relation='Member'
+                 )
 
-        # Update fields
-        if 'name' in data: member.name = data['name']
-        
-        if 'date_of_birth' in data: member.date_of_birth = data['date_of_birth']
-        if 'education' in data: member.education = data['education']
-        if 'occupation' in data: member.occupation = data['occupation']
-        if 'place_of_work' in data: member.place_of_work = data['place_of_work']
-        if 'blood_group' in data: member.blood_group = data['blood_group']
-        if 'address' in data: member.address_if_different = data['address']
-        
-        # Update Profile Pic
-        if 'profile_pic' in request.FILES:
-            member.photo = request.FILES['profile_pic']
-        
-        member.save()
-        
-        return Response(FamilyMemberSerializer(member).data)
+            # Update Name from split fields if provided
+            if 'first_name' in data or 'last_name' in data:
+                f_name = data.get('first_name', '')
+                l_name = data.get('last_name', '')
+                member.name = f"{f_name} {l_name}".strip()
+            elif 'name' in data:
+                member.name = data['name']
+            
+            if 'date_of_birth' in data: member.date_of_birth = data['date_of_birth']
+            if 'education' in data: member.education = data['education']
+            if 'occupation' in data: member.occupation = data['occupation']
+            if 'place_of_work' in data: member.place_of_work = data['place_of_work']
+            if 'blood_group' in data: member.blood_group = data['blood_group']
+            if 'address' in data: member.address_if_different = data['address']
+            
+            # Additional fields sent by frontend
+            # Note: You might want to add these to the model if they are missing
+            # For now we'll handle what exists and ignore the rest safely
+            
+            # Update Profile Pic
+            if 'profile_pic' in request.FILES:
+                member.photo = request.FILES['profile_pic']
+            
+            member.save()
+            
+            return Response(FamilyMemberSerializer(member).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 
 class FamilyTreeView(APIView):
@@ -67,46 +82,29 @@ class FamilyTreeView(APIView):
         links = []
         
         for m in members:
-            # Calculate Age using property
-            age = m.age
-
-            user_acc = getattr(m, 'user_account', None)
-            
-            # Combine name
             # Combine name
             full_name = m.name
-            spouse_name = None
-            if m.spouse:
-                spouse_name = m.spouse.name
 
             nodes.append({
                 "id": m.id,
                 "name": full_name,
                 "photo": m.photo.url if m.photo else None,
                 "role": "Member",
-                "username": user_acc.username if user_acc else None,
-                "age": age,
+                "username": m.user.username if m.user else None,
+                "age": m.age,
                 "occupation": m.occupation,
                 "date_of_birth": m.date_of_birth,
                 "blood_group": m.blood_group,
                 "education": m.education,
                 "location": m.address_if_different,
                 "place_of_work": m.place_of_work,
-                "spouse": spouse_name,
-                "parents": [{"name": p.name, "age": 0} for p in m.parents.all()],
+                "parents": [{"name": p.name, "age": p.age} for p in m.parents.all()],
                 "children": [{"name": c.name, "age": c.age} for c in m.children.all()],
-                "is_committee": user_acc.committee_entries.exists() if user_acc else False,
-                "committee_role": user_acc.committee_entries.first().role if (user_acc and user_acc.committee_entries.exists()) else None
             })
             
-            # Spouse link
-            if m.spouse:
-                if m.id < m.spouse.id:
-                    links.append({"source": m.id, "target": m.spouse.id, "type": "spouse"})
-
-            # Parent child link (Tree)
-            if m.parent:
-                 links.append({"source": m.parent.id, "target": m.id, "type": "parent"})
+            # Parent-child links (Tree) using ManyToMany
+            for p in m.parents.all():
+                 links.append({"source": p.id, "target": m.id, "type": "parent"})
 
         return Response({"nodes": nodes, "links": links})
 

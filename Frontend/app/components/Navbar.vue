@@ -59,7 +59,7 @@ onUnmounted(() => {
 <template>
   <!-- NAVBAR -->
   <nav 
-    class="fixed top-0 left-0 right-0 w-full lg:w-190 z-20 bg-transparent transition-transform duration-300 ease-in-out"
+    class="fixed top-0 left-0 right-0 w-full lg:w-190 z-50 bg-transparent transition-transform duration-300 ease-in-out"
     :class="[ showNavbar ? 'translate-y-0' : '-translate-y-full' ]"
   >
       <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15">
@@ -97,7 +97,10 @@ onUnmounted(() => {
             class="flex items-center gap-3 text-base font-semibold text-slate-800 pr-6 py-1 rounded transition"
           >
             <template v-if="auth.isAuthenticated">
-              <span class="h-8 w-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold">{{ initials }}</span>
+              <div v-if="auth.user?.profile_pic" class="h-8 w-8 rounded-full border border-slate-200 overflow-hidden">
+                <img :src="auth.user.profile_pic.startsWith('http') ? auth.user.profile_pic : `${useRuntimeConfig().public.apiBase || 'http://localhost:8000'}${auth.user.profile_pic}`" class="w-full h-full object-cover" />
+              </div>
+              <span v-else class="h-8 w-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold">{{ initials }}</span>
             </template>
             <template v-else>
                <svg class="w-8 h-8 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>

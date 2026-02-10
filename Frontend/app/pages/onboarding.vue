@@ -326,9 +326,20 @@ const cancelCrop = () => {
     tempImage.value = null
 }
 
+// Helper to get cookies for CSRF
+function getCookie(name) {
+    if (typeof document === 'undefined') return null
+    const matches = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'))
+    return matches ? matches[2] : null
+}
+
 const saveProfile = async () => {
     loading.value = true
     try {
+        // Fetch CSRF token first
+        await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
+        const csrftoken = getCookie('csrftoken')
+
         const formData = new FormData()
         // Append all fields
         Object.keys(form.value).forEach(key => {
@@ -343,6 +354,9 @@ const saveProfile = async () => {
 
         const res = await fetch(`${apiBase}/api/families/profile/`, {
             method: 'POST',
+            headers: {
+                ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+            },
             body: formData,
             credentials: 'include'
         })
@@ -351,17 +365,20 @@ const saveProfile = async () => {
             const updated = await res.json()
             // Update local auth store with new basics
             auth.updateProfile({ 
-                first_name: updated.first_name,
-                last_name: updated.last_name,
-                name: `${updated.first_name} ${updated.last_name}`,
+                first_name: updated.first_name || '',
+                last_name: updated.last_name || '',
+                name: updated.name || `${updated.first_name} ${updated.last_name}`,
+                profile_pic: updated.profile_pic
             })
             router.push('/familytree')
         } else {
-            alert('Failed to save profile. Please try again.')
+            const errData = await res.json().catch(() => ({}))
+            console.error("Save failed:", errData)
+            alert(`Failed to save profile: ${errData.error || 'Please try again.'}`)
         }
     } catch (e) {
         console.error(e)
-        alert('Error saving profile')
+        alert('Error saving profile: ' + e.message)
     } finally {
         loading.value = false
     }

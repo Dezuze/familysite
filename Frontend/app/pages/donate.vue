@@ -13,7 +13,7 @@
       
       <p class="text-lg text-slate-600 leading-relaxed mb-8 font-medium">
         We are currently setting up our secure donation system. <br>
-        Please check back soon to support the Kollaparambil Family Association.
+        Please check back soon to support the Kollamparambil Family Association.
       </p>
 
       <NuxtLink to="/" class="inline-flex items-center gap-2 px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow-lg hover:brightness-110 transition-all active:scale-95">

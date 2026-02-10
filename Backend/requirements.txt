@@ -8,3 +8,4 @@ Faker
 django-cors-headers
 python-dotenv
 gunicorn
+django-unfold

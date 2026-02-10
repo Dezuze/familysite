@@ -80,7 +80,7 @@ import { useHead, useRuntimeConfig } from '#imports'
 import type { FamilyMember } from '~/types/family'
 
 useHead({
-  title: 'Committee - Kollaparambil Family'
+  title: 'Committee - Kollamparambil Family'
 })
 
 // Types
