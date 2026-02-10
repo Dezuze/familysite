@@ -1,12 +1,11 @@
 <template>
-  <div class="min-h-screen bg-black/80 font-sans text-slate-800 overflow-x-hidden">
+  <div class="min-h-screen bg-slate-100 font-sans text-slate-800 overflow-x-hidden">
     <!-- Hero Section -->
     <div class="relative w-full h-[110vh] overflow-hidden">
       <!-- Background Image -->
       <img src="/images/family.jpg" alt="Family Gathering" class="absolute inset-0 w-full h-full object-cover" />
       
-      <!-- Gradient Overlay (Dark Fade to Slate-100) -->
-      <div class="absolute inset-0 bg-linear-to-b from-black/30 to-black/80"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-black/30 via-black/60 to-slate-100"></div>
 
       <!-- Hero Content -->
       <div class="absolute top-0 left-0 w-full h-screen flex flex-col items-center md:items-start justify-end px-4 pb-40 md:px-24 md:pb-24">
@@ -33,7 +32,7 @@
     <!-- Navigation Buttons (Intersection Layout) -->
     <!-- Negative margin to pull it up over the hero image -->
     <!-- Navigation Buttons (Intersection Layout) -->
-    <div class="relative z-20 -mt-20 px-4 md:px-12 pb-12">
+    <div class="relative z-20 -mt-12 px-4 md:px-12 pb-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-6xl mx-auto">
             
             <!-- Button 1: Family Directory (Restricted) -->
@@ -42,7 +41,7 @@
                 class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-amber-600 transition-colors">Family<br>Directory</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-[#A08050] transition-colors">Family<br>Directory</h3>
                 </div>
             </div>
 
@@ -59,7 +58,7 @@
                 class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-amber-600 transition-colors">Annual<br>Kudumbayogam</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-[#A08050] transition-colors">Annual<br>Kudumbayogam</h3>
                 </div>
             </div>
 
@@ -76,7 +75,7 @@
                 <button 
                   v-if="auth.isAuthenticated"
                   @click="isAddModalOpen = true"
-                  class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 shadow-md"
+                  class="bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 shadow-md"
                 >
                   <span class="text-xl">+</span> Add News
                 </button>
@@ -94,7 +93,7 @@
                 >
                     <div class="relative h-36 overflow-hidden">
                         <img :src="resolveImage(item.image) || 'https://placehold.co/600x400/f1f5f9/64748b?text=News'" :alt="item.title" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow">
+                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-[#A08050] text-white text-xs font-bold px-2 py-0.5 rounded shadow">
                             EVENT
                         </div>
                     </div>
@@ -181,27 +180,6 @@
         @refresh="refreshNews"
     />
 
-    <!-- Footer -->
-    <footer class="bg-slate-200 text-slate-600 py-16 px-6 border-t border-slate-300">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-10">
-            <!-- Logo Section -->
-            <div class="flex flex-col items-center md:items-start">
-                <img src="/images/logo.png" alt="Family Logo" class="w-48 mb-6 opacity-80 mix-blend-multiply hover:opacity-100 transition-all" />
-            </div>
-
-            <!-- Links -->
-            <div class="grid grid-cols-2 gap-x-12 gap-y-4 font-semibold text-lg">
-                <NuxtLink v-if="auth.isAuthenticated" to="/familytree" class="hover:text-amber-600 hover:underline">Family Tree</NuxtLink>
-                <NuxtLink to="/history" class="hover:text-amber-600 hover:underline">Family History</NuxtLink>
-                <NuxtLink to="/events" class="hover:text-amber-600 hover:underline">Events</NuxtLink>
-                <NuxtLink v-if="auth.isAuthenticated" to="/committee" class="hover:text-amber-600 hover:underline">Commitee Member</NuxtLink>
-                <NuxtLink v-if="auth.isAuthenticated" to="/directory" class="hover:text-amber-600 hover:underline">Directory</NuxtLink>
-                <NuxtLink v-if="auth.isAuthenticated" to="/gallery" class="hover:text-amber-600 hover:underline">Gallery</NuxtLink>
-                <NuxtLink to="/donate" class="hover:text-amber-600 hover:underline">Donations</NuxtLink>
-                <NuxtLink to="/contact" class="hover:text-amber-600 hover:underline">Contact</NuxtLink>
-            </div>
-        </div>
-    </footer>
   </div>
 </template>
 

@@ -24,9 +24,7 @@ class AccountsTests(TestCase):
             username="johndoe",
             email="john@example.com",
             password="ComplexPass123!",
-            member=self.member,
-            first_name="John",
-            last_name="Doe"
+            member=self.member
         )
 
     def test_user_creation(self):
@@ -34,14 +32,16 @@ class AccountsTests(TestCase):
         self.assertEqual(self.user.member, self.member)
 
     def test_login_success(self):
-        url = '/auth/login/'
+        url = '/api/auth/login/'
         data = {"identifier": "johndoe", "password": "ComplexPass123!"}
         response = self.client.post(url, data, format='json')
+        if response.status_code != 200:
+            print("Login success test failed with status", response.status_code, "and data:", response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['username'], "johndoe")
 
     def test_login_fail(self):
-        url = '/auth/login/'
+        url = '/api/auth/login/'
         data = {"identifier": "johndoe", "password": "wrongpassword123!"}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 400)

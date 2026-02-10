@@ -14,7 +14,7 @@
         <div class="w-full md:w-1/3 bg-slate-50 p-8 flex flex-col items-center justify-center border-r border-slate-100 relative">
              <div class="w-48 h-48 rounded-full border-4 border-white overflow-hidden shadow-xl mb-6 ring-1 ring-slate-200">
                <img 
-                 :src="member.photo || `https://ui-avatars.com/api/?name=${member.name}&background=cbd5e1&color=fff`" 
+                 :src="resolveImage(member.photo) || `https://ui-avatars.com/api/?name=${member.name}&background=cbd5e1&color=fff`" 
                  class="w-full h-full object-cover"
                />
              </div>
@@ -36,7 +36,7 @@
             <!-- Header & Close -->
             <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h3 class="text-lg font-bold text-amber-600 uppercase tracking-widest">{{ member.committee_role || member.role || member.relation || 'Member' }}</h3>
+                    <h3 class="text-lg font-bold text-[#A08050] uppercase tracking-widest">{{ member.committee_role || member.role || member.relation || 'Member' }}</h3>
                     <p class="text-xs text-slate-500">Profile Details</p>
                 </div>
                 <button @click="$emit('close')" class="hidden md:block p-2 text-slate-400 hover:text-slate-800 transition-colors">
@@ -130,10 +130,20 @@
 </template>
 
 <script setup>
+import { useRuntimeConfig } from '#imports'
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || 'http://localhost:8000'
+
 defineProps({
   member: Object
 })
 defineEmits(['close'])
+
+const resolveImage = (path) => {
+    if (!path) return null
+    if (path.startsWith('http')) return path
+    return `${apiBase}${path}`
+}
 </script>
 
 <style scoped>

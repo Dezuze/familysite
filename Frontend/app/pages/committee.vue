@@ -5,9 +5,9 @@
       <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Committee Members</h1>
-        <div class="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
+        <div class="h-1 w-24 bg-[#A08050] mx-auto rounded-full"></div>
         <div class="mt-6 flex justify-center">
-            <span class="bg-white text-amber-600 px-6 py-2 rounded-full border border-slate-200 font-bold tracking-widest text-sm uppercase shadow-md backdrop-blur-sm">
+            <span class="bg-white text-[#A08050] px-6 py-2 rounded-full border border-slate-200 font-bold tracking-widest text-sm uppercase shadow-md backdrop-blur-sm">
                 Term 2025 - 2027
             </span>
         </div>

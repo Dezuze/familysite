@@ -15,14 +15,21 @@ class Command(BaseCommand):
         
         self.stdout.write("Purging existing data...")
         # Order of deletion to avoid FK issues
-        User.objects.filter(is_superuser=False).delete()
+        User.objects.filter(is_superuser=False).exclude(username__in=['normal_user', 'admin_wesly']).delete()
         DeceasedMember.objects.all().delete()
+        # Clear member links from preserved users first
+        User.objects.filter(username__in=['normal_user', 'admin_wesly']).update(member=None)
+        
         FamilyHead.objects.all().delete()
         FamilyMember.objects.all().delete()
         Family.objects.all().delete()
         Post.objects.all().delete()
 
         self.stdout.write("Generating realistic Indian family data...")
+        
+        # Get preserved users
+        normal_user = User.objects.filter(username='normal_user').first()
+        admin_wesly = User.objects.filter(username='admin_wesly').first()
 
         family_branches = ["Vadakara", "Thalassery", "Kottayam", "Pala", "Kakkanad", "Edappally"]
         occupations = ["Software Engineer", "Retired Teacher", "Nurse", "Farmer", "Business Owner", "Doctor", "Banker", "Student"]
@@ -55,6 +62,11 @@ class Command(BaseCommand):
                     occupation=random.choice(occupations),
                     blood_group=random.choice(['A+', 'B+', 'O+', 'AB+']),
                 )
+                
+                # Link admin_wesly to the first head
+                if i == 1 and admin_wesly:
+                    admin_wesly.member = head_member
+                    admin_wesly.save()
 
                 FamilyHead.objects.create(
                     family=fam,
@@ -84,6 +96,11 @@ class Command(BaseCommand):
                         occupation="Homemaker" if random.random() > 0.4 else random.choice(occupations),
                         blood_group=random.choice(['A+', 'B+', 'O+', 'AB+']),
                     )
+                    
+                    # Link normal_user to the first spouse
+                    if i == 1 and normal_user:
+                        normal_user.member = spouse
+                        normal_user.save()
 
                 # 3. Children (Nuclear, Step-children, etc.)
                 num_children = random.randint(1, 4)
@@ -139,4 +156,4 @@ class Command(BaseCommand):
                 location=random.choice(family_branches)
             )
 
-        self.stdout.write(self.style.SUCCESS("Successfully seeded 10 realistic Indian families with complex relations!"))
+        self.stdout.write(self.style.SUCCESS("Successfully seeded 10 realistic Indian families with complex relations and linked users!"))

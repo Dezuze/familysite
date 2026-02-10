@@ -10,7 +10,9 @@ class User(AbstractUser):
     member = models.OneToOneField(
         'families.FamilyMember', 
         on_delete=models.CASCADE, 
-        related_name='user_account'
+        related_name='user_account',
+        null=True,
+        blank=True
     )
     
     role = models.CharField(max_length=20, default='member') # 'admin', 'member'

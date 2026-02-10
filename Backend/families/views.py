@@ -81,16 +81,20 @@ class FamilyTreeView(APIView):
         nodes = []
         links = []
         
+        processed_spouses = set()
         for m in members:
-            # Combine name
-            full_name = m.name
+            # Username for centering focus
+            username = None
+            if hasattr(m, 'user_account'):
+                username = m.user_account.username
 
             nodes.append({
                 "id": m.id,
-                "name": full_name,
+                "name": m.name,
                 "photo": m.photo.url if m.photo else None,
                 "role": "Member",
-                "username": m.user.username if m.user else None,
+                "username": username,
+                "gender": "M" if "Son" in (m.relation or "") or "Head" in (m.relation or "") and "Widow" not in (m.relation or "") else "F",
                 "age": m.age,
                 "occupation": m.occupation,
                 "date_of_birth": m.date_of_birth,
@@ -98,13 +102,22 @@ class FamilyTreeView(APIView):
                 "education": m.education,
                 "location": m.address_if_different,
                 "place_of_work": m.place_of_work,
-                "parents": [{"name": p.name, "age": p.age} for p in m.parents.all()],
-                "children": [{"name": c.name, "age": c.age} for c in m.children.all()],
             })
             
-            # Parent-child links (Tree) using ManyToMany
+            # Parent-child links
             for p in m.parents.all():
                  links.append({"source": p.id, "target": m.id, "type": "parent"})
+
+            # Spouse Detection: Share the same children
+            children_ids = set(m.children.values_list('id', flat=True))
+            if children_ids:
+                # Find other parents of these children
+                other_parents = FamilyMember.objects.filter(children__id__in=children_ids).exclude(id=m.id).distinct()
+                for op in other_parents:
+                    spouse_pair = tuple(sorted([m.id, op.id]))
+                    if spouse_pair not in processed_spouses:
+                        links.append({"source": m.id, "target": op.id, "type": "spouse"})
+                        processed_spouses.add(spouse_pair)
 
         return Response({"nodes": nodes, "links": links})
 

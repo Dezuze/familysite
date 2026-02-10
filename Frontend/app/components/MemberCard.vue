@@ -1,7 +1,7 @@
 <template>
   <div :class="cardClass" class="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4 border border-slate-200 hover:shadow-md transition">
     <div class="shrink-0">
-      <img v-if="member.photo" :src="member.photo" alt="photo" class="w-16 h-16 rounded-full object-cover ring-1 ring-slate-100" />
+      <img v-if="member.photo" :src="resolveImage(member.photo)" alt="photo" class="w-16 h-16 rounded-full object-cover ring-1 ring-slate-100 shadow-sm" />
       <div v-else class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-lg font-semibold text-slate-500">
         {{ initials }}
       </div>
@@ -13,7 +13,7 @@
         <span class="text-xs text-slate-400">#{{ member.id }}</span>
       </div>
       <p class="text-xs text-slate-500 truncate">
-        <span v-if="member.role" class="text-amber-600 font-bold mr-1">{{ member.role }}</span>
+        <span v-if="member.role" class="text-[#A08050] font-bold mr-1">{{ member.role }}</span>
         <span v-else-if="member.relation">{{ member.relation }}</span>
         <span v-if="member.age" class="ml-1">• {{ member.age }}y</span>
       </p>
@@ -24,8 +24,17 @@
 <script setup lang="ts">
 import type { FamilyMember } from '~/types/family'
 import { computed } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 const props = defineProps<{ member: FamilyMember; variant?: 'default' | 'compact' | 'list' }>()
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || 'http://localhost:8000'
+
+const resolveImage = (path: string | undefined | null) => {
+    if (!path) return undefined
+    if (path.startsWith('http')) return path
+    return `${apiBase}${path}`
+}
 
 const initials = computed(() => {
   const n = props.member?.name ?? ''

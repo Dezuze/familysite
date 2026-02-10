@@ -140,7 +140,7 @@
                             Next Step
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
-                        <button v-else type="submit" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button v-else type="submit" :disabled="loading" class="bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-[#A08050]/30 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                             {{ loading ? 'Saving Changes...' : 'Save Profile' }}
                         </button>
                     </div>

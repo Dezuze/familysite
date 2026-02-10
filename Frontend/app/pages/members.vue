@@ -5,7 +5,7 @@
       <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Family Directory</h1>
-        <div class="h-1 w-24 bg-amber-500 mx-auto rounded-full"></div>
+        <div class="h-1 w-24 bg-[#A08050] mx-auto rounded-full"></div>
       </div>
 
       <!-- Controls -->

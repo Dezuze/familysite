@@ -72,7 +72,7 @@ onUnmounted(() => {
               v-for="link in visibleLinks"
               :key="link.to"
               :to="link.to"
-              class="py-2 rounded-md text-sm font-bold text-slate-800 hover:bg-amber-50 hover:text-amber-600 hover:shadow-md transition"
+              class="py-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-[#A08050] hover:shadow-sm transition"
             >
               {{ link.name }}
             </NuxtLink>
@@ -100,7 +100,7 @@ onUnmounted(() => {
               <div v-if="auth.user?.profile_pic" class="h-8 w-8 rounded-full border border-slate-200 overflow-hidden">
                 <img :src="auth.user.profile_pic.startsWith('http') ? auth.user.profile_pic : `${useRuntimeConfig().public.apiBase || 'http://localhost:8000'}${auth.user.profile_pic}`" class="w-full h-full object-cover" />
               </div>
-              <span v-else class="h-8 w-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold">{{ initials }}</span>
+              <span v-else class="h-8 w-8 rounded-full bg-[#A08050] text-white flex items-center justify-center font-bold">{{ initials }}</span>
             </template>
             <template v-else>
                <svg class="w-8 h-8 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>

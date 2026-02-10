@@ -62,8 +62,8 @@
                class="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-amber-500/50 transition-all cursor-pointer group hover:-translate-y-1 shadow-md hover:shadow-xl"
             >
                <div class="h-24 bg-linear-to-r from-slate-200 to-slate-300 relative">
-                   <div class="absolute -bottom-8 left-4 w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-slate-100">
-                     <img :src="member.photo || `https://ui-avatars.com/api/?name=${member.name}&background=random`" class="w-full h-full object-cover">
+                   <div class="absolute -bottom-8 left-4 w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-slate-100 shadow-md">
+                     <img :src="resolveImage(member.photo) || `https://ui-avatars.com/api/?name=${member.name}&background=random`" class="w-full h-full object-cover">
                    </div>
                </div>
                <div class="pt-10 px-4 pb-4">
@@ -109,6 +109,12 @@ const chartContainer = ref(null)
 const nodes = ref([])
 const links = ref([])
 const selectedMember = ref(null)
+
+const resolveImage = (path) => {
+    if (!path) return null
+    if (path.startsWith('http')) return path
+    return `${apiBase}${path}`
+}
 
 const searchQuery = ref('')
 const searchResults = ref([])
@@ -206,6 +212,18 @@ const openMember = (m) => { selectedMember.value = m }
       // 1. Identify all components (Forest)
       const hasParent = new Set(links.value.filter(l => l.type === 'parent').map(l => l.target))
       const potentialRoots = nodes.value.filter(n => !hasParent.has(n.id))
+      const roots = potentialRoots.filter((r, idx) => {
+          // If this root has a spouse who is also in potentialRoots and appeared earlier, skip it.
+          const spouseLink = links.value.find(l => (l.source === r.id || l.target === r.id) && l.type === 'spouse')
+          if (spouseLink) {
+              const spouseId = spouseLink.source === r.id ? spouseLink.target : spouseLink.source
+              const spouseObj = potentialRoots.find(pr => pr.id === spouseId)
+              if (spouseObj && potentialRoots.indexOf(spouseObj) < idx) {
+                  return false
+              }
+          }
+          return true
+      })
       
       const getChildrenIds = (parentId) => {
          return links.value
@@ -319,7 +337,7 @@ const openMember = (m) => { selectedMember.value = m }
 
           group.append("circle").attr("cx", 0).attr("cy", -cardHeight/4).attr("r", 35).attr("fill", "#f1f5f9").attr("stroke", "#fff").attr("stroke-width", 2)
           group.append("image")
-            .attr("xlink:href", d.photo || `https://ui-avatars.com/api/?name=${d.name}&background=f1f5f9&color=64748b`)
+            .attr("xlink:href", resolveImage(d.photo) || `https://ui-avatars.com/api/?name=${d.name}&background=f1f5f9&color=64748b`)
             .attr("x", -35).attr("y", -cardHeight/4 - 35).attr("width", 70).attr("height", 70)
             .attr("clip-path", `circle(35px at 0px ${-cardHeight/4}px)`)
             .style("pointer-events", "none")
@@ -343,23 +361,34 @@ const openMember = (m) => { selectedMember.value = m }
       
       // FOCUS ON USER
       let userCoords = {x: 0, y: 0, found: false}
+      console.log("Current user to focus:", auth.user?.username)
+      
       forestGroups.forEach((root, i) => {
           if (userCoords.found) return
           
           root.descendants().forEach(d => {
               if (userCoords.found) return
               
+              const nodeUsername = d.data.username
+              if (nodeUsername) console.log("Checking node:", d.data.name, "username:", nodeUsername)
+              
               // Check the primary node (bloodline)
-              if (d.data.username === auth.user?.username) {
+              if (nodeUsername === auth.user?.username) {
                   userCoords = { x: (i * 1200) + width/2 + d.x, y: 100 + d.y, found: true }
+                  console.log("Found user (primary):", d.data.name, userCoords)
                   return
               }
               
               // Check the spouse (rendered side-by-side)
               const spouse = getSpouse(d.data.id)
-              if (spouse && spouse.username === auth.user?.username) {
-                  const spouseOffsetX = 180
-                  userCoords = { x: (i * 1200) + width/2 + d.x + spouseOffsetX, y: 100 + d.y, found: true }
+              if (spouse) {
+                  const spouseUsername = spouse.username
+                  if (spouseUsername) console.log("Checking spouse of", d.data.name, ":", spouse.name, "username:", spouseUsername)
+                  if (spouseUsername === auth.user?.username) {
+                      const spouseOffsetX = 180
+                      userCoords = { x: (i * 1200) + width/2 + d.x + spouseOffsetX, y: 100 + d.y, found: true }
+                      console.log("Found user (spouse):", spouse.name, userCoords)
+                  }
               }
           })
       })

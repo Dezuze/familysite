@@ -14,7 +14,7 @@
       <button 
         v-if="auth.isAuthenticated"
         @click="isAddModalOpen = true"
-        class="absolute right-0 top-0 hidden md:flex bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95 items-center gap-2"
+        class="absolute right-0 top-0 hidden md:flex bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95 items-center gap-2"
       >
         <span class="text-xl">+</span> Add Event
       </button>
@@ -23,7 +23,7 @@
       <button 
         v-if="auth.isAuthenticated"
         @click="isAddModalOpen = true"
-        class="md:hidden mt-6 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md items-center gap-2 inline-flex"
+        class="md:hidden mt-6 bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md items-center gap-2 inline-flex"
       >
         <span class="text-xl">+</span> Add Event
       </button>

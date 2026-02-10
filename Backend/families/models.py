@@ -38,8 +38,7 @@ class FamilyHead(models.Model):
 class FamilyMember(models.Model):
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name="members")
 
-    # optional link to accounts.User if the person has an account
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    # link to accounts.User handled by User.member (OneToOneField)
     # temporary id for unregistered persons
     temp_member_id = models.CharField(max_length=50, blank=True, null=True)
 
