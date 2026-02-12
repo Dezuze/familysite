@@ -52,33 +52,47 @@
        <svg ref="svgRef" class="w-full h-full"></svg>
     </div>
 
-    <!-- Grid View -->
+     <!-- Grid View -->
      <div v-if="viewMode === 'grid'" class="max-w-7xl mx-auto px-4 pt-10 pb-20 overflow-y-auto h-[calc(100vh-100px)]">
          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div 
-               v-for="member in sortedMembers" 
-               :key="member.id"
-               @click="openMember(member)"
-               class="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-amber-500/50 transition-all cursor-pointer group hover:-translate-y-1 shadow-md hover:shadow-xl"
-            >
-               <div class="h-24 bg-linear-to-r from-slate-200 to-slate-300 relative">
-                   <div class="absolute -bottom-8 left-4 w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-slate-100 shadow-md">
-                     <img :src="resolveImage(member.photo) || `https://ui-avatars.com/api/?name=${member.name}&background=random`" class="w-full h-full object-cover">
-                   </div>
+            <!-- Skeleton Grid -->
+            <template v-if="loading">
+               <div v-for="n in 8" :key="n" class="bg-white rounded-xl h-48 animate-pulse border border-slate-200">
+                  <div class="h-24 bg-slate-200"></div>
+                  <div class="p-4 space-y-2">
+                     <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                     <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+                  </div>
                </div>
-               <div class="pt-10 px-4 pb-4">
-                  <h3 class="font-bold text-slate-800 truncate">{{ member.name }}</h3>
-                   <div class="flex justify-between items-center">
-                     <p class="text-xs text-amber-600 uppercase tracking-wide">{{ member.relation }}</p>
-                     <span v-if="member.is_committee" class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Committee</span>
-                   </div>
-                   <div class="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                      <span>{{ member.age }} Years</span>
-                      <span>•</span>
-                      <span>{{ member.occupation || 'N/A' }}</span>
-                   </div>
+            </template>
+
+            <!-- Real Cards -->
+            <template v-else>
+               <div 
+                  v-for="member in sortedMembers" 
+                  :key="member.id"
+                  @click="openMember(member)"
+                  class="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-amber-500/50 transition-all cursor-pointer group hover:-translate-y-1 shadow-md hover:shadow-xl"
+               >
+                  <div class="h-24 bg-linear-to-r from-slate-200 to-slate-300 relative">
+                      <div class="absolute -bottom-8 left-4 w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-slate-100 shadow-md">
+                        <img :src="resolveImage(member.photo) || `https://ui-avatars.com/api/?name=${member.name}&background=random`" class="w-full h-full object-cover">
+                      </div>
+                  </div>
+                  <div class="pt-10 px-4 pb-4">
+                     <h3 class="font-bold text-slate-800 truncate">{{ member.name }}</h3>
+                      <div class="flex justify-between items-center">
+                        <p class="text-xs text-amber-600 uppercase tracking-wide">{{ member.role || member.relation }}</p>
+                        <span v-if="member.is_committee" class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Committee</span>
+                      </div>
+                      <div class="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                         <span>{{ member.age }} Years</span>
+                         <span>•</span>
+                         <span>{{ member.occupation || 'N/A' }}</span>
+                      </div>
+                  </div>
                </div>
-            </div>
+            </template>
          </div>
      </div>
 

@@ -32,75 +32,86 @@
     <!-- Events Grid -->
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
       
-      <!-- Event Card -->
-      <div 
-        v-for="event in events" 
-        :key="event.id" 
-        @click="openDetails(event)"
-        class="group relative flex flex-col bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl border border-slate-200 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-      >
-        <!-- Image & Date -->
-        <div class="relative aspect-4/3 overflow-hidden">
-          <img 
-            :src="resolveImage(event.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Event'" 
-            :alt="event.title" 
-            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-          />
-          <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-60"></div>
-          
-          <!-- Floating Date Badge -->
-          <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md border border-slate-200 rounded-lg p-3 text-center min-w-[70px] shadow-lg">
-            <span class="block text-xs font-bold uppercase tracking-wider text-amber-600 mb-0.5">{{ getMonth(event.event_date) }}</span>
-            <span class="block text-2xl font-serif font-bold text-slate-900 leading-none">{{ getDay(event.event_date) }}</span>
+      <!-- Skeleton Cards -->
+      <template v-if="loading">
+        <div v-for="n in 6" :key="n" class="bg-white h-[450px] rounded-xl overflow-hidden shadow-sm border border-slate-200 animate-pulse">
+           <div class="h-1/2 bg-slate-200"></div>
+           <div class="p-6 space-y-4">
+              <div class="h-6 bg-slate-200 rounded w-3/4"></div>
+              <div class="h-4 bg-slate-200 rounded w-full"></div>
+              <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+           </div>
+        </div>
+      </template>
+
+      <!-- Real Event Cards -->
+      <template v-else-if="events.length > 0">
+        <div 
+          v-for="event in events" 
+          :key="event.id" 
+          @click="openDetails(event)"
+          class="group relative flex flex-col bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl border border-slate-200 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+        >
+          <!-- Image & Date -->
+          <div class="relative aspect-4/3 overflow-hidden">
+            <img 
+              :src="resolveImage(event.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Event'" 
+              :alt="event.title" 
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+            />
+            <div class="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-60"></div>
+            
+            <!-- Floating Date Badge -->
+            <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md border border-slate-200 rounded-lg p-3 text-center min-w-[70px] shadow-lg">
+              <span class="block text-xs font-bold uppercase tracking-wider text-amber-600 mb-0.5">{{ getMonth(event.event_date) }}</span>
+              <span class="block text-2xl font-serif font-bold text-slate-900 leading-none">{{ getDay(event.event_date) }}</span>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 p-6 flex flex-col relative">
+            <!-- Meta Info -->
+            <div class="flex items-center gap-4 text-xs font-medium text-amber-600 mb-3 tracking-wide uppercase">
+              <div v-if="event.location" class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                {{ event.location }}
+              </div>
+              <div class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {{ getTime(event.event_date) }}
+              </div>
+            </div>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-3 group-hover:text-amber-700 transition-colors">
+              {{ event.title }}
+            </h2>
+            
+            <p class="text-slate-600 text-sm leading-relaxed mb-6 line-clamp-3 font-medium">
+              {{ event.description }}
+            </p>
+
+            <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+              <button class="text-sm font-semibold text-slate-700 group-hover:text-amber-600 transition-colors flex items-center gap-2">
+                  View Details
+                  <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              </button>
+              <button @click.stop="addToCalendar(event)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full text-slate-600 transition-colors border border-slate-200">
+                  Add to Calendar
+              </button>
+            </div>
           </div>
         </div>
+      </template>
 
-        <!-- Content -->
-        <div class="flex-1 p-6 flex flex-col relative">
-          <!-- Meta Info -->
-          <div class="flex items-center gap-4 text-xs font-medium text-amber-600 mb-3 tracking-wide uppercase">
-            <div v-if="event.location" class="flex items-center gap-1.5">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-              {{ event.location }}
-            </div>
-            <div class="flex items-center gap-1.5">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              {{ getTime(event.event_date) }}
-            </div>
-          </div>
-
-          <h2 class="text-2xl font-serif font-medium text-slate-800 mb-3 group-hover:text-amber-600 transition-colors">
-            {{ event.title }}
-          </h2>
-          
-          <p class="text-slate-500 text-sm leading-relaxed mb-6 line-clamp-3">
-            {{ event.description }}
-          </p>
-
-          <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-             <button class="text-sm font-semibold text-slate-700 group-hover:text-amber-600 transition-colors flex items-center gap-2">
-                View Details
-                <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-             </button>
-             <button @click.stop="addToCalendar(event)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full text-slate-600 transition-colors border border-slate-200">
-                Add to Calendar
-             </button>
-          </div>
+      <!-- Empty State inside Grid -->
+      <template v-else>
+        <div class="col-span-full max-w-md mx-auto mt-2 text-center p-10 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <h3 class="text-xl font-serif text-slate-800 mb-2">No Upcoming Events</h3>
+          <p class="text-slate-500 text-sm">We are currently planning our next gathering. Check back soon.</p>
         </div>
-      </div>
+      </template>
 
-    </div>
-
-    <!-- Empty State -->
-    <div v-if="events.length === 0 && !loading" class="max-w-md mx-auto mt-20 text-center p-10 bg-white rounded-2xl border border-slate-200 shadow-sm">
-       <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-       <h3 class="text-xl font-serif text-slate-800 mb-2">No Upcoming Events</h3>
-       <p class="text-slate-500 text-sm">We are currently planning our next gathering. Check back soon.</p>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-        <div v-for="n in 3" :key="n" class="bg-white h-[500px] rounded-xl animate-pulse border border-slate-200"></div>
     </div>
 
     <!-- Details Modal -->
@@ -147,8 +158,8 @@
              </div>
 
              <!-- Description -->
-             <div class="prose prose-slate max-w-none text-slate-600">
-                <p>{{ selectedEvent.description }}</p>
+             <div class="prose prose-slate max-w-none text-slate-800 font-sans leading-loose text-lg">
+                <p class="font-medium">{{ selectedEvent.description }}</p>
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
              </div>
 
@@ -164,14 +175,14 @@
                      <ShareButtons :title="selectedEvent.title" :description="selectedEvent.description" />
                   </div>
 
-                  <!-- Delete Button -->
-                  <button 
-                    v-if="selectedEvent.author_id === auth.user?.id"
-                    @click="deleteEvent(selectedEvent.id)"
-                    class="text-red-500 hover:text-red-700 text-sm font-bold uppercase tracking-wide hover:underline"
-                  >
-                    Delete
-                  </button>
+                   <!-- Delete Button -->
+                   <button 
+                     v-if="auth.isAuthenticated && selectedEvent.author_id === auth.user?.id"
+                     @click="deleteEvent(selectedEvent.id)"
+                     class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors border border-red-100"
+                   >
+                     Delete Event
+                   </button>
                </div>
              </div>
           </div>

@@ -23,6 +23,11 @@ class CommitteeSerializer(serializers.ModelSerializer):
              return obj.user.member.age
         return None
 
+    def get_phone_no(self, obj):
+        if hasattr(obj.user, 'member') and obj.user.member:
+            return obj.user.member.phone_no
+        return None
+
     class Meta:
         model = Committee
-        fields = ('id', 'user', 'name', 'pic', 'role', 'age', 'created_at')
+        fields = ('id', 'user', 'name', 'pic', 'role', 'age', 'phone_no', 'created_at')

@@ -31,8 +31,8 @@ const menuOpen = ref(false)
 
 // Check for referral link
 onMounted(() => {
-  if (route.query.ref) {
-      sponsorId.value = route.query.ref as string
+  if (route.query.ref || route.query.token) {
+      sponsorId.value = (route.query.token || route.query.ref) as string
       open.value = true
       registering.value = true
   }
@@ -124,15 +124,41 @@ const openEdit = () => {
   router.push('/onboarding')
 }
 
-const copyInvite = () => {
+function getCookie(name: string) {
+  if (typeof document === 'undefined') return null
+  const matches = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'))
+  return matches ? matches[2] : null
+}
+
+const copyInvite = async () => {
     menuOpen.value = false
-    const u = auth.user as any
-    if (u && u.member_id) {
-        const link = `${window.location.origin}/?ref=${u.member_id}`
-        navigator.clipboard.writeText(link)
-        alert('Invite link copied to clipboard!')
-    } else {
-        alert('Member ID not found.')
+    try {
+        const config = useRuntimeConfig()
+        const apiBase = (config.public.apiBase as string) || 'http://localhost:8000'
+        
+        // Get CSRF Token
+        await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
+        const csrftoken = getCookie('csrftoken')
+
+        const res = await fetch(`${apiBase}/api/auth/generate-invite-token/`, {
+            method: 'POST',
+            headers: {
+                ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {})
+            },
+            credentials: 'include'
+        })
+
+        if (res.ok) {
+            const data = await res.json()
+            const link = `${window.location.origin}/?token=${data.token}`
+            await navigator.clipboard.writeText(link)
+            alert('Invite link copied to clipboard!')
+        } else {
+            alert('Failed to generate invite token.')
+        }
+    } catch (e) {
+        console.error("Invite generation failed", e)
+        alert('Error generating invite.')
     }
 }
 
@@ -146,7 +172,7 @@ const register = async () => {
   const formData = new FormData()
   formData.append('username', regName.value || regEmail.value)
   formData.append('email', regEmail.value)
-  formData.append('sponsor_id', sponsorId.value)
+  formData.append('invite_token', sponsorId.value)
   formData.append('password', regPassword.value)
   if (regAvatar.value) {
       formData.append('avatar', regAvatar.value)
@@ -303,10 +329,10 @@ defineExpose({ toggle })
         <h2 class="text-xl font-bold mb-4 text-[#A08050]">Create Account</h2>
 
         <div class="mb-4 text-xs text-gray-500">
-           Enter your Sponsor's Member ID to join.
+           Enter your Invite Token to join.
         </div>
 
-        <input v-model="sponsorId" placeholder="Sponsor Member ID" class="w-full mb-3 px-3 py-2 border rounded-lg border-amber-500 bg-amber-50" />
+        <input v-model="sponsorId" placeholder="Invite Token" class="w-full mb-3 px-3 py-2 border rounded-lg border-amber-500 bg-amber-50" />
         <input v-model="regName" placeholder="Full name" class="w-full mb-3 px-3 py-2 border rounded-lg" />
         <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]" />
         

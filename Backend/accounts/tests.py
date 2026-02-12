@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from families.models import Family, FamilyMember
 from rest_framework.test import APIClient
 import datetime
+from .models import InviteToken
 
 User = get_user_model()
 
@@ -45,3 +46,46 @@ class AccountsTests(TestCase):
         data = {"identifier": "johndoe", "password": "wrongpassword123!"}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 400)
+
+    def test_signup_with_token(self):
+        # 0. Create a separate member for signup (since one-to-one)
+        new_member = FamilyMember.objects.create(
+            family=self.family,
+            name="New Member",
+            age=20,
+            relation="Child",
+            date_of_birth=datetime.date(2004, 1, 1)
+        )
+        # 1. Generate Token
+        token_obj = InviteToken.objects.create(member=new_member)
+        token_str = str(token_obj.token)
+
+        # 2. Signup
+        url = '/api/auth/signup/'
+        data = {
+            "username": "newuser",
+            "email": "new@example.com",
+            "password": "ComplexPass123!",
+            "invite_token": token_str
+        }
+        response = self.client.post(url, data, format='json')
+        if response.status_code != 201:
+             print("Signup with token failed with data:", response.data)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['username'], "newuser")
+
+        # 3. Verify Token Used
+        token_obj.refresh_from_db()
+        self.assertTrue(token_obj.is_used)
+
+    def test_signup_invalid_token(self):
+        url = '/api/auth/signup/'
+        data = {
+            "username": "baduser",
+            "email": "bad@example.com",
+            "password": "ComplexPass123!",
+            "invite_token": "invalid-uuid"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.data)

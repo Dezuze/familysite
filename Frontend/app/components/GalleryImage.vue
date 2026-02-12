@@ -4,8 +4,8 @@
     :title="image.title || ''"
     role="button"
     tabindex="0"
-    @click="$emit('open', image)"
-    @keydown.enter="$emit('open', image)"
+    @click.stop="$emit('open', image)"
+    @keydown.enter.stop="$emit('open', image)"
     @contextmenu.prevent
   >
     <img
@@ -74,19 +74,21 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .gallery-item {
-  display: inline-block;
+  display: block;
   width: 100%;
-  margin: 0 0 16px;
+  margin: 0;
+  padding: 0;
   position: relative;
   break-inside: avoid;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .gallery-img {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 8px;
+  border-radius: 0;
   background: #f3f4f6;
   transition: opacity 180ms ease-in-out, transform 160ms ease;
   will-change: opacity, transform;

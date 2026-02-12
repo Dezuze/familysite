@@ -22,53 +22,67 @@
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="text-center text-slate-500 py-10">Loading committee members...</div>
-
-      <!-- Empty State -->
-      <div v-else-if="filtered.length === 0" class="text-center text-slate-500 py-10">No committee members found</div>
-
       <!-- Custom Grid -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div 
-          v-for="m in filtered" 
-          :key="m.id"
-          class="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1 transition-all duration-300"
-        >
-           <!-- Full Size Image -->
-           <div class="h-64 sm:h-72 w-full relative bg-slate-100">
-               <img 
-                 v-if="m.photo" 
-                 :src="m.photo" 
-                 class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" 
-               />
-               <div v-else class="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-                   <span class="text-6xl font-bold opacity-30">{{ m.name.charAt(0) }}</span>
-               </div>
-               
-               <!-- Gradient Overlay -->
-               <div class="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-black/80 to-transparent"></div>
-               
-               <!-- Position Badge -->
-               <div class="absolute bottom-4 left-4 right-4 text-white">
-                   <span class="bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-2 inline-block">
-                       {{ m.role || 'Member' }}
-                   </span>
-                   <h3 class="text-xl font-bold font-serif leading-tight drop-shadow-md">{{ m.name }}</h3>
-               </div>
-           </div>
-           
-           <!-- Details (Footer) -->
-           <div class="p-4 flex justify-between items-center bg-white">
-               <div class="text-sm text-slate-500 font-medium flex items-center gap-2">
-                   <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                   <span v-if="m.phone_no">Available</span>
-                   <span v-else>Contact via Directory</span>
-               </div>
-               <!-- View Profile Button -->
-               <button class="text-amber-600 hover:text-amber-700 font-bold text-sm">View Profile &rarr;</button>
-           </div>
-        </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Skeleton Grid -->
+        <template v-if="loading">
+          <div v-for="n in 6" :key="n" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 animate-pulse">
+            <div class="h-64 sm:h-72 bg-slate-200"></div>
+            <div class="p-4 space-y-3">
+              <div class="h-6 bg-slate-200 rounded w-1/2"></div>
+              <div class="h-4 bg-slate-200 rounded w-1/3"></div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Real Committee Cards -->
+        <template v-else-if="filtered.length > 0">
+          <div 
+            v-for="m in filtered" 
+            :key="m.id"
+            class="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 group hover:-translate-y-1 transition-all duration-300"
+          >
+             <!-- Full Size Image -->
+             <div class="h-64 sm:h-72 w-full relative bg-slate-100">
+                 <img 
+                   v-if="m.photo" 
+                   :src="m.photo" 
+                   class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" 
+                 />
+                 <div v-else class="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+                     <span class="text-6xl font-bold opacity-30">{{ m.name.charAt(0) }}</span>
+                 </div>
+                 
+                 <!-- Gradient Overlay -->
+                 <div class="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-black/80 to-transparent"></div>
+                 
+                 <!-- Position Badge -->
+                 <div class="absolute bottom-4 left-4 right-4 text-white">
+                     <span class="bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-2 inline-block">
+                         {{ m.role || 'Member' }}
+                     </span>
+                     <h3 class="text-xl font-bold font-serif leading-tight drop-shadow-md">{{ m.name }}</h3>
+                 </div>
+             </div>
+             
+             <!-- Details (Footer) -->
+             <div class="p-4 flex justify-between items-center bg-white">
+                 <div class="text-sm text-slate-500 font-medium flex items-center gap-2">
+                     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                     <span v-if="m.phone_no">Available</span>
+                     <span v-else>Contact via Directory</span>
+                 </div>
+                 <button class="text-amber-600 hover:text-amber-700 font-bold text-sm">View Profile &rarr;</button>
+             </div>
+          </div>
+        </template>
+
+        <!-- Empty State -->
+        <template v-else>
+          <div class="col-span-full text-center text-slate-500 py-20">
+            No committee members found
+          </div>
+        </template>
       </div>
 
     </div>
@@ -132,7 +146,8 @@ onMounted(async () => {
                 name: item.name,
                 photo: resolveImage(item.pic),
                 role: item.role,
-                // Fallback age/relation if not present in API, though MemberCard handles missing fine
+                phone_no: item.phone_no,
+                // Fallback age/relation if not present in API
                 relation: 'Committee', 
             }))
         }

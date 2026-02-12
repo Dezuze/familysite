@@ -23,8 +23,8 @@ class UserProfileView(APIView):
             data = request.data
             user = request.user
             
-            # Check if member exists
-            member = FamilyMember.objects.filter(user=user).first()
+            # Check if member exists via OneToOne relationship
+            member = getattr(user, 'member', None)
             
             if not member:
                  # Create new member if not exists - needs a family
@@ -33,7 +33,6 @@ class UserProfileView(APIView):
                      return Response({"error": "No families found in database. Contact admin."}, status=400)
                      
                  member = FamilyMember.objects.create(
-                     user=user,
                      family=family,
                      name=f"{data.get('first_name', '')} {data.get('last_name', '')}".strip() or user.username,
                      age=30,
@@ -41,6 +40,9 @@ class UserProfileView(APIView):
                      blood_group='O+',
                      relation='Member'
                  )
+                 # Link user to member (since User.member is the field)
+                 user.member = member
+                 user.save()
 
             # Update Name from split fields if provided
             if 'first_name' in data or 'last_name' in data:
@@ -57,9 +59,13 @@ class UserProfileView(APIView):
             if 'blood_group' in data: member.blood_group = data['blood_group']
             if 'address' in data: member.address_if_different = data['address']
             
-            # Additional fields sent by frontend
-            # Note: You might want to add these to the model if they are missing
-            # For now we'll handle what exists and ignore the rest safely
+            # Update Parents (ManyToMany)
+            if 'parents' in data:
+                parent_ids = data['parents']
+                if isinstance(parent_ids, str):
+                    # Handle comma separated string if sent that way
+                    parent_ids = [p.strip() for p in parent_ids.split(',')]
+                member.parents.set(parent_ids)
             
             # Update Profile Pic
             if 'profile_pic' in request.FILES:

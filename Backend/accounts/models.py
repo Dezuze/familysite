@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -28,3 +29,21 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email'] # removed member_id from required as it's a FK now, usually set programmatically
+
+class InviteToken(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    
+    # Optional pre-link to a member so they don't have to enter member_id during signup
+    member = models.ForeignKey(
+        'families.FamilyMember', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='invite_tokens'
+    )
+    
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Token {self.token} ({'Used' if self.is_used else 'Available'})"

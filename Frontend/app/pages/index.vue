@@ -84,8 +84,21 @@
             <!-- Horizontal Scroll Container -->
             <div class="flex overflow-x-auto gap-6 pb-8 snap-x custom-scrollbar">
                 
+                <!-- Skeleton News Cards -->
+                <template v-if="newsList.length === 0">
+                    <div v-for="n in 4" :key="n" class="snap-start min-w-[260px] w-[260px] bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 shrink-0 animate-pulse">
+                        <div class="h-36 bg-slate-200"></div>
+                        <div class="p-5 space-y-3">
+                            <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                            <div class="h-3 bg-slate-200 rounded w-full"></div>
+                            <div class="h-3 bg-slate-200 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </template>
+
                 <!-- Real News Card -->
                 <div 
+                    v-else
                     v-for="item in newsList" 
                     :key="item.id" 
                     @click="openDetails(item)"
@@ -97,18 +110,13 @@
                             EVENT
                         </div>
                     </div>
-                    <div class="p-4">
-                        <h3 class="text-lg font-bold text-slate-800 mb-2 line-clamp-2 leading-tight group-hover:text-amber-600 transition-colors">{{ item.title }}</h3>
-                        <p class="text-slate-500 text-sm line-clamp-2">{{ item.description }}</p>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-amber-700 transition-colors">{{ item.title }}</h3>
+                        <p class="text-slate-600 text-sm line-clamp-2 leading-relaxed font-medium">{{ item.description }}</p>
                         <div class="mt-3 flex justify-between items-center">
                             <span class="text-xs text-slate-400 uppercase tracking-wider">{{ getDay(item.created_at) }} {{ getMonth(item.created_at) }}</span>
                             <span class="text-amber-600 text-xs font-bold uppercase tracking-wide group-hover:underline">Read More</span>
                         </div>
-                    </div>
-                </div>
-                <div v-if="newsList.length === 0" class="flex gap-6">
-                    <div v-for="i in 3" :key="i" class="snap-start min-w-[300px] w-[300px] bg-white rounded-xl h-80 animate-pulse flex items-center justify-center border border-slate-200">
-                        <span class="text-slate-400">Loading News...</span>
                     </div>
                 </div>
             </div>
@@ -145,8 +153,8 @@
                 <!-- Modal Body -->
                 <div class="p-6 space-y-6">
                     <!-- Description -->
-                    <div class="prose prose-slate max-w-none text-slate-600 font-sans">
-                        <p>{{ selectedItem.description }}</p>
+                    <div class="prose prose-slate max-w-none text-slate-800 font-sans leading-loose text-lg">
+                        <p class="font-medium">{{ selectedItem.description }}</p>
                         <p class="opacity-75">Full article content would go here. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                     </div>
 
@@ -159,11 +167,11 @@
                          
                          <!-- Delete Button -->
                          <button 
-                            v-if="selectedItem.author_id === auth.user?.id"
+                            v-if="auth.isAuthenticated && selectedItem.author_id === auth.user?.id"
                             @click="deleteNews(selectedItem.id)"
-                            class="text-red-500 hover:text-red-700 text-sm font-bold uppercase tracking-wide hover:underline"
+                            class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors border border-red-100"
                         >
-                            Delete
+                            Delete Post
                         </button>
                     </div>
                 </div>

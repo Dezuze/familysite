@@ -126,6 +126,52 @@
                                 <input v-model="form.church_parish" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-medium focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-slate-400" placeholder="St. Mary's Forane Church">
                             </div>
                          </div>
+
+                         <!-- Parent Selection -->
+                         <div class="group">
+                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">Link Parents</label>
+                             <div class="space-y-4">
+                                 <!-- Selected Parents Chips -->
+                                 <div v-if="form.parents.length > 0" class="flex flex-wrap gap-2">
+                                     <div v-for="pid in form.parents" :key="pid" class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-bold border border-blue-100">
+                                         {{ getMemberName(pid) }}
+                                         <button @click="removeParent(pid)" type="button" class="text-blue-400 hover:text-blue-600 transition-colors">
+                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                         </button>
+                                     </div>
+                                 </div>
+                                 
+                                 <!-- Search Input -->
+                                 <div class="relative">
+                                     <input 
+                                         v-model="parentSearch" 
+                                         type="text" 
+                                         class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-medium focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-slate-400" 
+                                         placeholder="Search parents to link..."
+                                     >
+                                     <!-- Search Results Dropdown -->
+                                     <div v-if="filteredPotentialParents.length > 0" class="absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden py-2 animate-fade-in">
+                                         <button 
+                                             v-for="pm in filteredPotentialParents" 
+                                             :key="pm.id" 
+                                             @click="addParent(pm)" 
+                                             type="button"
+                                             class="w-full text-left px-6 py-3 hover:bg-slate-50 transition-colors flex items-center gap-3"
+                                         >
+                                             <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 overflow-hidden">
+                                                 <img v-if="pm.photo" :src="pm.photo.startsWith('http') ? pm.photo : apiBase+pm.photo" class="w-full h-full object-cover">
+                                                 <span v-else>{{ pm.name.charAt(0) }}</span>
+                                             </div>
+                                             <div>
+                                                 <div class="font-bold text-slate-800">{{ pm.name }}</div>
+                                                 <div class="text-xs text-slate-500">{{ pm.relation }}</div>
+                                             </div>
+                                         </button>
+                                     </div>
+                                 </div>
+                                 <p class="text-[10px] text-slate-400 font-medium ml-1 uppercase tracking-tight">Linking parents helps build the family tree automatically.</p>
+                             </div>
+                         </div>
                     </div>
 
                     <!-- Actions -->
@@ -213,10 +259,37 @@ const form = ref({
     email_id: '',
     phone_no: '',
     address: '',
+    address: '',
     place_of_work: '',
     church_parish: '',
+    parents: [],
     avatar: null 
 })
+const allMembers = ref([])
+const parentSearch = ref('')
+const filteredPotentialParents = computed(() => {
+    if (!parentSearch.value) return []
+    const q = parentSearch.value.toLowerCase()
+    return allMembers.value.filter(m => 
+        m.name.toLowerCase().includes(q) && 
+        !form.value.parents.includes(m.id)
+    ).slice(0, 5)
+})
+
+const addParent = (m) => {
+    if (!form.value.parents.includes(m.id)) {
+        form.value.parents.push(m.id)
+    }
+    parentSearch.value = ''
+}
+
+const removeParent = (id) => {
+    form.value.parents = form.value.parents.filter(p => p !== id)
+}
+
+const getMemberName = (id) => {
+    return allMembers.value.find(m => m.id === id)?.name || 'Unknown'
+}
 const avatarPreview = ref(null)
 
 // Cropper State
@@ -239,6 +312,17 @@ onMounted(async () => {
         }
     } catch (e) {
         console.error("Failed to fetch fresh profile", e)
+    }
+
+    // 3. Fetch all members for parent selection
+    try {
+        const res = await fetch(`${apiBase}/api/families/tree/`)
+        if (res.ok) {
+            const data = await res.json()
+            allMembers.value = data.nodes || []
+        }
+    } catch (e) {
+        console.error("Failed to fetch tree nodes", e)
     }
 
     // 2. Fallback to auth store
@@ -347,6 +431,13 @@ const saveProfile = async () => {
                 formData.append(key, form.value[key])
             }
         })
+        // Append parents as individual entries or comma separated
+        if (form.value.parents.length > 0) {
+            form.value.parents.forEach(pid => {
+                formData.append('parents', pid)
+            })
+        }
+        
         // Append avatar if it's a File (not string URL)
         if (form.value.avatar instanceof File) {
              formData.append('profile_pic', form.value.avatar)

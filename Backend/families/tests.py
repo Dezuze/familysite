@@ -33,3 +33,24 @@ class FamiliesTests(TestCase):
 
     def test_family_str(self):
         self.assertEqual(str(self.family), "F100-TEST")
+
+    def test_update_parents_via_api(self):
+        from rest_framework.test import APIClient
+        client = APIClient()
+        # Note: In a real scenario we'd need to mock authentication or use a logged in user
+        # For this test, we verify the view logic if it were called
+        url = '/api/families/profile/'
+        data = {
+            'parents': [self.member1.id]
+        }
+        # Since we use credentials='include' and session auth, we'll manually set the user
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.create_user(username="testuser", email="test@ex.com", member=self.member2)
+        client.force_authenticate(user=user)
+        
+        response = client.post(url, data, format='json')
+        self.assertEqual(response.status_code, 200)
+        
+        self.member2.refresh_from_db()
+        self.assertIn(self.member1, self.member2.parents.all())

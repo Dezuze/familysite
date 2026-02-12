@@ -15,13 +15,12 @@ const config = useRuntimeConfig()
 const apiBase = config.public.apiBase as string
 
 const images = ref<GalleryItem[]>([])
-const visibleCount = ref(30)
-const perPage = 30
+const visibleCount = ref(999)
+const perPage = 999
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 const sentinel = ref<HTMLElement | null>(null)
-let io: IntersectionObserver | null = null
 
 const sortedImages = computed(() =>
   [...images.value].sort((a, b) => {
@@ -31,8 +30,8 @@ const sortedImages = computed(() =>
   })
 )
 
-const visibleImages = computed(() => sortedImages.value.slice(0, visibleCount.value))
-const hasMore = computed(() => visibleCount.value < sortedImages.value.length)
+const visibleImages = computed(() => sortedImages.value)
+const hasMore = computed(() => false)
 
 const loadGallery = async () => {
   isLoading.value = true
@@ -45,9 +44,9 @@ const loadGallery = async () => {
 
     images.value = (list || []).map((i: any) => ({
       id: i.id,
-      photo: i.photo ? (i.photo.startsWith('http') ? i.photo : apiBase + i.photo) : '',
-      title: i.title ?? i.name ?? '',
-      created_at: i.created_at ?? i.date ?? i.uploaded_at ?? null,
+      photo: i.image ? (i.image.startsWith('http') ? i.image : apiBase + i.image) : '',
+      title: i.description || i.title || i.name || '',
+      created_at: i.created_at || i.date || i.uploaded_at || null,
     }))
   } catch (e: any) {
     error.value = e?.message ?? 'Failed to load gallery'
@@ -56,14 +55,12 @@ const loadGallery = async () => {
   }
 }
 
-const loadMore = () => {
-  if (!hasMore.value) return
-  visibleCount.value = Math.min(images.value.length, visibleCount.value + perPage)
-}
+const loadMore = () => {}
 
 const selectedImage = ref<GalleryItem | null>(null)
 
 const openImage = (img: GalleryItem) => {
+  console.log("Opening image:", img)
   selectedImage.value = img
 }
 
@@ -74,31 +71,20 @@ const currentIndex = () => sortedImages.value.findIndex(i => i.id === selectedIm
 const nextImage = () => {
   const idx = currentIndex()
   if (idx >= 0 && idx < sortedImages.value.length - 1) {
-    selectedImage.value = sortedImages.value[idx + 1]
+    selectedImage.value = sortedImages.value[idx + 1] || null
   }
 }
 
 const prevImage = () => {
   const idx = currentIndex()
-  if (idx > 0) selectedImage.value = sortedImages.value[idx - 1]
+  if (idx > 0) selectedImage.value = sortedImages.value[idx - 1] || null
 }
 
 onMounted(async () => {
   await loadGallery()
-
-  io = new IntersectionObserver(entries => {
-    entries.forEach(en => {
-      if (en.isIntersecting && hasMore.value && !isLoading.value) {
-        loadMore()
-      }
-    })
-  }, { root: null, rootMargin: '400px', threshold: 0 })
-
-  if (sentinel.value) io.observe(sentinel.value)
 })
 
 onBeforeUnmount(() => {
-  io?.disconnect()
 })
 </script>
 
@@ -112,8 +98,14 @@ onBeforeUnmount(() => {
       </header>
 
       <main>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
+      <div class="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-0 p-0">
+        <!-- Skeleton Loaders -->
+        <template v-if="isLoading && images.length === 0">
+          <div v-for="n in 10" :key="n" class="aspect-square bg-slate-200 animate-pulse border border-slate-100"></div>
+        </template>
+        
         <GalleryImage
+          v-else
           v-for="img in visibleImages"
           :key="img.id"
           :image="img"

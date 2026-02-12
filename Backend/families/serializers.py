@@ -3,11 +3,19 @@ from .models import FamilyMember
 
 class FamilyMemberSerializer(serializers.ModelSerializer):
     role = serializers.ReadOnlyField()
+    is_committee = serializers.ReadOnlyField()
     profile_pic = serializers.SerializerMethodField()
 
     class Meta:
         model = FamilyMember
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'age', 'gender', 'relation', 'role', 'is_committee',
+            'date_of_birth', 'blood_group', 'phone_no', 'email_id', 'photo',
+            'profile_pic', 'bio', 'occupation', 'education', 'parents'
+        ]
+        extra_kwargs = {
+            'parents': {'required': False}
+        }
 
     def get_profile_pic(self, obj):
         if obj.photo:
@@ -15,10 +23,13 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
         return None
 
 class FamilyTreeSerializer(serializers.ModelSerializer):
+    role = serializers.ReadOnlyField()
+    is_committee = serializers.ReadOnlyField()
+
     class Meta:
         model = FamilyMember
-        fields = ['id', 'name', 'parents', 'children']
-        depth = 1 # Simple depth to see Names of related objects
+        fields = ['id', 'name', 'role', 'is_committee', 'photo', 'parents', 'children']
+        depth = 1 
 
 from .models import FamilyMedia
 class FamilyMediaSerializer(serializers.ModelSerializer):

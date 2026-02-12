@@ -56,6 +56,12 @@ class FamilyMember(models.Model):
 
     blood_group = models.CharField(max_length=5)
 
+    gender = models.CharField(max_length=1, choices=[("M", "Male"), ("F", "Female"), ("O", "Other")], default="M")
+    bio = models.TextField(blank=True, null=True)
+    phone_no = models.CharField(max_length=20, blank=True, null=True)
+    email_id = models.EmailField(blank=True, null=True)
+    church_parish = models.CharField(max_length=100, blank=True, null=True)
+
     photo = models.ImageField(upload_to="members/photos/", blank=True, null=True)
 
     # Link to other FamilyMember instances to represent parent/child relationships.
@@ -66,6 +72,30 @@ class FamilyMember(models.Model):
         related_name='children',
         blank=True,
     )
+
+    @property
+    def role(self):
+        # Check if linked user is in committee
+        try:
+            if hasattr(self, 'user_account') and self.user_account:
+                committee_entry = self.user_account.committee_entries.first()
+                if committee_entry and committee_entry.role:
+                    return committee_entry.role
+        except Exception:
+            pass
+        return self.relation
+
+    @property
+    def is_committee(self):
+        try:
+            if hasattr(self, 'user_account') and self.user_account:
+                return self.user_account.committee_entries.exists()
+        except Exception:
+            pass
+        return False
+
+    def __str__(self):
+        return f"{self.name} ({self.role})"
 
 
 class DeceasedMember(models.Model):

@@ -39,16 +39,36 @@
         </div>
       </div>
 
-    <div v-if="filtered.length === 0" class="text-center text-slate-500 py-10">No members found</div>
+    <!-- Grid Section -->
+    <div class="grid gap-4" :class="containerClass" :style="containerStyle">
+      <!-- Skeleton Grid -->
+      <template v-if="family.loading && filtered.length === 0">
+        <div v-for="n in 8" :key="n" class="bg-white rounded-xl h-48 animate-pulse border border-slate-200">
+           <div class="h-full flex items-center p-4 gap-4">
+              <div class="w-24 h-24 rounded-full bg-slate-200 shrink-0"></div>
+              <div class="flex-1 space-y-3">
+                 <div class="h-5 bg-slate-200 rounded w-3/4"></div>
+                 <div class="h-4 bg-slate-200 rounded w-1/2"></div>
+              </div>
+           </div>
+        </div>
+      </template>
 
-    <div v-else :class="containerClass" :style="containerStyle">
-      <component
-        v-for="m in filtered"
-        :key="m.id"
-        :is="cardComponent"
-        :member="m"
-        :variant="cardVariant"
-      />
+      <!-- Real Cards -->
+      <template v-else-if="filtered.length > 0">
+        <component
+          v-for="m in filtered"
+          :key="m.id"
+          :is="cardComponent"
+          :member="m"
+          :variant="cardVariant"
+        />
+      </template>
+
+      <!-- Empty State -->
+      <template v-else-if="!family.loading">
+        <div class="col-span-full text-center text-slate-500 py-10 bg-white rounded-xl border border-slate-200">No members found</div>
+      </template>
     </div>
     </div>
   </div>
