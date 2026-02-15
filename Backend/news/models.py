@@ -15,6 +15,7 @@ class Post(models.Model):
     
     event_date = models.DateTimeField(null=True, blank=True) # Null if post_type is 'news'
     location = models.CharField(max_length=255, blank=True, null=True)
+    is_kudumbayogam = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
 

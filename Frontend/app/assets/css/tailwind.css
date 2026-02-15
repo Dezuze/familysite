@@ -3,9 +3,8 @@
 @theme {
   --color-brand-gold: #A08050;
   --color-brand-gold-dark: #6d5030;
-  --color-brand-olive: #556B2F;
-  --color-brand-slate: #2F4F4F;
 }
+
 html {
   scroll-behavior: smooth;
 }
@@ -46,9 +45,9 @@ body {
   background-color: #cbd5e1; /* slate-300 */
   border-radius: 20px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background-color: #f59e0b; /* amber-500 */
-}
+ ::-webkit-scrollbar-thumb:hover {
+   background-color: #A08050; /* brand-gold */
+ }
 
 .font-fleur {
   font-family: 'Fleur De Leah', cursive !important;

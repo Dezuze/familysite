@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-slate-100 font-sans text-slate-800 overflow-x-hidden">
+  <div class="min-h-screen bg-slate-50 font-sans text-slate-800 overflow-x-hidden">
     <!-- Hero Section -->
     <div class="relative w-full h-[110vh] overflow-hidden">
       <!-- Background Image -->
       <img src="/images/family.jpg" alt="Family Gathering" class="absolute inset-0 w-full h-full object-cover" />
       
-      <div class="absolute inset-0 bg-linear-to-b from-black/30 via-black/60 to-slate-100"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-black/30 via-black/60 to-slate-50"></div>
 
       <!-- Hero Content -->
       <div class="absolute top-0 left-0 w-full h-screen flex flex-col items-center md:items-start justify-end px-4 pb-40 md:px-24 md:pb-24">
@@ -30,30 +30,29 @@
     </div>
 
     <!-- Navigation Buttons (Intersection Layout) -->
-    <!-- Negative margin to pull it up over the hero image -->
-    <!-- Navigation Buttons (Intersection Layout) -->
-    <div class="relative z-20 -mt-12 px-4 md:px-12 pb-12">
+    <div class="relative z-20 -mt-12 px-4 md:px-12 pb-20 md:pb-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 max-w-6xl mx-auto">
             
-            <!-- Button 1: Family Directory (Restricted) -->
-            <div 
-                class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
+            <!-- Button 1: Committee Members (Public) -->
+            <NuxtLink 
+                to="/committee" 
+                class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-white border border-slate-100"
             >
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-brand-gold transition-colors">Family<br>Directory</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-brand-gold transition-colors">Committee<br>Members</h3>
                 </div>
-            </div>
+            </NuxtLink>
 
             <!-- Button 2: Events (Public) -->
-            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-linear-to-b from-brand-gold to-brand-gold-dark">
+            <NuxtLink to="/news-events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-linear-to-b from-brand-gold to-brand-gold-dark">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-white uppercase tracking-wide leading-tight">Events</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-white uppercase tracking-wide leading-tight">Events & News</h3>
                 </div>
             </NuxtLink>
 
             <!-- Button 3: Annual Kudumbayogam (Restricted) -->
              <div 
-                @click="handleRestrictedNavigation('/kudumbayogam')"
+                @click="handleRestrictedNavigation('/yogam')"
                 class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
@@ -65,19 +64,31 @@
     </div>
 
     <!-- News Section -->
-    <div class="bg-slate-100 py-16 px-4 md:px-12">
+    <div class="bg-slate-50 py-16 px-4 md:px-12">
         <div class="max-w-7xl mx-auto">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 uppercase tracking-widest decoration-brand-gold underline underline-offset-8">
-                    Latest News & Events
-                </h2>
-                <button 
-                  v-if="auth.isAuthenticated"
-                  @click="isAddModalOpen = true"
-                  class="bg-linear-to-b from-brand-gold to-brand-gold-dark hover:brightness-110 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 shadow-md"
-                >
-                  <span class="text-xl">+</span> Add News
-                </button>
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                <div class="space-y-2">
+                    <h2 class="text-3xl md:text-5xl font-serif font-bold text-slate-900 drop-shadow-sm">
+                        Latest News & Events
+                    </h2>
+                    <div class="h-1.5 w-24 bg-brand-gold rounded-full"></div>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 self-start md:self-auto shrink-0">
+                    <NuxtLink 
+                      to="/news-events"
+                      class="bg-white border-2 border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shadow-md active:scale-95"
+                    >
+                      View All
+                    </NuxtLink>
+
+                    <button 
+                      v-if="auth.isAuthenticated"
+                      @click="isAddModalOpen = true"
+                      class="bg-linear-to-b from-brand-gold to-brand-gold-dark hover:brightness-110 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shadow-lg active:scale-95 shrink-0"
+                    >
+                      <span class="text-xl leading-none">+</span> Add News
+                    </button>
+                </div>
             </div>
             
             <!-- Horizontal Scroll Container -->
@@ -191,8 +202,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useHead, useRuntimeConfig } from '#imports'
+import { ref, onMounted } from 'vue'
+import { useHead, useRuntimeConfig, navigateTo } from '#imports'
 import { useAuthStore } from '~/stores/auth'
 import ShareButtons from '~/components/ShareButtons.vue'
 import AddPostModal from '~/components/AddPostModal.vue'
@@ -227,7 +238,7 @@ const closeDetails = () => {
   document.body.style.overflow = ''
 }
 
-// Helpers (using created_at or event_date if available in future)
+// Helpers
 const getMonth = (dateStr: string) => new Date(dateStr).toLocaleString('default', { month: 'short' })
 const getDay = (dateStr: string) => new Date(dateStr).getDate()
 const getYear = (dateStr: string) => new Date(dateStr).getFullYear()
@@ -302,7 +313,6 @@ useHead({
 </script>
 
 <style scoped>
-
 /* Animations */
 @keyframes slide-up {
   from { transform: translateY(20px); opacity: 0; }

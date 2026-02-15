@@ -15,7 +15,9 @@ class UserSerializer(serializers.ModelSerializer):
             'name',
             'member',
             'role',
-            'profile_pic'
+            'profile_pic',
+            'is_superuser',
+            'is_staff'
         )
 
     def get_name(self, obj):

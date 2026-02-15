@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveDestroyAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.utils import timezone
 from django.db.models import Q
@@ -57,7 +57,7 @@ class NewsCreateView(ListCreateAPIView):
             raise ValidationError({"error": "Your user account is not linked to a Family Member profile. Please contact an admin or complete your onboarding to post news."})
 
 
-class NewsDetailView(RetrieveDestroyAPIView):
+class NewsDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthorOrReadOnly]

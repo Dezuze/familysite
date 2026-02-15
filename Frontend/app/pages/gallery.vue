@@ -89,13 +89,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-100 font-sans pt-32">
+  <div class="min-h-screen bg-slate-50 font-sans pt-32 pb-16 px-4">
     <div class="page-container">
-      <header class="gallery-header text-center py-8">
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-2">Gallery</h1>
-        <div class="h-1 w-16 bg-amber-500 mx-auto rounded-full mb-4"></div>
-        <p class="muted text-slate-500 font-medium">Latest images from our family gatherings and events.</p>
-      </header>
+      <div class="max-w-7xl mx-auto mb-16 text-center space-y-4">
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 leading-tight">
+            Family Gallery
+        </h1>
+        <div class="h-1.5 w-32 bg-brand-gold mx-auto rounded-full"></div>
+        <p class="text-lg text-slate-500 max-w-xl mx-auto font-medium">
+            Capturing moments of our shared heritage and celebrations.
+        </p>
+      </div>
 
       <main>
       <div class="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-0 p-0">

@@ -11,6 +11,8 @@ class GallerySerializer(serializers.ModelSerializer):
 class CommitteeSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     age = serializers.SerializerMethodField()
+    phone_no = serializers.SerializerMethodField()
+    pic = serializers.SerializerMethodField()
     
     def get_name(self, obj):
         # Try to find family member linked to this user
@@ -26,6 +28,13 @@ class CommitteeSerializer(serializers.ModelSerializer):
     def get_phone_no(self, obj):
         if hasattr(obj.user, 'member') and obj.user.member:
             return obj.user.member.phone_no
+        return None
+
+    def get_pic(self, obj):
+        if obj.pic:
+            return obj.pic.url
+        if hasattr(obj.user, 'member') and obj.user.member and obj.user.member.photo:
+            return obj.user.member.photo.url
         return None
 
     class Meta:

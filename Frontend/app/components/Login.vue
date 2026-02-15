@@ -52,7 +52,6 @@ const initials = computed<string>(() => {
   const a = parts[0]?.charAt(0) ?? ''
   const b = parts[parts.length - 1]?.charAt(0) ?? ''
   return (a + b).toUpperCase()
-  return (a + b).toUpperCase()
 })
 
 const passwordStrength = computed(() => {
@@ -85,14 +84,19 @@ const passwordStrengthLabel = computed(() => {
 
 const userPhoto = computed<string>(() => {
   const u = auth.user as any
-  const photo = u?.photo || u?.image || u?.profile_pic || ''
+  // Potential field names: profile_pic (from serializer), photo, image
+  const photo = u?.profile_pic || u?.photo || u?.image || ''
   if (!photo) return ''
-  // If it's already a full URL or blob, return it
-  if (photo.startsWith('http') || photo.startsWith('blob:')) return photo
-  // Otherwise prepend apiBase
+  // If it's already a full URL or base64/blob, return it
+  if (photo.startsWith('http') || photo.startsWith('data:') || photo.startsWith('blob:')) return photo
+  
+  // Prepend apiBase if it's a relative path
   const config = useRuntimeConfig()
   const apiBase = (config.public.apiBase as string) || 'http://localhost:8000'
-  return `${apiBase}${photo}`
+  
+  // Ensure we don't double prepend if photo already has a leading slash
+  const cleanPhoto = photo.startsWith('/') ? photo : `/${photo}`
+  return `${apiBase}${cleanPhoto}`
 })
 
 const toggle = () => (open.value = !open.value)
@@ -247,13 +251,13 @@ defineExpose({ toggle })
           <!-- Name (Visible on Mobile, Hidden on Desktop to keep pill shape clean) -->
           <span class="text-white font-bold text-sm md:text-base lg:hidden drop-shadow-md">{{ displayName }}</span>
 
-          <button @click="menuOpen = !menuOpen" class="h-10 w-10 rounded-full bg-[#1A3C3B] border-2 border-white/20 text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-md transition-transform active:scale-95">
+          <button @click="menuOpen = !menuOpen" class="h-10 w-10 rounded-full bg-brand-gold border-2 border-white/20 text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-md transition-transform active:scale-95">
              <img v-if="userPhoto" :src="userPhoto" alt="User" class="w-full h-full object-cover" />
              <span v-else>{{ initials }}</span>
           </button>
 
-          <div v-if="menuOpen" class="absolute z-50 top-12 right-0 w-auto bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
-            <div class="px-2 py-1.5 font-bold text-[#1A3C3B] border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
+          <div v-if="menuOpen" class="absolute z-50 top-12 -left-15 w-40 bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
+            <div class="px-2 py-1.5 font-bold text-brand-gold-dark border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
             <button @click="copyInvite" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-brand-gold font-bold">Invite Member</button>
             <button @click="openEdit" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors">Edit profile</button>
             <button @click="logout" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-red-600">Logout</button>
@@ -277,7 +281,7 @@ defineExpose({ toggle })
     <Transition name="scale-fade">
       <div v-if="open" class="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-80 shadow-xl">
       <template v-if="!registering">
-        <h2 class="text-xl font-bold mb-4 text-[#1A3C3B]">Login</h2>
+        <h2 class="text-xl font-bold mb-4 text-brand-gold">Login</h2>
         <input
           v-model="email"
           type="email"
@@ -320,7 +324,7 @@ defineExpose({ toggle })
         </button>
 
         <div class="mt-4 text-center text-sm">
-          <button @click="registering = true" class="text-lime-800 font-medium">Create an account</button>
+          <button @click="registering = true" class="text-brand-gold-dark font-medium">Create an account</button>
         </div>
       </template>
 

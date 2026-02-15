@@ -5,14 +5,15 @@ import { useRuntimeConfig } from '#imports'
 export const useFamilyStore = defineStore('family', {
   state: () => ({
     members: [] as FamilyMember[],
+    links: [] as any[], // Add links state
     loading: false,
     error: null as string | null
   }),
 
   actions: {
     async fetchFamily() {
-      // Prevent multiple fetches if already loaded (unless forced? for now simple check)
-      if (this.members.length > 0) return
+      // Prevent multiple fetches if already loaded
+      if (this.members.length > 0 && this.links.length > 0) return
 
       this.loading = true
       this.error = null
@@ -28,8 +29,8 @@ export const useFamilyStore = defineStore('family', {
         if (response.ok) {
             const data = await response.json()
             // Data is { nodes: [], links: [] }
-            // We store nodes as the flat list
-            this.members = data.nodes
+            this.members = data.nodes || []
+            this.links = data.links || [] // Store links
         } else {
             this.error = 'Failed to load family data'
         }

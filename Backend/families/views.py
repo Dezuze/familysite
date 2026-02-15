@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import FamilyMember, FamilyMedia
+from .models import FamilyMember, FamilyMedia, Family
 from .serializers import FamilyMemberSerializer, FamilyTreeSerializer, FamilyMediaSerializer
 from rest_framework import generics
 from django.shortcuts import get_object_or_404
@@ -12,7 +12,7 @@ class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        member = FamilyMember.objects.filter(user=request.user).first()
+        member = FamilyMember.objects.filter(user_account=request.user).first()
         if member:
             serializer = FamilyMemberSerializer(member)
             return Response(serializer.data)
@@ -31,13 +31,25 @@ class UserProfileView(APIView):
                  family = Family.objects.first()
                  if not family:
                      return Response({"error": "No families found in database. Contact admin."}, status=400)
-                     
+                 
+                 dob = data.get('date_of_birth')
+                 if not dob:
+                     return Response({"error": "Date of birth is required for new profile."}, status=400)
+                 
+                 # Calculate age
+                 try:
+                     dob_date = date.fromisoformat(dob)
+                     today = date.today()
+                     calculated_age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+                 except ValueError:
+                     return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+
                  member = FamilyMember.objects.create(
                      family=family,
                      name=f"{data.get('first_name', '')} {data.get('last_name', '')}".strip() or user.username,
-                     age=30,
-                     date_of_birth=data.get('date_of_birth', '1994-01-01'),
-                     blood_group='O+',
+                     age=calculated_age,
+                     date_of_birth=dob_date,
+                     blood_group=data.get('blood_group', 'Unknown'),
                      relation='Member'
                  )
                  # Link user to member (since User.member is the field)
@@ -52,7 +64,17 @@ class UserProfileView(APIView):
             elif 'name' in data:
                 member.name = data['name']
             
-            if 'date_of_birth' in data: member.date_of_birth = data['date_of_birth']
+            if 'date_of_birth' in data: 
+                dob = data['date_of_birth']
+                member.date_of_birth = dob
+                # Recalculate age if DOB changed
+                try:
+                    dob_date = date.fromisoformat(dob)
+                    today = date.today()
+                    member.age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+                except ValueError:
+                    pass
+
             if 'education' in data: member.education = data['education']
             if 'occupation' in data: member.occupation = data['occupation']
             if 'place_of_work' in data: member.place_of_work = data['place_of_work']
@@ -98,9 +120,10 @@ class FamilyTreeView(APIView):
                 "id": m.id,
                 "name": m.name,
                 "photo": m.photo.url if m.photo else None,
-                "role": "Member",
+                "role": m.role,
+                "is_committee": m.is_committee,
                 "username": username,
-                "gender": "M" if "Son" in (m.relation or "") or "Head" in (m.relation or "") and "Widow" not in (m.relation or "") else "F",
+                "gender": m.gender,
                 "age": m.age,
                 "occupation": m.occupation,
                 "date_of_birth": m.date_of_birth,
@@ -134,11 +157,125 @@ class FamilyMediaList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        # Determine family? The serializer expects 'family' field or we derive it?
-        # The test sends 'family' ID in data. So serializer handles it.
         serializer.save()
 
 class FamilyMediaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = FamilyMedia.objects.all()
     serializer_class = FamilyMediaSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class ManagedMembersView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # List all members created by this user
+        members = FamilyMember.objects.filter(created_by=request.user)
+        serializer = FamilyMemberSerializer(members, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        # Create a new member managed by this user
+        try:
+            data = request.data
+            from .models import Family
+            family = Family.objects.first()
+            if not family:
+                return Response({"error": "No family found"}, status=400)
+
+            # Extract fields
+            f_name = data.get('first_name', '')
+            l_name = data.get('last_name', '')
+            full_name = data.get('name', f"{f_name} {l_name}".strip())
+
+            member = FamilyMember.objects.create(
+                family=family,
+                name=full_name,
+                age=data.get('age', 0),
+                gender=data.get('gender', 'M'),
+                relation=data.get('relation', 'Child'),
+                date_of_birth=data.get('date_of_birth', '2000-01-01'),
+                blood_group=data.get('blood_group', 'Unknown'),
+                occupation=data.get('occupation', ''),
+                education=data.get('education', ''),
+                phone_no=data.get('phone_no', ''),
+                email_id=data.get('email_id', ''),
+                address_if_different=data.get('address', ''),
+                bio=data.get('bio', ''),
+                created_by=request.user
+            )
+
+            # Link parents if provided
+            if 'parents' in data:
+                parent_ids = data['parents']
+                if isinstance(parent_ids, str):
+                    parent_ids = [p.strip() for p in parent_ids.split(',')]
+                member.parents.set(parent_ids)
+
+            # Profile Pic
+            if 'profile_pic' in request.FILES:
+                member.photo = request.FILES['profile_pic']
+                member.save()
+
+            return Response(FamilyMemberSerializer(member).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class ManagedMemberDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, pk, user):
+        return get_object_or_404(FamilyMember, pk=pk, created_by=user)
+
+    def get(self, request, pk):
+        member = self.get_object(pk, request.user)
+        return Response(FamilyMemberSerializer(member).data)
+
+    def put(self, request, pk):
+        member = self.get_object(pk, request.user)
+        # Prevent editing if the member has their own account now?
+        # The user said "if there isnt an account for them".
+        if hasattr(member, 'user_account') and member.user_account:
+             return Response({"error": "Member has their own account and cannot be managed by others."}, status=403)
+
+        try:
+            data = request.data
+            
+            f_name = data.get('first_name')
+            l_name = data.get('last_name')
+            if f_name is not None or l_name is not None:
+                member.name = f"{f_name or ''} {l_name or ''}".strip()
+            elif 'name' in data:
+                member.name = data['name']
+
+            if 'age' in data: member.age = data['age']
+            if 'gender' in data: member.gender = data['gender']
+            if 'relation' in data: member.relation = data['relation']
+            if 'date_of_birth' in data: member.date_of_birth = data['date_of_birth']
+            if 'blood_group' in data: member.blood_group = data['blood_group']
+            if 'occupation' in data: member.occupation = data['occupation']
+            if 'education' in data: member.education = data['education']
+            if 'phone_no' in data: member.phone_no = data['phone_no']
+            if 'email_id' in data: member.email_id = data['email_id']
+            if 'address' in data: member.address_if_different = data['address']
+            if 'bio' in data: member.bio = data['bio']
+
+            if 'parents' in data:
+                parent_ids = data['parents']
+                if isinstance(parent_ids, str):
+                    parent_ids = [p.strip() for p in parent_ids.split(',')]
+                member.parents.set(parent_ids)
+
+            if 'profile_pic' in request.FILES:
+                member.photo = request.FILES['profile_pic']
+
+            member.save()
+            return Response(FamilyMemberSerializer(member).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+    def delete(self, request, pk):
+        member = self.get_object(pk, request.user)
+        if hasattr(member, 'user_account') and member.user_account:
+             return Response({"error": "Member has their own account and cannot be deleted by others."}, status=403)
+        member.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

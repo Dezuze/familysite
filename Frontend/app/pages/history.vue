@@ -1,8 +1,12 @@
 <template>
-  <div class="min-h-screen bg-slate-100 flex flex-col items-center justify-center px-2 pt-32 pb-16 text-slate-800 font-sans overflow-x-hidden">
+  <div class="min-h-screen bg-slate-50 flex flex-col items-center px-4 pt-32 pb-16 text-slate-800 font-sans">
     <div class="w-full">
-        <h1 class="text-4xl md:text-5xl font-serif font-bold mb-4 text-center text-slate-900">Family History</h1>
-        <div class="h-1 w-24 bg-amber-500 mx-auto rounded-full mb-8"></div>
+    <div class="max-w-7xl mx-auto mb-16 text-center space-y-4">
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 leading-tight">
+            Family History
+        </h1>
+        <div class="h-1.5 w-32 bg-brand-gold mx-auto rounded-full"></div>
+    </div>
         
         <div class="bg-white rounded-xl p-4 md:p-8 backdrop-blur-sm border border-slate-200 shadow-xl w-full">
             <client-only>

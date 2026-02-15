@@ -59,28 +59,26 @@ onUnmounted(() => {
 <template>
   <!-- NAVBAR -->
   <nav 
-    class="fixed top-0 left-0 right-0 w-full lg:w-190 z-50 bg-transparent transition-transform duration-300 ease-in-out"
+    class="fixed top-0 left-0 right-0 w-full lg:w-170 z-50 bg-transparent transition-transform duration-300 ease-in-out"
     :class="[ showNavbar ? 'translate-y-0' : '-translate-y-full' ]"
   >
-      <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15">
-        <div class="flex items-center gap-4">
-          <NuxtLink to="/" class="flex fixed items-center gap-3">
-            <span class="font-fleur text-3xl text-slate-800 hover:text-brand-gold transition-colors">
-              Kollamparambil Family
-            </span>
-          </NuxtLink>
-          <div class="flex absolute items-center gap-4 right-6">
+      <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15 shadow-sm">
+        <div class="flex items-center gap-4 h-full">
+          <NuxtLink to="/" class="flex font-fleur text-2xl items-center text-right h-full">
+           Kollamparambil<br>Family
+        </NuxtLink>
+          <div class="flex absolute items-center right-5">
             <NuxtLink
               v-for="link in visibleLinks"
               :key="link.to"
               :to="link.to"
-              class="py-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-brand-gold hover:shadow-sm transition"
+              class="py-2 px-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-brand-gold hover:shadow-sm transition"
             >
               {{ link.name }}
             </NuxtLink>
           </div>
         </div>
-        <div class="flex -z-20 ml-170 items-center gap-3">
+        <div class="flex -z-20 ml-120 items-center gap-3">
           <Login />
         </div>
       </div>
@@ -88,11 +86,9 @@ onUnmounted(() => {
 
 
       <!-- Mobile -->
-      <div class="flex bg-white lg:hidden items-center z-30 justify-between h-15">
-        <NuxtLink to="/" class="flex px-3 items-center gap-3">
-          <span class="font-fleur text-2xl text-slate-800">
-            Kollamparambil Family
-          </span>
+      <div class="flex bg-white lg:hidden items-center z-30 justify-between h-15 px-4 shadow-sm">
+        <NuxtLink to="/" class="flex font-fleur text-2xl items-center ml-4 text-right h-full">
+           Kollamparambil<br>Family
         </NuxtLink>
 
         <div class="flex items-center gap-2">

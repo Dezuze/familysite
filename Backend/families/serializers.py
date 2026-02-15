@@ -11,10 +11,11 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'age', 'gender', 'relation', 'role', 'is_committee',
             'date_of_birth', 'blood_group', 'phone_no', 'email_id', 'photo',
-            'profile_pic', 'bio', 'occupation', 'education', 'parents'
+            'profile_pic', 'bio', 'occupation', 'education', 'parents', 'created_by'
         ]
         extra_kwargs = {
-            'parents': {'required': False}
+            'parents': {'required': False},
+            'created_by': {'read_only': True}
         }
 
     def get_profile_pic(self, obj):

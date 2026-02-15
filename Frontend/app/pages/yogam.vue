@@ -3,11 +3,11 @@
     <!-- Header Section -->
     <div class="max-w-7xl mx-auto mb-16 text-center space-y-4">
         <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 leading-tight">
-            Upcoming Gatherings
+            Annual Kudumbayogam
         </h1>
         <div class="h-1.5 w-32 bg-brand-gold mx-auto rounded-full"></div>
         <p class="text-lg text-slate-500 max-w-xl mx-auto font-medium">
-            Join our family in fellowship and celebration. Save the date for these upcoming moments together.
+            Stay updated with the highlights and schedules of our annual family gatherings, bringing everyone together in celebration.
         </p>
         
         <div v-if="auth.isAuthenticated" class="pt-6 flex justify-center">
@@ -15,11 +15,10 @@
                 @click="isAddModalOpen = true"
                 class="bg-brand-gold text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-brand-gold/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
-                <span class="text-xl leading-none">+</span> Add Event
+                <span class="text-xl leading-none">+</span> Add Highlight
             </button>
         </div>
     </div>
-
 
     <!-- Events Grid -->
     <div class="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 lg:gap-10">
@@ -31,7 +30,6 @@
            <div class="p-6 space-y-4">
               <div class="h-6 bg-slate-200 rounded w-3/4"></div>
               <div class="h-4 bg-slate-200 rounded w-full"></div>
-              <div class="h-4 bg-slate-200 rounded w-5/6"></div>
            </div>
         </div>
       </template>
@@ -47,7 +45,7 @@
           <!-- Image & Date -->
           <div class="relative aspect-4/3 overflow-hidden">
             <img 
-              :src="resolveImage(event.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Event'" 
+              :src="resolveImage(event.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Annual+Meeting'" 
               :alt="event.title" 
               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
             />
@@ -61,16 +59,11 @@
           </div>
 
           <!-- Content -->
-          <div class="flex-1 p-6 flex flex-col relative">
-            <!-- Meta Info -->
+          <div class="flex-1 p-6 flex flex-col relative text-left">
             <div class="flex items-center gap-4 text-xs font-medium text-brand-gold mb-3 tracking-wide uppercase">
               <div v-if="event.location" class="flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
                 {{ event.location }}
-              </div>
-              <div class="flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                {{ getTime(event.event_date) }}
               </div>
             </div>
 
@@ -82,28 +75,24 @@
               {{ event.description }}
             </p>
 
-            <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div class="mt-auto pt-4 border-t border-slate-100">
                <button class="text-sm font-semibold text-slate-700 group-hover:text-brand-gold transition-colors flex items-center gap-2">
-                   View Details
+                   View Highlights
                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                </button>
-              <button @click.stop="addToCalendar(event)" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full text-slate-600 transition-colors border border-slate-200">
-                  Add to Calendar
-              </button>
             </div>
           </div>
         </div>
       </template>
 
-      <!-- Empty State inside Grid -->
+      <!-- Empty State -->
       <template v-else>
         <div class="col-span-full max-w-md mx-auto mt-2 text-center p-10 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-          <h3 class="text-xl font-serif text-slate-800 mb-2">No Upcoming Events</h3>
-          <p class="text-slate-500 text-sm">We are currently planning our next gathering. Check back soon.</p>
+          <h3 class="text-xl font-serif text-slate-800 mb-2">No Yogam History Yet</h3>
+          <p class="text-slate-500 text-sm">Highlights of our annual gatherings will appear here.</p>
         </div>
       </template>
-
     </div>
 
     <!-- Details Modal -->
@@ -112,103 +101,65 @@
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         
         <div class="relative bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
-          <!-- Close Button -->
           <button @click="closeDetails" class="absolute top-4 right-4 z-10 p-2 bg-black/10 hover:bg-black/20 rounded-full text-white transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
 
-          <!-- Modal Image -->
           <div class="relative h-64 sm:h-80 shrink-0">
-            <img :src="resolveImage(selectedEvent.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Event'" class="w-full h-full object-cover" />
+            <img :src="resolveImage(selectedEvent.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Annual+Meeting'" class="w-full h-full object-cover" />
             <div class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
             
              <div class="absolute bottom-4 left-6">
                 <span class="inline-block px-3 py-1 bg-brand-gold text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">
-                  {{ getMonth(selectedEvent.event_date) }} {{ getDay(selectedEvent.event_date) }}
+                  {{ getMonth(selectedEvent.event_date) }} {{ getDay(selectedEvent.event_date) }}, {{ getYear(selectedEvent.event_date) }}
                 </span>
                 <h2 class="text-3xl font-serif font-bold text-white drop-shadow-md">{{ selectedEvent.title }}</h2>
-                <p v-if="selectedEvent.author_name" class="text-brand-gold/70 text-sm mt-1 font-medium">Organized by {{ selectedEvent.author_name }}</p>
              </div>
           </div>
 
-          <!-- Modal Body -->
           <div class="p-6 space-y-6">
-             <!-- Info Row -->
-             <div class="flex flex-wrap gap-6 text-sm text-slate-600 border-b border-slate-100 pb-6 font-medium">
-                <div class="flex items-center gap-2">
-                   <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                   {{ new Date(selectedEvent.event_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
-                </div>
-                 <div class="flex items-center gap-2">
-                   <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                   {{ getTime(selectedEvent.event_date) }}
-                </div>
-                 <div v-if="selectedEvent.location" class="flex items-center gap-2">
-                   <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                   {{ selectedEvent.location }}
-                </div>
+             <div v-if="selectedEvent.location" class="flex items-center gap-2 text-sm text-slate-600 border-b border-slate-100 pb-6 font-medium">
+               <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+               {{ selectedEvent.location }}
              </div>
 
-             <!-- Description -->
              <div class="prose prose-slate max-w-none text-slate-800 font-sans leading-loose text-lg">
-                <p class="font-medium">{{ selectedEvent.description }}</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <p class="font-medium whitespace-pre-wrap">{{ selectedEvent.description }}</p>
              </div>
 
-             <!-- Actions -->
-             <div class="pt-4 flex flex-col gap-4">
-               <button @click="addToCalendar(selectedEvent)" class="w-full bg-brand-gold hover:bg-brand-gold/90 text-white font-bold py-3 rounded-lg transition-colors shadow-md">
-                  Add to Calendar
-               </button>
-               
-               <div class="flex items-center justify-between border-t border-slate-100 pt-4">
-                  <div class="flex items-center gap-4">
-                     <span class="text-sm text-slate-400 uppercase font-bold tracking-wider">Share Event:</span>
-                     <ShareButtons :title="selectedEvent.title" :description="selectedEvent.description" />
-                  </div>
-
-                   <div class="flex items-center gap-2">
-                       <!-- Edit Button -->
-                       <button 
-                         v-if="auth.isAuthenticated && (selectedEvent.author_id === auth.user?.id || auth.user?.is_superuser)"
-                         @click="openEdit"
-                         class="bg-slate-50 text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors border border-slate-200"
-                       >
-                         Edit
-                       </button>
-
-                       <!-- Delete Button -->
-                       <button 
-                         v-if="auth.isAuthenticated && (selectedEvent.author_id === auth.user?.id || auth.user?.is_superuser)"
-                         @click="deleteEvent(selectedEvent.id)"
-                         class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors border border-red-100"
-                       >
-                         Delete
-                       </button>
-                   </div>
-               </div>
+             <div v-if="auth.isAuthenticated && (selectedEvent.author_id === auth.user?.id || auth.user?.is_superuser)" class="pt-6 border-t border-slate-100 flex justify-end gap-2">
+                <button 
+                   @click="openEdit"
+                   class="bg-slate-50 text-slate-600 px-6 py-2.5 rounded-xl font-bold text-xs border border-slate-200 hover:bg-slate-100 transition-colors"
+                >
+                   Edit
+                </button>
+                <button 
+                   @click="deletePost(selectedEvent.id)"
+                   class="bg-red-50 text-red-600 px-6 py-2.5 rounded-xl font-bold text-xs border border-red-100 hover:bg-red-100 transition-colors"
+                >
+                   Delete
+                </button>
              </div>
           </div>
         </div>
       </div>
     </Transition>
 
-    <!-- Add Post Modal -->
     <AddPostModal 
         v-if="auth.isAuthenticated"
         :is-open="isAddModalOpen"
         type="event"
+        :is-kudumbayogam="true"
         :initial-data="editingEvent"
         @close="closeAddModal"
         @refresh="refreshEvents"
     />
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRuntimeConfig, useHead } from '#imports'
-import ShareButtons from '~/components/ShareButtons.vue'
+import { useRuntimeConfig, useHead, ref, onMounted } from '#imports'
 import AddPostModal from '~/components/AddPostModal.vue'
 import { useAuthStore } from '~/stores/auth'
 
@@ -235,7 +186,7 @@ const selectedEvent = ref<EventItem | null>(null)
 
 const openDetails = (event: EventItem) => {
   selectedEvent.value = event
-  document.body.style.overflow = 'hidden' // Prevent background scrolling
+  document.body.style.overflow = 'hidden'
 }
 
 const closeDetails = () => {
@@ -253,15 +204,41 @@ const closeAddModal = () => {
   editingEvent.value = null
 }
 
-// Date Helpers
 const getMonth = (dateStr: string) => new Date(dateStr).toLocaleString('default', { month: 'short' })
 const getDay = (dateStr: string) => new Date(dateStr).getDate()
-const getTime = (dateStr: string) => new Date(dateStr).toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' })
+const getYear = (dateStr: string) => new Date(dateStr).getFullYear()
 
 const resolveImage = (path: string) => {
     if (!path) return null
     if (path.startsWith('http')) return path
-    return `${apiBase}${path}`
+    const cleanPath = path.startsWith('/') ? path : `/${path}`
+    return `${apiBase}${cleanPath}`
+}
+
+const refreshEvents = async () => {
+    loading.value = true
+    try {
+        // We might want a specific category for Kudumbayogam in the future
+        // For now, we fetch all events and perhaps filter on the frontend if needed
+        const response = await fetch(`${apiBase}/api/news/events/`)
+        if (response.ok) {
+            const allEvents = await response.json()
+            // Filter strategy: Use the explicit boolean flag
+            events.value = allEvents.filter((e: any) => e.is_kudumbayogam)
+            
+            // Fallback: If no explicit flags found, try string matching as backup for older posts
+            if (events.value.length === 0) {
+                 events.value = allEvents.filter((e: any) => 
+                    e.title.toLowerCase().includes('yogam') || 
+                    e.description.toLowerCase().includes('yogam')
+                 )
+            }
+        }
+  } catch (e) {
+    console.error("Failed to fetch kudumbayogam highlights", e)
+    } finally {
+    loading.value = false
+  }
 }
 
 function getCookie(name: string) {
@@ -270,39 +247,8 @@ function getCookie(name: string) {
   return matches ? matches[2] : null
 }
 
-const refreshEvents = async () => {
-    loading.value = true
-    try {
-    const response = await fetch(`${apiBase}/api/news/events/`)
-    if (response.ok) {
-        events.value = await response.json()
-    }
-  } catch (e) {
-    console.error("Failed to fetch events", e)
-  } finally {
-    loading.value = false
-  }
-}
-
-const addToCalendar = (event: EventItem | null) => {
-    if(!event) return
-    const start = new Date(event.event_date)
-    const end = new Date(start.getTime() + 60 * 60 * 1000) // 1 hour duration
-
-    const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g, "")
-
-    const url = new URL("https://www.google.com/calendar/render")
-    url.searchParams.append("action", "TEMPLATE")
-    url.searchParams.append("text", event.title)
-    url.searchParams.append("dates", `${formatDate(start)}/${formatDate(end)}`)
-    url.searchParams.append("details", event.description)
-    if (event.location) url.searchParams.append("location", event.location)
-
-    window.open(url.toString(), "_blank")
-}
-
-const deleteEvent = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this event?')) return
+const deletePost = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this highlight?')) return
     
     try {
         await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
@@ -332,6 +278,6 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Events - Kollaparambil Family',
+  title: 'Annual Kudumbayogam - Kollaparambil Family',
 })
 </script>

@@ -43,5 +43,6 @@ class PostSerializer(serializers.ModelSerializer):
             'creator_name',
             'author_id',
             'media',
-            'image'
+            'image',
+            'is_kudumbayogam'
         )
