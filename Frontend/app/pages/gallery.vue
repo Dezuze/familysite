@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
     <div class="page-container">
       <header class="gallery-header text-center py-8">
         <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-2">Gallery</h1>
-        <div class="h-1 w-16 bg-amber-500 mx-auto rounded-full mb-4"></div>
+        <div class="h-1 w-16 bg-brand-gold mx-auto rounded-full mb-4"></div>
         <p class="muted text-slate-500 font-medium">Latest images from our family gatherings and events.</p>
       </header>
 

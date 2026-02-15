@@ -37,16 +37,16 @@
             
             <!-- Button 1: Family Directory (Restricted) -->
             <div 
-                @click="handleRestrictedNavigation('/members')" 
+                @click="handleRestrictedNavigation('/familytree?view=grid')" 
                 class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-[#A08050] transition-colors">Family<br>Directory</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-brand-gold transition-colors">Family<br>Directory</h3>
                 </div>
             </div>
 
             <!-- Button 2: Events (Public) -->
-            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-linear-to-b from-[#A08050] to-[#6d5030]">
+            <NuxtLink to="/events" class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 bg-linear-to-b from-brand-olive to-brand-slate">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
                     <h3 class="text-lg md:text-xl font-bold text-white uppercase tracking-wide leading-tight">Events</h3>
                 </div>
@@ -58,7 +58,7 @@
                 class="group relative h-32 md:h-40 rounded-xl overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 cursor-pointer bg-white border border-slate-100"
             >
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-3">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-[#A08050] transition-colors">Annual<br>Kudumbayogam</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 uppercase tracking-wide leading-tight group-hover:text-brand-gold transition-colors">Annual<br>Kudumbayogam</h3>
                 </div>
             </div>
 
@@ -69,13 +69,13 @@
     <div class="bg-slate-100 py-16 px-4 md:px-12">
         <div class="max-w-7xl mx-auto">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 uppercase tracking-widest decoration-amber-500 underline underline-offset-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 uppercase tracking-widest decoration-brand-gold underline underline-offset-8">
                     Latest News & Events
                 </h2>
                 <button 
                   v-if="auth.isAuthenticated"
                   @click="isAddModalOpen = true"
-                  class="bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 shadow-md"
+                  class="bg-linear-to-b from-brand-olive to-brand-slate hover:brightness-110 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 shadow-md"
                 >
                   <span class="text-xl">+</span> Add News
                 </button>
@@ -106,16 +106,16 @@
                 >
                     <div class="relative h-36 overflow-hidden">
                         <img :src="resolveImage(item.image) || 'https://placehold.co/600x400/f1f5f9/64748b?text=News'" :alt="item.title" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-[#A08050] text-white text-xs font-bold px-2 py-0.5 rounded shadow">
+                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-brand-gold text-white text-xs font-bold px-2 py-0.5 rounded shadow">
                             EVENT
                         </div>
                     </div>
                     <div class="p-5">
-                        <h3 class="text-xl font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-amber-700 transition-colors">{{ item.title }}</h3>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-brand-gold transition-colors">{{ item.title }}</h3>
                         <p class="text-slate-600 text-sm line-clamp-2 leading-relaxed font-medium">{{ item.description }}</p>
                         <div class="mt-3 flex justify-between items-center">
                             <span class="text-xs text-slate-400 uppercase tracking-wider">{{ getDay(item.created_at) }} {{ getMonth(item.created_at) }}</span>
-                            <span class="text-amber-600 text-xs font-bold uppercase tracking-wide group-hover:underline">Read More</span>
+                            <span class="text-brand-gold text-xs font-bold uppercase tracking-wide group-hover:underline">Read More</span>
                         </div>
                     </div>
                 </div>
@@ -142,11 +142,11 @@
                     <div class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
 
                     <div class="absolute bottom-4 left-6">
-                        <span class="inline-block px-3 py-1 bg-amber-500 text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">
+                        <span class="inline-block px-3 py-1 bg-brand-gold text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">
                             {{ getMonth(selectedItem.created_at) }} {{ getDay(selectedItem.created_at) }}, {{ getYear(selectedItem.created_at) }}
                         </span>
                         <h2 class="text-3xl font-serif font-bold text-white leading-tight mt-1 drop-shadow-md">{{ selectedItem.title }}</h2>
-                        <p v-if="selectedItem.author_name" class="text-amber-200 text-sm mt-1 font-medium">Posted by {{ selectedItem.author_name }}</p>
+                        <p v-if="selectedItem.author_name" class="text-brand-gold/70 text-sm mt-1 font-medium">Posted by {{ selectedItem.author_name }}</p>
                     </div>
                 </div>
 
@@ -305,11 +305,7 @@ useHead({
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Fleur+De+Leah&display=swap');
-
-.font-fleur {
-  font-family: 'Fleur De Leah', cursive !important;
-}
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
 /* Animations */
 @keyframes slide-up {

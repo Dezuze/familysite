@@ -2,9 +2,12 @@
   <footer class="bg-slate-200 text-slate-600 py-16 px-6 border-t border-slate-300 w-full overflow-hidden">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-10 text-center md:text-left">
       <!-- Logo Section -->
-      <div class="flex flex-col items-center md:items-start w-full md:w-auto">
-        <img src="/images/logo.png" alt="Family Logo" class="w-48 mb-6 opacity-80 mix-blend-multiply hover:opacity-100 transition-all" />
-      </div>
+       <div class="flex flex-col items-center md:items-start w-full md:w-auto">
+         <NuxtLink to="/" class="flex flex-col items-center md:items-start group transition-all duration-300">
+            <span class="font-fleur text-4xl text-slate-800 group-hover:text-[#A08050] leading-none">Kollamparambil</span>
+            <span class="font-fleur text-3xl text-slate-600 group-hover:text-[#A08050] leading-none -mt-2 md:ml-8 transition-colors">Family</span>
+         </NuxtLink>
+       </div>
 
       <!-- Links -->
       <div class="grid grid-cols-2 gap-x-8 sm:gap-x-12 gap-y-4 font-semibold text-base sm:text-lg w-full md:w-auto px-4 md:px-0">

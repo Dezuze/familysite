@@ -23,6 +23,7 @@ export const useAuthStore = defineStore('auth', {
       last_name?: string
       name?: string
       profile_pic?: string | null
+      username?: string
     },
     token: null as string | null,
     isAuthenticated: false,
@@ -101,7 +102,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    setAuth(user: any, token?: string) {
+    setAuth(user: any, token?: string | null) {
       this.user = user
       this.token = token ?? null
       this.isAuthenticated = true

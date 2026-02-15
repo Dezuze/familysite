@@ -60,7 +60,7 @@ class FamilyMemberAdmin(ModelAdmin):
         }),
         (None, {
             'classes': ('unfold-tab', 'unfold-connections_tab'),
-            'fields': ('user', 'temp_member_id', 'parents', 'photo')
+            'fields': ('temp_member_id', 'parents', 'photo')
         }),
     )
 

@@ -5,7 +5,7 @@
       <h1 class="text-4xl md:text-5xl font-serif font-medium tracking-tight text-slate-900 mb-6">
         Upcoming Gatherings
       </h1>
-      <div class="h-1 w-24 bg-amber-500 mx-auto rounded-full mb-6"></div>
+      <div class="h-1 w-24 bg-brand-gold mx-auto rounded-full mb-6"></div>
       <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
         Join our family in fellowship and celebration. Save the date for these upcoming moments together.
       </p>
@@ -14,7 +14,7 @@
       <button 
         v-if="auth.isAuthenticated"
         @click="isAddModalOpen = true"
-        class="absolute right-0 top-0 hidden md:flex bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95 items-center gap-2"
+        class="absolute right-0 top-0 hidden md:flex bg-linear-to-b from-brand-olive to-brand-slate hover:brightness-110 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95 items-center gap-2"
       >
         <span class="text-xl">+</span> Add Event
       </button>
@@ -23,7 +23,7 @@
       <button 
         v-if="auth.isAuthenticated"
         @click="isAddModalOpen = true"
-        class="md:hidden mt-6 bg-linear-to-b from-[#A08050] to-[#6d5030] hover:brightness-110 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md items-center gap-2 inline-flex"
+        class="md:hidden mt-6 bg-linear-to-b from-brand-olive to-brand-slate hover:brightness-110 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md items-center gap-2 inline-flex"
       >
         <span class="text-xl">+</span> Add Event
       </button>
@@ -63,7 +63,7 @@
             
             <!-- Floating Date Badge -->
             <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md border border-slate-200 rounded-lg p-3 text-center min-w-[70px] shadow-lg">
-              <span class="block text-xs font-bold uppercase tracking-wider text-amber-600 mb-0.5">{{ getMonth(event.event_date) }}</span>
+              <span class="block text-xs font-bold uppercase tracking-wider text-brand-gold mb-0.5">{{ getMonth(event.event_date) }}</span>
               <span class="block text-2xl font-serif font-bold text-slate-900 leading-none">{{ getDay(event.event_date) }}</span>
             </div>
           </div>
@@ -71,7 +71,7 @@
           <!-- Content -->
           <div class="flex-1 p-6 flex flex-col relative">
             <!-- Meta Info -->
-            <div class="flex items-center gap-4 text-xs font-medium text-amber-600 mb-3 tracking-wide uppercase">
+            <div class="flex items-center gap-4 text-xs font-medium text-brand-gold mb-3 tracking-wide uppercase">
               <div v-if="event.location" class="flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 {{ event.location }}
@@ -82,7 +82,7 @@
               </div>
             </div>
 
-            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-3 group-hover:text-amber-700 transition-colors">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-3 group-hover:text-brand-gold transition-colors">
               {{ event.title }}
             </h2>
             
@@ -91,7 +91,7 @@
             </p>
 
             <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-              <button class="text-sm font-semibold text-slate-700 group-hover:text-amber-600 transition-colors flex items-center gap-2">
+              <button class="text-sm font-semibold text-slate-700 group-hover:text-brand-olive transition-colors flex items-center gap-2">
                   View Details
                   <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
               </button>
@@ -131,11 +131,11 @@
             <div class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
             
              <div class="absolute bottom-4 left-6">
-                <span class="inline-block px-3 py-1 bg-amber-500 text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">
+                <span class="inline-block px-3 py-1 bg-brand-gold text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">
                   {{ getMonth(selectedEvent.event_date) }} {{ getDay(selectedEvent.event_date) }}
                 </span>
                 <h2 class="text-3xl font-serif font-bold text-white drop-shadow-md">{{ selectedEvent.title }}</h2>
-                <p v-if="selectedEvent.author_name" class="text-amber-200 text-sm mt-1 font-medium">Organized by {{ selectedEvent.author_name }}</p>
+                <p v-if="selectedEvent.author_name" class="text-brand-gold/70 text-sm mt-1 font-medium">Organized by {{ selectedEvent.author_name }}</p>
              </div>
           </div>
 
@@ -144,15 +144,15 @@
              <!-- Info Row -->
              <div class="flex flex-wrap gap-6 text-sm text-slate-600 border-b border-slate-100 pb-6 font-medium">
                 <div class="flex items-center gap-2">
-                   <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                   <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                    {{ new Date(selectedEvent.event_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
                 </div>
                  <div class="flex items-center gap-2">
-                   <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                   <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                    {{ getTime(selectedEvent.event_date) }}
                 </div>
                  <div v-if="selectedEvent.location" class="flex items-center gap-2">
-                   <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                   <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                    {{ selectedEvent.location }}
                 </div>
              </div>
@@ -165,7 +165,7 @@
 
              <!-- Actions -->
              <div class="pt-4 flex flex-col gap-4">
-               <button @click="addToCalendar(selectedEvent)" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg transition-colors shadow-md">
+               <button @click="addToCalendar(selectedEvent)" class="w-full bg-brand-gold hover:bg-brand-gold/90 text-white font-bold py-3 rounded-lg transition-colors shadow-md">
                   Add to Calendar
                </button>
                

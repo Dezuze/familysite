@@ -231,7 +231,7 @@ defineExpose({ toggle })
   <div class="z-20 h-15 w-full lg:w-40 flex items-center
            transition-all duration-500 max-lg:rounded-4xl
            lg:rounded-br-[80px] lg:rounded-tr-[10px]"
-       style="background: linear-gradient(to bottom, #A08050, #6d5030);">
+       style="background: linear-gradient(to bottom, var(--color-brand-olive, #556B2F), var(--color-brand-slate, #2F4F4F));">
     <div class="w-full">
       <div v-if="!auth.isAuthenticated">
         <button
@@ -248,13 +248,13 @@ defineExpose({ toggle })
           <!-- Name (Visible on Mobile, Hidden on Desktop to keep pill shape clean) -->
           <span class="text-white font-bold text-sm md:text-base lg:hidden drop-shadow-md">{{ displayName }}</span>
 
-          <button @click="menuOpen = !menuOpen" class="h-10 w-10 rounded-full bg-[#1A3C3B] border-2 border-white/20 text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-md transition-transform active:scale-95">
+          <button @click="menuOpen = !menuOpen" class="h-10 w-10 rounded-full bg-brand-olive border-2 border-white/20 text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-md transition-transform active:scale-95">
              <img v-if="userPhoto" :src="userPhoto" alt="User" class="w-full h-full object-cover" />
              <span v-else>{{ initials }}</span>
           </button>
 
           <div v-if="menuOpen" class="absolute z-50 top-12 right-0 w-auto bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
-            <div class="px-2 py-1.5 font-bold text-[#1A3C3B] border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
+            <div class="px-2 py-1.5 font-bold text-brand-olive border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
             <button @click="copyInvite" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-amber-600 font-bold">Invite Member</button>
             <button @click="openEdit" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors">Edit profile</button>
             <button @click="logout" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-red-600">Logout</button>
@@ -278,12 +278,12 @@ defineExpose({ toggle })
     <Transition name="scale-fade">
       <div v-if="open" class="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-80 shadow-xl">
       <template v-if="!registering">
-        <h2 class="text-xl font-bold mb-4 text-[#1A3C3B]">Login</h2>
+        <h2 class="text-xl font-bold mb-4 text-brand-olive">Login</h2>
         <input
           v-model="email"
           type="email"
           placeholder="Email"
-          class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]"
+          class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold"
         />
 
         <div class="relative mb-3">
@@ -291,7 +291,7 @@ defineExpose({ toggle })
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             placeholder="Password"
-            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050] pr-10"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold pr-10"
           />
           <button
             @click.prevent="showPassword = !showPassword"
@@ -314,7 +314,7 @@ defineExpose({ toggle })
 
         <button
           @click.prevent="submit"
-          class="w-full bg-linear-to-b from-[#A08050] to-[#6d5030] py-2 rounded-lg text-white font-bold
+          class="w-full bg-linear-to-b from-brand-olive to-brand-slate py-2 rounded-lg text-white font-bold
                  transition hover:brightness-110 active:scale-95"
         >
           Continue
@@ -326,7 +326,7 @@ defineExpose({ toggle })
       </template>
 
       <template v-else>
-        <h2 class="text-xl font-bold mb-4 text-[#A08050]">Create Account</h2>
+        <h2 class="text-xl font-bold mb-4 text-brand-gold">Create Account</h2>
 
         <div class="mb-4 text-xs text-gray-500">
            Enter your Invite Token to join.
@@ -334,13 +334,13 @@ defineExpose({ toggle })
 
         <input v-model="sponsorId" placeholder="Invite Token" class="w-full mb-3 px-3 py-2 border rounded-lg border-amber-500 bg-amber-50" />
         <input v-model="regName" placeholder="Full name" class="w-full mb-3 px-3 py-2 border rounded-lg" />
-        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]" />
+        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold" />
         
         <div class="mb-3">
             <label class="block text-xs text-gray-500 mb-1">Profile Photo (Optional)</label>
             
             <div v-if="avatarSrc && !croppingAvatar" class="relative group w-20 h-20 mx-auto mb-2">
-                <img :src="avatarSrc" class="w-full h-full object-cover rounded-full border-2 border-[#A08050]" />
+                <img :src="avatarSrc" class="w-full h-full object-cover rounded-full border-2 border-brand-gold" />
                 <button @click="avatarSrc = null; regAvatar = null" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -351,7 +351,7 @@ defineExpose({ toggle })
                 type="file" 
                 @change="handleAvatarChange"
                 accept="image/*"
-                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-[#A08050] hover:file:bg-amber-100"
+                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold/10 file:text-brand-gold hover:file:bg-brand-gold/20"
             />
 
             <!-- Cropper Overlay moved outside for better stacking -->
@@ -362,7 +362,7 @@ defineExpose({ toggle })
             v-model="regPassword"
             :type="showRegPassword ? 'text' : 'password'"
             placeholder="Password"
-            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050] pr-10"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold pr-10"
           />
           <button
             @click.prevent="showRegPassword = !showRegPassword"
@@ -397,7 +397,7 @@ defineExpose({ toggle })
         <div v-if="error" class="text-sm text-red-600 mb-2">{{ error }}</div>
 
         <div class="flex gap-2">
-          <button @click.prevent="register" class="flex-1 bg-linear-to-b from-[#A08050] to-[#6d5030] text-white py-2 rounded font-bold hover:brightness-110 active:scale-95 transition-all">Create</button>
+          <button @click.prevent="register" class="flex-1 bg-linear-to-b from-brand-olive to-brand-slate text-white py-2 rounded font-bold hover:brightness-110 active:scale-95 transition-all">Create</button>
           <button @click.prevent="registering = false" class="flex-1 bg-slate-100 py-2 rounded">Cancel</button>
         </div>
       </template>
@@ -425,7 +425,7 @@ defineExpose({ toggle })
                   />
               </div>
               <div class="p-4 flex gap-3 shrink-0">
-                  <button @click="cropImage" class="flex-1 bg-[#A08050] text-white py-2 rounded-lg font-bold hover:brightness-110 active:scale-95 transition-all">Apply Crop</button>
+                  <button @click="cropImage" class="flex-1 bg-brand-olive text-white py-2 rounded-lg font-bold hover:brightness-110 active:scale-95 transition-all">Apply Crop</button>
                   <button @click="cancelCrop" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg font-bold hover:bg-slate-200 active:scale-95 transition-all">Cancel</button>
               </div>
           </div>

@@ -10,11 +10,11 @@
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-semibold truncate text-slate-800">{{ member.name }}</h3>
-        <span v-if="member.is_committee" class="shrink-0 bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Comm</span>
+        <span v-if="member.is_committee" class="shrink-0 bg-brand-olive/10 text-brand-olive text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Comm</span>
         <span class="shrink-0 text-[10px] text-slate-400">#{{ member.id }}</span>
       </div>
       <p class="text-xs text-slate-500 truncate mt-0.5">
-        <span v-if="member.role" class="text-[#A08050] font-bold mr-1">{{ member.role }}</span>
+        <span v-if="member.role" class="text-brand-gold font-bold mr-1">{{ member.role }}</span>
         <span v-else-if="member.relation">{{ member.relation }}</span>
         <span v-if="member.age" class="ml-1 opacity-70">• {{ member.age }}y</span>
       </p>

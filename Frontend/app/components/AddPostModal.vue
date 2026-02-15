@@ -18,7 +18,7 @@
             v-model="form.title" 
             type="text" 
             required
-            class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[#A08050]/50"
+            class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
             placeholder="Enter title..."
           />
         </div>
@@ -30,7 +30,7 @@
             v-model="form.description" 
             required
             rows="4"
-            class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[#A08050]/50"
+            class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
             placeholder="Enter details..."
           ></textarea>
         </div>
@@ -43,7 +43,7 @@
               v-model="form.event_date" 
               type="datetime-local" 
               required
-              class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[#A08050]/50"
+              class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
             />
           </div>
           <div>
@@ -51,7 +51,7 @@
             <input 
               v-model="form.location" 
               type="text" 
-              class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[#A08050]/50"
+              class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
               placeholder="e.g. Community Hall"
             />
           </div>
@@ -64,7 +64,7 @@
             type="file" 
             accept="image/*"
             @change="handleFileChange"
-            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-[#A08050] hover:file:bg-amber-100 dark:file:bg-[#A08050]/30 dark:file:text-[#A08050]"
+            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand-gold/10 file:text-brand-gold hover:file:bg-brand-gold/20 dark:file:bg-brand-gold/30 dark:file:text-brand-gold"
           />
         </div>
 
@@ -80,7 +80,7 @@
           <button 
             type="submit" 
             :disabled="loading"
-            class="px-6 py-2 rounded-xl bg-linear-to-r from-[#A08050] to-[#6d5030] text-white font-medium shadow-lg shadow-[#A08050]/20 hover:shadow-[#A08050]/30 active:scale-95 transition-all disabled:opacity-50"
+            class="px-6 py-2 rounded-xl bg-linear-to-r from-brand-olive to-brand-slate text-white font-medium shadow-lg shadow-brand-olive/20 hover:shadow-brand-olive/30 active:scale-95 transition-all disabled:opacity-50"
           >
             {{ loading ? 'Posting...' : 'Post' }}
           </button>

@@ -25,7 +25,7 @@
              </span>
              
              <div class="mt-6 flex gap-2">
-                <span v-if="member.gender=='M'" class="text-blue-600 text-xs uppercase font-bold tracking-wider bg-blue-50 px-2 py-1 rounded-md">Male</span>
+                <span v-if="member.gender=='M'" class="text-brand-olive text-xs uppercase font-bold tracking-wider bg-brand-olive/5 px-2 py-1 rounded-md">Male</span>
                 <span v-if="member.gender=='F'" class="text-pink-600 text-xs uppercase font-bold tracking-wider bg-pink-50 px-2 py-1 rounded-md">Female</span>
                 <span v-if="member.is_deceased" class="text-slate-500 text-xs uppercase font-bold tracking-wider bg-slate-200 px-2 py-1 rounded-md">Deceased</span>
              </div>
@@ -36,7 +36,7 @@
             <!-- Header & Close -->
             <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h3 class="text-lg font-bold text-[#A08050] uppercase tracking-widest">{{ member.committee_role || member.role || member.relation || 'Member' }}</h3>
+                    <h3 class="text-lg font-bold text-brand-gold uppercase tracking-widest">{{ member.committee_role || member.role || member.relation || 'Member' }}</h3>
                     <p class="text-xs text-slate-500">Profile Details</p>
                 </div>
                 <button @click="$emit('close')" class="hidden md:block p-2 text-slate-400 hover:text-slate-800 transition-colors">

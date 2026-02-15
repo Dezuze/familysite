@@ -66,6 +66,15 @@ class FamilyMember(models.Model):
 
     # Link to other FamilyMember instances to represent parent/child relationships.
     # Use `symmetrical=False` so `parents` and `children` are distinct.
+    # Track who created this member (especially for children/members without accounts)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="managed_members",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
     parents = models.ManyToManyField(
         'self',
         symmetrical=False,
