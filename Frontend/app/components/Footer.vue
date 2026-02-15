@@ -3,19 +3,21 @@
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-10 text-center md:text-left">
       <!-- Logo Section -->
       <div class="flex flex-col items-center md:items-start w-full md:w-auto">
-        <img src="/images/logo.png" alt="Family Logo" class="w-48 mb-6 opacity-80 mix-blend-multiply hover:opacity-100 transition-all" />
+        <span class="font-fleur text-4xl text-slate-800 mb-6 drop-shadow-sm">
+          Kollamparambil Family
+        </span>
       </div>
 
       <!-- Links -->
       <div class="grid grid-cols-2 gap-x-8 sm:gap-x-12 gap-y-4 font-semibold text-base sm:text-lg w-full md:w-auto px-4 md:px-0">
-        <NuxtLink v-if="auth.isAuthenticated" to="/familytree" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Family Tree</NuxtLink>
-        <NuxtLink to="/history" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Family History</NuxtLink>
-        <NuxtLink to="/events" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Events</NuxtLink>
-        <NuxtLink v-if="auth.isAuthenticated" to="/committee" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Committee</NuxtLink>
-        <NuxtLink v-if="auth.isAuthenticated" to="/directory" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Directory</NuxtLink>
-        <NuxtLink v-if="auth.isAuthenticated" to="/gallery" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Gallery</NuxtLink>
-        <NuxtLink to="/donate" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Donations</NuxtLink>
-        <NuxtLink to="/contact" class="hover:text-[#A08050] hover:underline transition-colors leading-tight">Contact</NuxtLink>
+        <NuxtLink v-if="auth.isAuthenticated" to="/familytree" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Family Tree</NuxtLink>
+        <NuxtLink to="/history" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Family History</NuxtLink>
+        <NuxtLink to="/events" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Events</NuxtLink>
+        <NuxtLink v-if="auth.isAuthenticated" to="/committee" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Committee</NuxtLink>
+        <NuxtLink v-if="auth.isAuthenticated" to="/directory" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Directory</NuxtLink>
+        <NuxtLink v-if="auth.isAuthenticated" to="/gallery" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Gallery</NuxtLink>
+        <NuxtLink to="/donate" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Donations</NuxtLink>
+        <NuxtLink to="/contact" class="hover:text-brand-gold hover:underline transition-colors leading-tight">Contact</NuxtLink>
       </div>
     </div>
     

@@ -1,4 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-gold: #A08050;
+  --color-brand-gold-dark: #6d5030;
+  --color-brand-olive: #556B2F;
+  --color-brand-slate: #2F4F4F;
+}
 html {
   scroll-behavior: smooth;
 }
@@ -41,4 +48,28 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background-color: #f59e0b; /* amber-500 */
+}
+
+.font-fleur {
+  font-family: 'Fleur De Leah', cursive !important;
+}
+
+/* Global Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.scale-fade-enter-from,
+.scale-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -45%) scale(0.92);
 }

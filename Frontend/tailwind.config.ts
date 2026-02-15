@@ -13,14 +13,7 @@ export default <Partial<Config>>{
         itim: ['Itim', 'cursive'],
       },
       colors: {
-        brand: {
-          gold: '#CDAA7D',
-          olive: '#556B2F',
-          slate: '#2F4F4F',
-          dark: '#0D0D0D',
-          light: '#F9F9F7',
-          white: '#FFFFFF',
-        },
+        // Colors are now defined in Frontend/app/assets/css/tailwind.css using @theme block for Tailwind v4 compatibility.
       },
     },
   },

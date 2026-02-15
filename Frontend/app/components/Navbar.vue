@@ -65,14 +65,16 @@ onUnmounted(() => {
       <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15">
         <div class="flex items-center gap-4">
           <NuxtLink to="/" class="flex fixed items-center gap-3">
-            <img src="/images/logo.png" alt="logo" class="w-35 h-13 object-contain" />
+            <span class="font-fleur text-3xl text-slate-800 hover:text-brand-gold transition-colors">
+              Kollamparambil Family
+            </span>
           </NuxtLink>
           <div class="flex absolute items-center gap-4 right-6">
             <NuxtLink
               v-for="link in visibleLinks"
               :key="link.to"
               :to="link.to"
-              class="py-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-[#A08050] hover:shadow-sm transition"
+              class="py-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-brand-gold hover:shadow-sm transition"
             >
               {{ link.name }}
             </NuxtLink>
@@ -88,7 +90,9 @@ onUnmounted(() => {
       <!-- Mobile -->
       <div class="flex bg-white lg:hidden items-center z-30 justify-between h-15">
         <NuxtLink to="/" class="flex px-3 items-center gap-3">
-          <img src="/images/logo.png" alt="logo" class="w-35 h-13 object-contain rounded" />
+          <span class="font-fleur text-2xl text-slate-800">
+            Kollamparambil Family
+          </span>
         </NuxtLink>
 
         <div class="flex items-center gap-2">
@@ -100,7 +104,7 @@ onUnmounted(() => {
               <div v-if="auth.user?.profile_pic" class="h-8 w-8 rounded-full border border-slate-200 overflow-hidden">
                 <img :src="auth.user.profile_pic.startsWith('http') ? auth.user.profile_pic : `${useRuntimeConfig().public.apiBase || 'http://localhost:8000'}${auth.user.profile_pic}`" class="w-full h-full object-cover" />
               </div>
-              <span v-else class="h-8 w-8 rounded-full bg-[#A08050] text-white flex items-center justify-center font-bold">{{ initials }}</span>
+              <span v-else class="h-8 w-8 rounded-full bg-brand-gold text-white flex items-center justify-center font-bold">{{ initials }}</span>
             </template>
             <template v-else>
                <svg class="w-8 h-8 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>

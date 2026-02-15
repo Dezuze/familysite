@@ -230,8 +230,7 @@ defineExpose({ toggle })
   <!-- LOGIN / AVATAR (keeps yellow bar) -->
   <div class="z-20 h-15 w-full lg:w-40 flex items-center
            transition-all duration-500 max-lg:rounded-4xl
-           lg:rounded-br-[80px] lg:rounded-tr-[10px]"
-       style="background: linear-gradient(to bottom, #A08050, #6d5030);">
+           lg:rounded-br-[80px] lg:rounded-tr-[10px] bg-linear-to-b from-brand-gold to-brand-gold-dark">
     <div class="w-full">
       <div v-if="!auth.isAuthenticated">
         <button
@@ -255,7 +254,7 @@ defineExpose({ toggle })
 
           <div v-if="menuOpen" class="absolute z-50 top-12 right-0 w-auto bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
             <div class="px-2 py-1.5 font-bold text-[#1A3C3B] border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
-            <button @click="copyInvite" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-amber-600 font-bold">Invite Member</button>
+            <button @click="copyInvite" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-brand-gold font-bold">Invite Member</button>
             <button @click="openEdit" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors">Edit profile</button>
             <button @click="logout" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-red-600">Logout</button>
           </div>
@@ -283,7 +282,7 @@ defineExpose({ toggle })
           v-model="email"
           type="email"
           placeholder="Email"
-          class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]"
+          class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold"
         />
 
         <div class="relative mb-3">
@@ -291,7 +290,7 @@ defineExpose({ toggle })
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             placeholder="Password"
-            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050] pr-10"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold pr-10"
           />
           <button
             @click.prevent="showPassword = !showPassword"
@@ -314,7 +313,7 @@ defineExpose({ toggle })
 
         <button
           @click.prevent="submit"
-          class="w-full bg-linear-to-b from-[#A08050] to-[#6d5030] py-2 rounded-lg text-white font-bold
+          class="w-full bg-linear-to-b from-brand-gold to-brand-gold-dark py-2 rounded-lg text-white font-bold
                  transition hover:brightness-110 active:scale-95"
         >
           Continue
@@ -326,21 +325,21 @@ defineExpose({ toggle })
       </template>
 
       <template v-else>
-        <h2 class="text-xl font-bold mb-4 text-[#A08050]">Create Account</h2>
+        <h2 class="text-xl font-bold mb-4 text-brand-gold">Create Account</h2>
 
         <div class="mb-4 text-xs text-gray-500">
            Enter your Invite Token to join.
         </div>
 
-        <input v-model="sponsorId" placeholder="Invite Token" class="w-full mb-3 px-3 py-2 border rounded-lg border-amber-500 bg-amber-50" />
+        <input v-model="sponsorId" placeholder="Invite Token" class="w-full mb-3 px-3 py-2 border rounded-lg border-brand-gold bg-brand-gold/5" />
         <input v-model="regName" placeholder="Full name" class="w-full mb-3 px-3 py-2 border rounded-lg" />
-        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050]" />
+        <input v-model="regEmail" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold" />
         
         <div class="mb-3">
             <label class="block text-xs text-gray-500 mb-1">Profile Photo (Optional)</label>
             
             <div v-if="avatarSrc && !croppingAvatar" class="relative group w-20 h-20 mx-auto mb-2">
-                <img :src="avatarSrc" class="w-full h-full object-cover rounded-full border-2 border-[#A08050]" />
+                <img :src="avatarSrc" class="w-full h-full object-cover rounded-full border-2 border-brand-gold" />
                 <button @click="avatarSrc = null; regAvatar = null" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -351,7 +350,7 @@ defineExpose({ toggle })
                 type="file" 
                 @change="handleAvatarChange"
                 accept="image/*"
-                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-[#A08050] hover:file:bg-amber-100"
+                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold/5 file:text-brand-gold hover:file:bg-brand-gold/10"
             />
 
             <!-- Cropper Overlay moved outside for better stacking -->
@@ -362,7 +361,7 @@ defineExpose({ toggle })
             v-model="regPassword"
             :type="showRegPassword ? 'text' : 'password'"
             placeholder="Password"
-            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#A08050] pr-10"
+            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold pr-10"
           />
           <button
             @click.prevent="showRegPassword = !showRegPassword"
@@ -383,7 +382,7 @@ defineExpose({ toggle })
         <div v-if="regPassword" class="mb-3">
           <div class="flex justify-between text-xs mb-1">
             <span class="text-gray-500">Security</span>
-            <span :class="passwordStrength >= 3 ? 'text-amber-600 font-bold' : 'text-gray-500'">{{ passwordStrengthLabel }}</span>
+            <span :class="passwordStrength >= 3 ? 'text-brand-gold font-bold' : 'text-gray-500'">{{ passwordStrengthLabel }}</span>
           </div>
           <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
              <div 
@@ -397,7 +396,7 @@ defineExpose({ toggle })
         <div v-if="error" class="text-sm text-red-600 mb-2">{{ error }}</div>
 
         <div class="flex gap-2">
-          <button @click.prevent="register" class="flex-1 bg-linear-to-b from-[#A08050] to-[#6d5030] text-white py-2 rounded font-bold hover:brightness-110 active:scale-95 transition-all">Create</button>
+          <button @click.prevent="register" class="flex-1 bg-linear-to-b from-brand-gold to-brand-gold-dark text-white py-2 rounded font-bold hover:brightness-110 active:scale-95 transition-all">Create</button>
           <button @click.prevent="registering = false" class="flex-1 bg-slate-100 py-2 rounded">Cancel</button>
         </div>
       </template>
@@ -425,7 +424,7 @@ defineExpose({ toggle })
                   />
               </div>
               <div class="p-4 flex gap-3 shrink-0">
-                  <button @click="cropImage" class="flex-1 bg-[#A08050] text-white py-2 rounded-lg font-bold hover:brightness-110 active:scale-95 transition-all">Apply Crop</button>
+                  <button @click="cropImage" class="flex-1 bg-brand-gold text-white py-2 rounded-lg font-bold hover:brightness-110 active:scale-95 transition-all">Apply Crop</button>
                   <button @click="cancelCrop" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg font-bold hover:bg-slate-200 active:scale-95 transition-all">Cancel</button>
               </div>
           </div>
@@ -435,22 +434,5 @@ defineExpose({ toggle })
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 
-.scale-fade-enter-active,
-.scale-fade-leave-active {
-  transition: all 0.3s ease;
-}
-.scale-fade-enter-from,
-.scale-fade-leave-to {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.95);
-}
 </style>
