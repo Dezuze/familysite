@@ -305,10 +305,7 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Kollamparambil Family',
-  link: [
-    { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap' }
-  ]
+  title: 'Home'
 })
 </script>
 

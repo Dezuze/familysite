@@ -347,7 +347,7 @@ onUnmounted(() => {
 })
 
 useHead({
-  title: 'News & Events - Kollaparambil Family',
+  title: 'News & Events'
 })
 </script>
 

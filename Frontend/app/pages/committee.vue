@@ -209,7 +209,7 @@ import { useHead, useRuntimeConfig } from '#imports'
 import type { FamilyMember } from '~/types/family'
 
 useHead({
-  title: 'Committee - Kollamparambil Family'
+  title: 'Committee'
 })
 
 // Types
