@@ -8,15 +8,6 @@ class PostAdmin(ModelAdmin):
     list_filter = ('post_type', 'created_at')
     search_fields = ('title',)
     ordering = ('-created_at',)
-    
-    fieldsets = (
-        ('Article Content', {
-            'fields': ('creator', 'title', 'description', 'post_type')
-        }),
-        ('Metadata', {
-            'fields': (('location', 'event_date'),)
-        }),
-    )
 
 @admin.register(Media)
 class MediaAdmin(ModelAdmin):
@@ -24,9 +15,3 @@ class MediaAdmin(ModelAdmin):
     list_filter = ('media_type', 'uploaded_at', 'post')
     search_fields = ('media_type', 'caption')
     readonly_fields = ('uploaded_at',)
-    
-    fieldsets = (
-        (None, {
-            'fields': (('uploader', 'post'), ('media_type', 'media_url'), 'caption', 'is_personal_gallery')
-        }),
-    )

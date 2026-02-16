@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import sys
 import pymysql
+from django.urls import reverse_lazy
 
 pymysql.install_as_MySQLdb()
 
@@ -228,12 +229,12 @@ UNFOLD = {
                     {
                         "title": "Users",
                         "icon": "manage_accounts", 
-                        "link": "reverse:admin:accounts_user_changelist",
+                        "link": reverse_lazy("admin:accounts_user_changelist"),
                     },
                     {
                         "title": "Invite Tokens",
                         "icon": "vpn_key", 
-                        "link": "reverse:admin:accounts_invitetoken_changelist",
+                        "link": reverse_lazy("admin:accounts_invitetoken_changelist"),
                     },
                 ],
             },
@@ -244,22 +245,22 @@ UNFOLD = {
                     {
                         "title": "Families",
                         "icon": "family_restroom",
-                        "link": "reverse:admin:families_family_changelist",
+                        "link": reverse_lazy("admin:families_family_changelist"),
                     },
                     {
                         "title": "Heads of Family",
                         "icon": "supervisor_account",
-                        "link": "reverse:admin:families_familyhead_changelist",
+                        "link": reverse_lazy("admin:families_familyhead_changelist"),
                     },
                     {
                         "title": "Members",
                         "icon": "group",
-                        "link": "reverse:admin:families_familymember_changelist",
+                        "link": reverse_lazy("admin:families_familymember_changelist"),
                     },
                     {
                         "title": "Deceased",
                         "icon": "hourglass_empty",
-                        "link": "reverse:admin:families_deceasedmember_changelist",
+                        "link": reverse_lazy("admin:families_deceasedmember_changelist"),
                     },
                 ],
             },
@@ -270,12 +271,12 @@ UNFOLD = {
                     {
                         "title": "News & Events",
                         "icon": "newspaper",
-                        "link": "reverse:admin:news_post_changelist",
+                        "link": reverse_lazy("admin:news_post_changelist"),
                     },
                     {
                         "title": "Post Media",
                         "icon": "perm_media",
-                        "link": "reverse:admin:news_media_changelist",
+                        "link": reverse_lazy("admin:news_media_changelist"),
                     },
                 ],
             },
@@ -286,17 +287,17 @@ UNFOLD = {
                     {
                         "title": "Photo Gallery",
                         "icon": "photo_library",
-                        "link": "reverse:admin:profiles_gallery_changelist",
+                        "link": reverse_lazy("admin:profiles_gallery_changelist"),
                     },
                     {
                         "title": "Family Media",
                         "icon": "collections",
-                        "link": "reverse:admin:families_familymedia_changelist",
+                        "link": reverse_lazy("admin:families_familymedia_changelist"),
                     },
                     {
                         "title": "Committee",
                         "icon": "work",
-                        "link": "reverse:admin:profiles_committee_changelist",
+                        "link": reverse_lazy("admin:profiles_committee_changelist"),
                     },
                 ],
             },
