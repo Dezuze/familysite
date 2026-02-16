@@ -230,10 +230,15 @@ UNFOLD = {
                         "icon": "manage_accounts", 
                         "link": "reverse:admin:accounts_user_changelist",
                     },
+                    {
+                        "title": "Invite Tokens",
+                        "icon": "vpn_key", 
+                        "link": "reverse:admin:accounts_invitetoken_changelist",
+                    },
                 ],
             },
             {
-                "title": "Core Directory",
+                "title": "Family Directory",
                 "separator": True,
                 "items": [
                     {
@@ -259,7 +264,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Media & News",
+                "title": "Content Management",
                 "separator": True,
                 "items": [
                     {
@@ -268,9 +273,25 @@ UNFOLD = {
                         "link": "reverse:admin:news_post_changelist",
                     },
                     {
-                        "title": "Gallery",
+                        "title": "Post Media",
+                        "icon": "perm_media",
+                        "link": "reverse:admin:news_media_changelist",
+                    },
+                ],
+            },
+            {
+                "title": "Gallery & Committee",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Photo Gallery",
                         "icon": "photo_library",
                         "link": "reverse:admin:profiles_gallery_changelist",
+                    },
+                    {
+                        "title": "Family Media",
+                        "icon": "collections",
+                        "link": "reverse:admin:families_familymedia_changelist",
                     },
                     {
                         "title": "Committee",
