@@ -69,9 +69,9 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async signup(payload: { username: string; email: string; member_id: number | null; password: string }) {
+    async signup(payload: any) {
       if (useLocalAuth()) {
-        const exists = users.find((u) => u.email.toLowerCase() === payload.email.toLowerCase())
+        const exists = users.find((u) => u.email.toLowerCase() === payload.email?.toLowerCase())
         if (exists) return { ok: false, error: { error: 'User already exists' } }
         const nextId = users.reduce((m, x) => Math.max(m, x.id), 0) + 1
         users.push({ id: nextId, email: payload.email, password: payload.password, name: payload.username })
@@ -83,14 +83,25 @@ export const useAuthStore = defineStore('auth', {
       try {
         await fetch(base + '/api/csrf/', { credentials: 'include' })
         const csrftoken = getCookie('csrftoken')
+        
+        const headers: Record<string, string> = {
+            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+        }
+
+        let body
+        if (payload instanceof FormData) {
+            body = payload
+            // browser sets content-type with boundary automatically for FormData
+        } else {
+            headers['Content-Type'] = 'application/json'
+            body = JSON.stringify(payload)
+        }
+
         const res = await fetch(base + '/api/auth/signup/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
-          },
+          headers,
           credentials: 'include',
-          body: JSON.stringify(payload),
+          body,
         })
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))

@@ -93,6 +93,12 @@ class SignupView(APIView):
                 member=member
             )
             
+            # Handle Avatar if provided
+            avatar = request.FILES.get('avatar')
+            if avatar and member:
+                member.photo = avatar
+                member.save()
+            
             token_obj.is_used = True
             token_obj.save()
             

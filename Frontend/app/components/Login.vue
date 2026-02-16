@@ -185,7 +185,8 @@ const register = async () => {
   const signupResult = await (auth as any).signup(formData)
 
   if (!signupResult || !signupResult.ok) {
-    const msg = (signupResult && signupResult.error && signupResult.error.error) || 'Signup failed'
+    const err = signupResult?.error
+    const msg = err?.error || err?.detail || 'Signup failed'
     error.value = typeof msg === 'string' ? msg : 'Signup failed'
     return
   }
