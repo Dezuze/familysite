@@ -4,7 +4,7 @@ from django.conf import settings
 
 class Gallery(models.Model):
 	image = models.ImageField(upload_to='gallery/')
-	date = models.DateField()
+	date = models.DateField(null=True, blank=True)
 	description = models.TextField(blank=True)
 
 	created_at = models.DateTimeField(auto_now_add=True)
