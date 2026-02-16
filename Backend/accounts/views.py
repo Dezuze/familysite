@@ -137,9 +137,11 @@ class GenerateInviteTokenView(APIView):
         return Response({"token": str(token_obj.token)}, status=status.HTTP_201_CREATED)
 
 
+from django.middleware.csrf import get_token
+
 class CsrfInitView(APIView):
     permission_classes = [AllowAny]
 
     @method_decorator(ensure_csrf_cookie)
     def get(self, request):
-        return Response({"detail": "ok"})
+        return Response({"csrfToken": get_token(request)})

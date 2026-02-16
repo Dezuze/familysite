@@ -4,7 +4,7 @@ from . import models
 
 
 @admin.register(models.Family)
-class FamilyAdmin(ModelAdmin):
+class FamilyAdmin(admin.ModelAdmin):
     list_display = ('member_no', 'sl_no', 'branch', 'created_at')
 
 

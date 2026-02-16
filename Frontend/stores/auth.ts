@@ -43,8 +43,9 @@ export const useAuthStore = defineStore('auth', {
 
       const base = apiBase()
       try {
-        await fetch(base + '/api/csrf/', { credentials: 'include' })
-        const csrftoken = getCookie('csrftoken')
+        const csrfRes = await fetch(base + '/api/csrf/', { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
 
         const res = await fetch(base + '/api/auth/login/', {
           method: 'POST',
@@ -81,8 +82,9 @@ export const useAuthStore = defineStore('auth', {
 
       const base = apiBase()
       try {
-        await fetch(base + '/api/csrf/', { credentials: 'include' })
-        const csrftoken = getCookie('csrftoken')
+        const csrfRes = await fetch(base + '/api/csrf/', { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
         
         const headers: Record<string, string> = {
             ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
@@ -144,8 +146,10 @@ export const useAuthStore = defineStore('auth', {
       }
       const base = apiBase()
       try {
-        await fetch(base + '/api/csrf/', { credentials: 'include' })
-        const csrftoken = getCookie('csrftoken')
+        const csrfRes = await fetch(base + '/api/csrf/', { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
+
         await fetch(base + '/api/auth/logout/', {
           method: 'POST',
           headers: {
