@@ -60,9 +60,14 @@ class FamilyMemberAdmin(ModelAdmin):
         }),
         (None, {
             'classes': ('unfold-tab', 'unfold-connections_tab'),
-            'fields': ('temp_member_id', 'parents', 'photo')
+            'fields': ('temp_member_id', 'parents', 'photo', 'created_by')
         }),
     )
+
+@admin.register(models.FamilyMedia)
+class FamilyMediaAdmin(ModelAdmin):
+    list_display = ('family', 'category', 'image')
+    list_filter = ('category', 'family')
 
 @admin.register(models.DeceasedMember)
 class DeceasedMemberAdmin(ModelAdmin):

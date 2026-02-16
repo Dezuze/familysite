@@ -11,15 +11,22 @@ class PostAdmin(ModelAdmin):
     
     fieldsets = (
         ('Article Content', {
-            'fields': ('title', 'content', 'post_type')
+            'fields': ('creator', 'title', 'description', 'post_type')
         }),
         ('Metadata', {
-            'fields': (('location', 'date'),)
+            'fields': (('location', 'event_date'),)
         }),
     )
 
 @admin.register(Media)
 class MediaAdmin(ModelAdmin):
-    list_display = ('id', 'media_type', 'uploaded_at')
-    list_filter = ('media_type', 'uploaded_at')
-    search_fields = ('media_type',)
+    list_display = ('id', 'uploader', 'post', 'media_type', 'uploaded_at')
+    list_filter = ('media_type', 'uploaded_at', 'post')
+    search_fields = ('media_type', 'caption')
+    readonly_fields = ('uploaded_at',)
+    
+    fieldsets = (
+        (None, {
+            'fields': (('uploader', 'post'), ('media_type', 'media_url'), 'caption', 'is_personal_gallery')
+        }),
+    )
