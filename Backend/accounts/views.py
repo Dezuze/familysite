@@ -12,6 +12,7 @@ from .serializers import UserSerializer
 
 
 class LoginView(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -55,6 +56,7 @@ class LoginView(APIView):
 from .models import InviteToken
 
 class SignupView(APIView):
+    authentication_classes = [] # Disable CSRF via SessionAuth for this endpoint
     permission_classes = [AllowAny]
 
     def post(self, request):

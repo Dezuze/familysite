@@ -37,7 +37,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
 INSTALLED_APPS = [
-    'unfold',
+    # 'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

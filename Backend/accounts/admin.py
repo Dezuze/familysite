@@ -11,7 +11,7 @@ except NotRegistered:
     pass
 
 @admin.register(User)
-class UserAdmin(auth_admin.UserAdmin, ModelAdmin):
+class UserAdmin(auth_admin.UserAdmin):
     list_display = (
         'username',
         'email',
@@ -24,7 +24,7 @@ class UserAdmin(auth_admin.UserAdmin, ModelAdmin):
     ordering = ('username',)
 
 @admin.register(InviteToken)
-class InviteTokenAdmin(ModelAdmin):
+class InviteTokenAdmin(admin.ModelAdmin):
     list_display = ('token', 'member', 'is_used', 'created_at')
     list_filter = ('is_used', 'created_at')
     readonly_fields = ('token', 'created_at')
