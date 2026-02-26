@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Login from '~/components/Login.vue'
 import { useAuthStore } from '~/stores/auth'
@@ -9,14 +9,31 @@ const auth = useAuthStore()
 
 const displayName = computed(() => auth.user?.name ?? auth.user?.email ?? '')
 const initials = computed(() => {
-  const n = displayName.value.trim()
+  const n = (displayName.value ?? '').trim()
   if (!n) return ''
   const parts = n.split(/\s+/).filter(Boolean)
   if (parts.length === 0) return ''
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  if (parts.length === 1) return (parts[0] ?? '').slice(0, 2).toUpperCase()
   const a = parts[0]?.charAt(0) ?? ''
   const b = parts[parts.length - 1]?.charAt(0) ?? ''
   return (a + b).toUpperCase()
+})
+
+const userPhoto = computed(() => {
+  const u = auth.user
+  if (!u) return ''
+  
+  const photo = (u as any).profile_pic || (u as any).photo || (u as any).image || ''
+  if (!photo) return ''
+  
+  if (photo.startsWith('http') || photo.startsWith('data:') || photo.startsWith('blob:')) {
+      return photo
+  }
+  
+  const config = useRuntimeConfig()
+  const apiBase = (config.public.apiBase as string) || 'http://localhost:8000'
+  const cleanPath = photo.replace(/^\/+/, '')
+  return `${apiBase}/${cleanPath}`
 })
 
 const links = [
@@ -86,7 +103,7 @@ onUnmounted(() => {
 
 
       <!-- Mobile -->
-      <div class="flex bg-white lg:hidden items-center z-30 justify-between h-15 px-4 shadow-sm">
+      <div class="flex bg-white lg:hidden items-center z-30 justify-between h-15 px-4 shadow-sm border-b border-slate-100">
         <NuxtLink to="/" class="flex font-fleur text-2xl items-center ml-4 text-right h-full">
            Kollamparambil<br>Family
         </NuxtLink>
@@ -94,13 +111,13 @@ onUnmounted(() => {
         <div class="flex items-center gap-2">
           <button
             @click="mobileOpen = !mobileOpen"
-            class="flex items-center gap-3 text-base font-semibold text-slate-800 pr-6 py-1 rounded transition"
+            class="flex items-center gap-3 text-base font-semibold text-slate-800 pr-2 py-1 rounded transition h-10 w-10 justify-center"
           >
             <template v-if="auth.isAuthenticated">
-              <div v-if="auth.user?.profile_pic" class="h-8 w-8 rounded-full border border-slate-200 overflow-hidden">
-                <img :src="auth.user.profile_pic.startsWith('http') ? auth.user.profile_pic : `${useRuntimeConfig().public.apiBase || 'http://localhost:8000'}${auth.user.profile_pic}`" class="w-full h-full object-cover" />
+              <div v-if="userPhoto" class="h-10 w-10 rounded-full border-2 border-brand-gold overflow-hidden shrink-0 shadow-sm">
+                <img :src="userPhoto" class="w-full h-full object-cover" @error="(e) => (e.target as any).style.display='none'" />
               </div>
-              <span v-else class="h-8 w-8 rounded-full bg-brand-gold text-white flex items-center justify-center font-bold">{{ initials }}</span>
+              <span v-else class="h-10 w-10 rounded-full bg-brand-gold text-white flex items-center justify-center font-bold shrink-0 shadow-sm">{{ initials }}</span>
             </template>
             <template v-else>
                <svg class="w-8 h-8 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -113,25 +130,21 @@ onUnmounted(() => {
     <Transition name="slide">
       <div
         v-if="mobileOpen"
-        class="lg:hidden fixed inset-x-0 top-15 -z-10 bg-white shadow-lg flex flex-col gap-3 px-6 pb-6 rounded-b-4xl"
+        class="lg:hidden fixed inset-x-0 top-15 z-40 bg-white shadow-2xl flex flex-col items-center gap-6 px-8 py-10 rounded-b-[40px] border-t border-slate-50"
       >
-        <div class="flex items-center justify-between pt-3">
-          <button @click="mobileOpen = false" class="text-xl"></button>
-        </div>
-
-        <div class="flex flex-col gap-2 mt-2">
+        <div class="flex flex-col items-center gap-2 w-full">
           <NuxtLink
             v-for="link in visibleLinks"
             :key="link.to"
             :to="link.to"
             @click="mobileOpen = false"
-            class="w-full text-center py-3 rounded-md font-semibold text-slate-800 hover:bg-slate-50 transition"
+            class="w-full text-center py-4 rounded-2xl font-bold text-lg text-slate-800 hover:bg-slate-50 hover:text-brand-gold transition-all active:scale-95"
           >
             {{ link.name }}
           </NuxtLink>
         </div>
 
-        <div class="mt-3">
+        <div class="w-full pt-4 border-t border-slate-100 flex flex-col items-center">
           <Login />
         </div>
       </div>

@@ -43,18 +43,20 @@ class FamilyMember(models.Model):
     temp_member_id = models.CharField(max_length=50, blank=True, null=True)
 
     name = models.CharField(max_length=100)
-    age = models.PositiveIntegerField()
+    nickname = models.CharField(max_length=50, blank=True, null=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
 
     relation = models.CharField(max_length=50)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True, blank=True)
 
     address_if_different = models.TextField(blank=True, null=True)
 
-    education = models.CharField(max_length=100)
-    occupation = models.CharField(max_length=100)
+    education = models.CharField(max_length=100, blank=True, null=True)
+    occupation = models.CharField(max_length=100, blank=True, null=True)
     place_of_work = models.CharField(max_length=100, blank=True, null=True)
 
-    blood_group = models.CharField(max_length=5)
+    blood_group = models.CharField(max_length=10, blank=True, null=True)
+    is_deceased = models.BooleanField(default=False)
 
     gender = models.CharField(max_length=1, choices=[("M", "Male"), ("F", "Female"), ("O", "Other")], default="M")
     bio = models.TextField(blank=True, null=True)
@@ -134,3 +136,27 @@ class FamilyMedia(models.Model):
 
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     image = models.ImageField(upload_to="family/gallery/")
+
+
+class Relationship(models.Model):
+    RELATION_CHOICES = [
+        ("Spouse", "Spouse"),
+        ("Aunt", "Aunt"),
+        ("Uncle", "Uncle"),
+        ("Cousin", "Cousin"),
+        ("Grandparent", "Grandparent"),
+        ("Sibling", "Sibling"),
+        ("Father", "Father"),
+        ("Mother", "Mother"),
+        ("Other", "Other"),
+    ]
+
+    from_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name="relationships_from")
+    to_member = models.ForeignKey(FamilyMember, on_delete=models.CASCADE, related_name="relationships_to")
+    relation_type = models.CharField(max_length=20, choices=RELATION_CHOICES)
+
+    class Meta:
+        unique_together = ('from_member', 'to_member', 'relation_type')
+
+    def __str__(self):
+        return f"{self.from_member.name} -> {self.relation_type} -> {self.to_member.name}"

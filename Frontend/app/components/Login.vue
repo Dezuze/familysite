@@ -30,7 +30,19 @@ const error = ref('')
 const menuOpen = ref(false)
 
 // Check for referral link
-onMounted(() => {
+onMounted(async () => {
+  // Always refresh profile to pick up managed_members if they were added
+  if (auth.isAuthenticated) {
+      await auth.fetchProfile()
+  }
+  
+  if (route.query.login) {
+      open.value = true
+  }
+  if (route.query.register) {
+      open.value = true
+      registering.value = true
+  }
   if (route.query.ref || route.query.token) {
       sponsorId.value = (route.query.token || route.query.ref) as string
       open.value = true
@@ -84,19 +96,22 @@ const passwordStrengthLabel = computed(() => {
 
 const userPhoto = computed<string>(() => {
   const u = auth.user as any
-  // Potential field names: profile_pic (from serializer), photo, image
-  const photo = u?.profile_pic || u?.photo || u?.image || ''
+  // Potential field names: profile_pic (from serializer), photo, image, picture
+  const photo = u?.profile_pic || u?.photo || u?.image || u?.picture || ''
   if (!photo) return ''
+  
   // If it's already a full URL or base64/blob, return it
-  if (photo.startsWith('http') || photo.startsWith('data:') || photo.startsWith('blob:')) return photo
+  if (photo.startsWith('http') || photo.startsWith('data:') || photo.startsWith('blob:')) {
+      return photo
+  }
   
   // Prepend apiBase if it's a relative path
   const config = useRuntimeConfig()
   const apiBase = (config.public.apiBase as string) || 'http://localhost:8000'
   
-  // Ensure we don't double prepend if photo already has a leading slash
-  const cleanPhoto = photo.startsWith('/') ? photo : `/${photo}`
-  return `${apiBase}${cleanPhoto}`
+  // Clean potential starting slashes to avoid double slashes with apiBase
+  const cleanPath = photo.replace(/^\/+/, '')
+  return `${apiBase}/${cleanPath}`
 })
 
 const toggle = () => (open.value = !open.value)
@@ -155,10 +170,11 @@ const copyInvite = async () => {
         if (res.ok) {
             const data = await res.json()
             const link = `${window.location.origin}/?token=${data.token}`
-            await navigator.clipboard.writeText(link)
-            alert('Invite link copied to clipboard!')
+            const message = `Hey! Join our family directory here: ${link}`
+            await navigator.clipboard.writeText(message)
+            alert('Invite link and message copied to clipboard! You can now paste it directly into WhatsApp.')
         } else {
-            alert('Failed to generate invite token.')
+            alert('Failed to generate invite token. Please make sure your profile is completed.')
         }
     } catch (e) {
         console.error("Invite generation failed", e)
@@ -234,34 +250,78 @@ defineExpose({ toggle })
 <template>
   <!-- LOGIN / AVATAR (keeps yellow bar) -->
   <div class="z-20 h-15 w-full lg:w-40 flex items-center
-           transition-all duration-500 max-lg:rounded-4xl
-           lg:rounded-br-[80px] lg:rounded-tr-[10px] bg-linear-to-b from-brand-gold to-brand-gold-dark">
+           transition-all duration-500 max-lg:rounded-full
+           lg:rounded-br-[80px] lg:rounded-tr-[10px] bg-linear-to-b from-brand-gold to-brand-gold-dark shadow-lg">
     <div class="w-full">
       <div v-if="!auth.isAuthenticated">
         <button
           @click="toggle"
-          class="w-full lg:pl-10 font-bold text-white py-3
+          class="w-full max-w-[280px] mx-auto lg:max-w-none lg:pl-10 font-bold text-white py-3 block
                  transition lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] hover:brightness-110 active:scale-95"
         >
           Login
         </button>
       </div>
 
-      <div v-else class="flex items-center justify-end pr-10 w-full h-full">
+      <div v-else class="flex items-center lg:justify-end justify-center lg:pr-10 w-full h-full px-4 lg:px-0">
         <div class="relative flex items-center gap-3">
-          <!-- Name (Visible on Mobile, Hidden on Desktop to keep pill shape clean) -->
-          <span class="text-white font-bold text-sm md:text-base lg:hidden drop-shadow-md">{{ displayName }}</span>
+          <!-- Name (Visible on Mobile, slightly smaller to fit pill) -->
+          <span class="text-white font-black text-xs lg:hidden drop-shadow-md truncate max-w-[120px]">{{ displayName }}</span>
 
-          <button @click="menuOpen = !menuOpen" class="h-10 w-10 rounded-full bg-brand-gold border-2 border-white/20 text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-md transition-transform active:scale-95">
-             <img v-if="userPhoto" :src="userPhoto" alt="User" class="w-full h-full object-cover" />
+          <button @click="menuOpen = !menuOpen" class="h-10 w-10 lg:h-11 lg:w-11 rounded-full bg-brand-gold border-2 border-white/50 text-white flex items-center justify-center font-bold overflow-hidden shrink-0 shadow-lg transition-transform active:scale-95">
+             <img v-if="userPhoto" :src="userPhoto" alt="User" class="w-full h-full object-cover" @error="(e) => (e.target as any).style.display='none'" />
              <span v-else>{{ initials }}</span>
           </button>
 
-          <div v-if="menuOpen" class="absolute z-50 top-12 -left-15 w-40 bg-white rounded-lg shadow-xl p-2 text-sm text-gray-800 border border-gray-100 flex flex-col gap-1">
-            <div class="px-2 py-1.5 font-bold text-brand-gold-dark border-b border-gray-100 mb-1 lg:block hidden">{{ displayName }}</div>
-            <button @click="copyInvite" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-brand-gold font-bold">Invite Member</button>
-            <button @click="openEdit" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors">Edit profile</button>
-            <button @click="logout" class="w-full text-left px-2 py-1.5 hover:bg-slate-100 rounded-md transition-colors text-red-600">Logout</button>
+          <div v-if="menuOpen" class="absolute z-50 top-14 lg:-left-24 left-1/2 lg:translate-x-0 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-2xl p-3 text-sm text-slate-800 border border-slate-100 flex flex-col gap-1.5 animate-fade-in">
+            <div class="px-3 py-2 font-black text-brand-gold-dark border-b border-slate-100 mb-2 text-center">{{ displayName }}</div>
+            
+            <button @click="copyInvite" class="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-xl transition-all text-brand-gold font-bold flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Invite Member
+            </button>
+
+            <button @click="router.push('/onboarding?step=3'); menuOpen = false" class="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-xl transition-all flex items-center gap-2 font-semibold">
+                <svg class="w-4 h-4 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                Add Family Member
+            </button>
+
+            <!-- Managed Members Section -->
+            <div v-if="auth.isAuthenticated && (auth.user?.managed_members?.length || 0) > 0" class="border-t border-slate-100 mt-2 pt-2">
+                <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex justify-between items-center">
+                    <span>Managed Members</span>
+                    <span class="bg-slate-100 text-slate-500 px-1.5 rounded-full">{{ auth.user?.managed_members?.length || 0 }}</span>
+                </div>
+                <div class="max-h-48 overflow-y-auto custom-scrollbar">
+                    <button 
+                        v-for="m in (auth.user?.managed_members || [])" 
+                        :key="m.id"
+                        @click="router.push(`/onboarding?step=3&edit=${m.id}`); menuOpen = false"
+                        class="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-xl transition-all flex items-center gap-3 group"
+                    >
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 group-hover:border-brand-gold/30 transition-colors">
+                            <img v-if="m.profile_pic" :src="m.profile_pic.startsWith('http') ? m.profile_pic : `${useRuntimeConfig().public.apiBase || 'http://localhost:8000'}${m.profile_pic}`" class="w-full h-full object-cover" />
+                            <div v-else class="w-full h-full flex items-center justify-center text-slate-400 font-bold text-sm uppercase">{{ m.name.charAt(0) }}</div>
+                        </div>
+                        <div class="flex flex-col flex-1 truncate">
+                            <span class="font-bold text-slate-700 group-hover:text-brand-gold transition-colors truncate">{{ m.name }}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">{{ m.relation }}</span>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-300 group-hover:text-brand-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-50 mt-1 pt-2">
+                <button @click="openEdit" class="w-full text-left px-3 py-2.5 hover:bg-slate-50 rounded-xl transition-all flex items-center gap-2 font-semibold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Edit profile
+                </button>
+                <button @click="logout" class="w-full text-left px-3 py-2.5 hover:bg-red-50 rounded-xl transition-all text-red-600 flex items-center gap-2 font-semibold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </button>
+            </div>
           </div>
         </div>
       </div>

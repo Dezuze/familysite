@@ -14,19 +14,27 @@ function getCookie(name: string) {
   return matches ? matches[2] : null
 }
 
+export interface User {
+  id: number
+  email: string
+  first_name?: string
+  last_name?: string
+  name?: string
+  profile_pic?: string | null
+  username?: string
+  is_superuser?: boolean
+  is_staff?: boolean
+  managed_members?: Array<{
+    id: number
+    name: string
+    profile_pic: string | null
+    relation: string
+  }>
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null as null | {
-      id: number
-      email: string
-      first_name?: string
-      last_name?: string
-      name?: string
-      profile_pic?: string | null
-      username?: string
-      is_superuser?: boolean
-      is_staff?: boolean
-    },
+    user: null as null | User,
     token: null as string | null,
     isAuthenticated: false,
   }),
@@ -171,7 +179,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Update profile fields locally (e.g., name)
-    updateProfile(partial: { name?: string }) {
+    updateProfile(partial: Partial<User>) {
       if (!this.user) return
       this.user = { ...this.user, ...partial }
     },

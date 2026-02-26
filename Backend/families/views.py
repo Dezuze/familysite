@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import FamilyMember, FamilyMedia, Family
+from .models import FamilyMember, FamilyMedia, Family, Relationship
 from .serializers import FamilyMemberSerializer, FamilyTreeSerializer, FamilyMediaSerializer
 from rest_framework import generics
 from django.shortcuts import get_object_or_404
@@ -56,7 +56,7 @@ class UserProfileView(APIView):
                  user.member = member
                  user.save()
 
-            # Update Name from split fields if provided
+            # Update Fields
             if 'first_name' in data or 'last_name' in data:
                 f_name = data.get('first_name', '')
                 l_name = data.get('last_name', '')
@@ -64,7 +64,14 @@ class UserProfileView(APIView):
             elif 'name' in data:
                 member.name = data['name']
             
-            if 'date_of_birth' in data: 
+            if 'nickname' in data: member.nickname = data['nickname']
+            if 'gender' in data: member.gender = data['gender']
+            if 'bio' in data: member.bio = data['bio']
+            if 'phone_no' in data: member.phone_no = data['phone_no']
+            if 'email_id' in data: member.email_id = data['email_id']
+            if 'church_parish' in data: member.church_parish = data['church_parish']
+            
+            if 'date_of_birth' in data and data['date_of_birth']: 
                 dob = data['date_of_birth']
                 member.date_of_birth = dob
                 # Recalculate age if DOB changed
@@ -72,31 +79,81 @@ class UserProfileView(APIView):
                     dob_date = date.fromisoformat(dob)
                     today = date.today()
                     member.age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
-                except ValueError:
+                except (ValueError, TypeError):
                     pass
 
             if 'education' in data: member.education = data['education']
             if 'occupation' in data: member.occupation = data['occupation']
             if 'place_of_work' in data: member.place_of_work = data['place_of_work']
             if 'blood_group' in data: member.blood_group = data['blood_group']
+            if 'is_deceased' in data: member.is_deceased = data['is_deceased'] == 'true' or data['is_deceased'] == True
             if 'address' in data: member.address_if_different = data['address']
+            elif 'address_if_different' in data: member.address_if_different = data['address_if_different']
             
             # Update Parents (ManyToMany)
             if 'parents' in data:
-                parent_ids = data['parents']
+                # Handle FormData getlist or JSON list
+                if hasattr(data, 'getlist'):
+                    parent_ids = data.getlist('parents')
+                else:
+                    parent_ids = data['parents']
+                
                 if isinstance(parent_ids, str):
-                    # Handle comma separated string if sent that way
                     parent_ids = [p.strip() for p in parent_ids.split(',')]
+                
                 member.parents.set(parent_ids)
             
+            # Update Relationships
+            if 'relationships' in data:
+                import json
+                try:
+                    rel_data = data['relationships']
+                    if isinstance(rel_data, str):
+                        rel_data = json.loads(rel_data)
+                    
+                    # Clear existing and re-add? Or just add new ones?
+                    # For onboarding, clearing might be cleaner
+                    Relationship.objects.filter(from_member=member).delete()
+                    for item in rel_data:
+                        to_id = item.get('to_member') or item.get('to_member_id')
+                        rel_type = item.get('relation_type')
+                        name = item.get('name') or item.get('to_member_name')
+                        
+                        if not to_id and name:
+                            # Auto-create member if not found
+                            new_member = FamilyMember.objects.create(
+                                name=name,
+                                relation=rel_type, # Temporary
+                                age=0, 
+                                created_by=request.user,
+                                family=member.family
+                            )
+                            to_id = new_member.id
+
+                        if to_id and rel_type:
+                            Relationship.objects.create(
+                                from_member=member,
+                                to_member_id=to_id,
+                                relation_type=rel_type
+                            )
+                            # Special case: Father/Mother also go to parents M2M for tree
+                            if rel_type in ['Father', 'Mother']:
+                                member.parents.add(to_id)
+                except Exception as e:
+                    print(f"Error saving relationships: {e}")
+
             # Update Profile Pic
             if 'profile_pic' in request.FILES:
                 member.photo = request.FILES['profile_pic']
+            elif 'photo' in request.FILES:
+                member.photo = request.FILES['photo']
             
             member.save()
             
             return Response(FamilyMemberSerializer(member).data)
         except Exception as e:
+            import traceback
+            traceback.print_exc() # Print to server logs for debugging
             return Response({"error": str(e)}, status=500)
 
 
@@ -197,24 +254,68 @@ class ManagedMembersView(APIView):
                 blood_group=data.get('blood_group', 'Unknown'),
                 occupation=data.get('occupation', ''),
                 education=data.get('education', ''),
+                is_deceased=data.get('is_deceased', 'false') == 'true' or data.get('is_deceased') == True,
                 phone_no=data.get('phone_no', ''),
                 email_id=data.get('email_id', ''),
                 address_if_different=data.get('address', ''),
                 bio=data.get('bio', ''),
+                church_parish=data.get('church_parish', ''),
+                nickname=data.get('nickname', ''),
                 created_by=request.user
             )
 
             # Link parents if provided
             if 'parents' in data:
-                parent_ids = data['parents']
+                if hasattr(data, 'getlist'):
+                    parent_ids = data.getlist('parents')
+                else:
+                    parent_ids = data['parents']
+                
                 if isinstance(parent_ids, str):
                     parent_ids = [p.strip() for p in parent_ids.split(',')]
                 member.parents.set(parent_ids)
 
+            # Relationships
+            if 'relationships' in data:
+                import json
+                try:
+                    rel_data = data['relationships']
+                    if isinstance(rel_data, str):
+                        rel_data = json.loads(rel_data)
+                    for item in rel_data:
+                        to_id = item.get('to_member') or item.get('to_member_id')
+                        rel_type = item.get('relation_type')
+                        name = item.get('name') or item.get('to_member_name')
+
+                        if not to_id and name:
+                            # Auto-create member if not found
+                            new_member = FamilyMember.objects.create(
+                                name=name,
+                                relation=rel_type, # Temporary
+                                age=0, 
+                                created_by=request.user,
+                                family=member.family
+                            )
+                            to_id = new_member.id
+
+                        if to_id and rel_type:
+                            Relationship.objects.create(
+                                from_member=member,
+                                to_member_id=to_id,
+                                relation_type=rel_type
+                            )
+                            if rel_type in ['Father', 'Mother']:
+                                member.parents.add(to_id)
+                except Exception as e:
+                    print(f"Error saving relationships: {e}")
+
             # Profile Pic
             if 'profile_pic' in request.FILES:
                 member.photo = request.FILES['profile_pic']
-                member.save()
+            elif 'photo' in request.FILES:
+                member.photo = request.FILES['photo']
+            
+            member.save()
 
             return Response(FamilyMemberSerializer(member).data, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -256,17 +357,62 @@ class ManagedMemberDetailView(APIView):
             if 'education' in data: member.education = data['education']
             if 'phone_no' in data: member.phone_no = data['phone_no']
             if 'email_id' in data: member.email_id = data['email_id']
+            if 'is_deceased' in data: member.is_deceased = data['is_deceased'] == 'true' or data['is_deceased'] == True
             if 'address' in data: member.address_if_different = data['address']
             if 'bio' in data: member.bio = data['bio']
+            if 'nickname' in data: member.nickname = data['nickname']
+            if 'church_parish' in data: member.church_parish = data['church_parish']
+
+            # Relationships
+            if 'relationships' in data:
+                import json
+                try:
+                    rel_data = data['relationships']
+                    if isinstance(rel_data, str):
+                        rel_data = json.loads(rel_data)
+                    
+                    Relationship.objects.filter(from_member=member).delete()
+                    for item in rel_data:
+                        to_id = item.get('to_member') or item.get('to_member_id')
+                        rel_type = item.get('relation_type')
+                        name = item.get('name') or item.get('to_member_name')
+
+                        if not to_id and name:
+                            # Auto-create member if not found
+                            new_member = FamilyMember.objects.create(
+                                name=name,
+                                relation=rel_type, # Temporary
+                                age=0, 
+                                created_by=request.user,
+                                family=member.family
+                            )
+                            to_id = new_member.id
+
+                        if to_id and rel_type:
+                            Relationship.objects.create(
+                                from_member=member,
+                                to_member_id=to_id,
+                                relation_type=rel_type
+                            )
+                            if rel_type in ['Father', 'Mother']:
+                                member.parents.add(to_id)
+                except Exception as e:
+                    print(f"Error saving relationships: {e}")
 
             if 'parents' in data:
-                parent_ids = data['parents']
+                if hasattr(data, 'getlist'):
+                    parent_ids = data.getlist('parents')
+                else:
+                    parent_ids = data['parents']
+                
                 if isinstance(parent_ids, str):
                     parent_ids = [p.strip() for p in parent_ids.split(',')]
                 member.parents.set(parent_ids)
 
             if 'profile_pic' in request.FILES:
                 member.photo = request.FILES['profile_pic']
+            elif 'photo' in request.FILES:
+                member.photo = request.FILES['photo']
 
             member.save()
             return Response(FamilyMemberSerializer(member).data)
