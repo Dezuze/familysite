@@ -623,8 +623,9 @@ const fetchManagedMembers = async () => {
 const saveManagedMember = async () => {
     loading.value = true
     try {
-        await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
-        const csrftoken = getCookie('csrftoken')
+        const csrfRes = await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
 
         const formData = new FormData()
         Object.keys(managedForm.value).forEach(key => {
@@ -929,8 +930,9 @@ const saveProfile = async () => {
     loading.value = true
     try {
         // Fetch CSRF token first
-        await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
-        const csrftoken = getCookie('csrftoken')
+        const csrfRes = await fetch(`${apiBase}/api/csrf/`, { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
 
         const formData = new FormData()
         // Append all fields

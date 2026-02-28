@@ -104,6 +104,9 @@ class SignupView(APIView):
             token_obj.is_used = True
             token_obj.save()
             
+            # Log the user in to establish a session cookie for subsequent profile updates
+            login(request, user)
+            
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
