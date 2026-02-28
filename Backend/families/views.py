@@ -30,7 +30,12 @@ class UserProfileView(APIView):
                  # Create new member if not exists - needs a family
                  family = Family.objects.first()
                  if not family:
-                     return Response({"error": "No families found in database. Contact admin."}, status=400)
+                     # Fallback: Create a default family if none exists
+                     family = Family.objects.create(
+                         sl_no="1",
+                         branch="Main Branch",
+                         member_no="KFA-0001"
+                     )
                  
                  dob = data.get('date_of_birth')
                  if not dob:
