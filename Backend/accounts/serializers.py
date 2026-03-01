@@ -4,15 +4,19 @@ from families.models import FamilyMember
 
 class ManagedMemberSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
+    has_account = serializers.SerializerMethodField()
 
     class Meta:
         model = FamilyMember
-        fields = ('id', 'name', 'profile_pic', 'relation')
+        fields = ('id', 'name', 'profile_pic', 'relation', 'is_independent', 'has_account')
 
     def get_profile_pic(self, obj):
         if obj.photo:
             return obj.photo.url
         return None
+
+    def get_has_account(self, obj):
+        return hasattr(obj, 'user_account') and obj.user_account is not None
 
 class UserSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()

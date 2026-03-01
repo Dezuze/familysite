@@ -305,7 +305,11 @@ defineExpose({ toggle })
                         </div>
                         <div class="flex flex-col flex-1 truncate">
                             <span class="font-bold text-slate-700 group-hover:text-brand-gold transition-colors truncate">{{ m.name }}</span>
-                            <span class="text-[10px] text-slate-400 font-medium">{{ m.relation }}</span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] text-slate-400 font-medium">{{ m.relation }}</span>
+                                <span v-if="m.has_account" class="text-[8px] text-blue-500 font-bold">• Login</span>
+                                <span v-if="m.is_independent" class="text-[8px] text-green-500 font-bold">• Independent</span>
+                            </div>
                         </div>
                         <svg class="w-4 h-4 text-slate-300 group-hover:text-brand-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </button>

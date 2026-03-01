@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-slate-50 text-slate-800 font-sans pt-32 relative overflow-hidden">
+  <div class="min-h-screen text-slate-800 font-sans pt-32 relative overflow-hidden" style="background: linear-gradient(135deg, #faf8f5 0%, #f0ede6 30%, #e8e4db 60%, #f5f2ec 100%);">
+    
+    <!-- Subtle decorative background pattern -->
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23A08050&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
     
     <!-- Standardized Premium Header -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 relative z-20 pointer-events-auto">
@@ -69,11 +72,13 @@
     </div>
 
     <!-- Visual View -->
-    <div v-show="viewMode === 'visual'" class="w-full h-[calc(100vh-100px)] cursor-move" ref="chartContainer">
-       <div v-if="loading" class="absolute inset-0 flex items-center justify-center">
+    <div v-show="viewMode === 'visual'" class="w-full h-[calc(100vh-100px)] cursor-move relative" ref="chartContainer">
+       <!-- Tree area backdrop -->
+       <div class="absolute inset-0 rounded-none" style="background: radial-gradient(ellipse at center, rgba(160,128,80,0.04) 0%, transparent 70%);"></div>
+       <div v-if="loading" class="absolute inset-0 flex items-center justify-center z-10">
           <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-gold"></div>
        </div>
-       <svg ref="svgRef" class="w-full h-full"></svg>
+       <svg ref="svgRef" class="w-full h-full relative z-1"></svg>
     </div>
 
      <!-- Grid View -->
@@ -129,18 +134,33 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted } from 'vue'
 import { useHead, useRuntimeConfig, useRoute } from '#imports'
-import * as d3 from 'd3'
-import type { FamilyMember } from '~/types/family'
 import MemberDetailsModal from '~/components/MemberDetailsModal.vue'
 import MemberCard from '~/components/MemberCard.vue'
-import { useAuthStore } from '~/stores/auth'
-import { useFamilyStore } from '~/stores/family'
 
-const auth = useAuthStore()
-const familyStore = useFamilyStore()
-const route = useRoute()
+// ============================================================
+// familytree.vue — Interactive Family Tree & Member Directory
+// ============================================================
+// Renders an interactive D3.js genealogy tree with:
+//   • Gender-coded cards (blue=male, rose=female, gold=current user)
+//   • Dynamic separation (spouse-aware spacing prevents overlap)
+//   • Multi-tree forest rendering (separate family heads side-by-side)
+//   • Pan, zoom, auto-focus on logged-in user, search-to-focus
+//   • Switchable grid/list/compact directory view
+// ============================================================
+
+import * as d3 from 'd3'
+import { useFamilyStore } from '~/stores/family'
+import type { FamilyMember } from '~/types/family'
+import { useAuthStore } from '~/stores/auth'
+
 const config = useRuntimeConfig()
-const apiBase = config.public.apiBase || 'http://localhost:8000'
+const apiBase = config.public.apiBase as string
+
+const familyStore = useFamilyStore()
+const auth = useAuthStore()
+
+// --- Refs & UI State ---
+const route = useRoute()
 
 // View mode can be 'visual' or 'grid'
 const viewMode = ref<'visual' | 'grid'>(route.query.view === 'grid' ? 'grid' : 'visual')
@@ -155,9 +175,13 @@ const minWidth = ref(250)
 const searchQuery = ref('')
 const searchResults = ref<FamilyMember[]>([])
 
+// --- Computed Data ---
+// Flatten the store's tree data into a simple array of nodes and links.
+// Nodes = all FamilyMembers, Links = parent/spouse/sibling connections.
 const nodes = computed(() => familyStore.flatList())
 const links = computed(() => familyStore.links)
 
+// When user presses Enter in search, auto-focus the first result
 const performSearch = () => {
   if (searchResults.value.length > 0) {
     focusOnMember(searchResults.value[0])
@@ -186,10 +210,14 @@ const sortedMembers = computed(() => {
    return list
 })
 
-// Store zoom behavior global to access from search
-let globalZoom: any = null 
-let globalSVG: any = null
-let globalRoot: any = null // D3 Hierarchy Root
+// --- Global D3 State ---
+// These module-scoped variables are updated each time initGraph() runs.
+// They enable the search-to-focus and auto-focus features to access
+// the last-rendered tree state.
+let globalZoom: any = null        // D3 zoom behavior for programmatic pan/zoom
+let globalSVG: any = null         // D3 selection of the <svg> element
+let globalRoot: any = null        // Root of the first tree (for fallback searches)
+let globalForestData: { root: any, xOffset: number }[] = [] // All trees + X offsets
 
 const resolveImage = (path: string | null) => {
     if (!path) return null
@@ -207,33 +235,45 @@ watch(searchQuery, (val) => {
     searchResults.value = nodes.value.filter((n: any) => n.name.toLowerCase().includes(q)).slice(0, 5)
 })
 
+/**
+ * Search-to-Focus: smoothly pan/zoom the tree to center on a member.
+ * Searches across ALL forest trees (not just the first) and handles
+ * both direct tree nodes and spouse-rendered cards.
+ */
 const focusOnMember = (targetMember: any) => {
     searchQuery.value = '' // clear search
     searchResults.value = []
     
     if (!targetMember || !globalZoom || !globalSVG) return
 
-    if (!globalRoot) return
-
-    let targetNode = globalRoot.descendants().find((d: any) => d.data.id === targetMember.id)
     let targetX = 0
     let targetY = 0
     let found = false
 
-    if (targetNode) {
-        targetX = targetNode.x
-        targetY = targetNode.y
-        found = true
-    } else {
+    // Search across ALL forest trees, not just the first
+    for (const { root, xOffset } of globalForestData) {
+        if (found) break
+        
+        // Check direct node
+        const targetNode = root.descendants().find((d: any) => d.data.id === targetMember.id)
+        if (targetNode) {
+            targetX = xOffset + targetNode.x
+            targetY = 100 + targetNode.y
+            found = true
+            break
+        }
+        
+        // Check if target is a spouse rendered next to a tree node
         const spouseLink = links.value.find((l: any) => l.type === 'spouse' && (l.source === targetMember.id || l.target === targetMember.id))
         if (spouseLink) {
-             const partnerId = spouseLink.source === targetMember.id ? spouseLink.target : spouseLink.source
-             const partnerNode = globalRoot.descendants().find((d: any) => d.data.id === partnerId)
-             if (partnerNode) {
-                 targetX = partnerNode.x + 160
-                 targetY = partnerNode.y
-                 found = true
-             }
+            const partnerId = spouseLink.source === targetMember.id ? spouseLink.target : spouseLink.source
+            const partnerNode = root.descendants().find((d: any) => d.data.id === partnerId)
+            if (partnerNode) {
+                targetX = xOffset + partnerNode.x + 180
+                targetY = 100 + partnerNode.y
+                found = true
+                break
+            }
         }
     }
 
@@ -254,7 +294,7 @@ const focusOnMember = (targetMember: any) => {
 
 const openMember = (m: FamilyMember) => { selectedMember.value = m }
 
-// --- D3 Logic ---
+// --- D3 Tree Rendering Pipeline ---
    const initGraph = () => {
       if (!nodes.value.length || !svgRef.value || !chartContainer.value) {
           return
@@ -322,29 +362,101 @@ const openMember = (m: FamilyMember) => { selectedMember.value = m }
           return childrenB - childrenA
       })
 
+      // Track which nodes are part of a "real" tree (have children or are children)
+      const treeNodeIds = new Set<number>()
+      
       potentialRoots.forEach((rootNode: any) => {
-          if (!globalVisited.has(rootNode.id)) {
-              const treeData = buildHierarchy(rootNode.id, globalVisited)
-              if (treeData) forest.push(treeData)
+          if (globalVisited.has(rootNode.id)) return
+          
+          // Check if this root is a spouse of any node already in a real tree
+          const isSpouseOfTreeNode = links.value.some((l: any) => 
+              l.type === 'spouse' && (
+                  (l.source === rootNode.id && treeNodeIds.has(l.target)) ||
+                  (l.target === rootNode.id && treeNodeIds.has(l.source))
+              )
+          )
+          if (isSpouseOfTreeNode) {
+              globalVisited.add(rootNode.id) // Mark visited so it doesn't float
+              return
+          }
+          
+          const treeData = buildHierarchy(rootNode.id, globalVisited)
+          if (treeData) {
+              forest.push(treeData)
+              // Track all nodes in this tree that have actual hierarchy (children)
+              const collectIds = (node: any) => {
+                  treeNodeIds.add(node.id)
+                  if (node.children) node.children.forEach(collectIds)
+              }
+              collectIds(treeData)
+          }
+      })
+
+      // Any remaining unvisited nodes that are spouses of tree nodes should not float
+      const spouseRendered = new Set<number>()
+      links.value.filter(l => l.type === 'spouse').forEach((l: any) => {
+          if (treeNodeIds.has(l.source) || globalVisited.has(l.source)) {
+              spouseRendered.add(l.target)
+          }
+          if (treeNodeIds.has(l.target) || globalVisited.has(l.target)) {
+              spouseRendered.add(l.source)
           }
       })
 
       nodes.value.forEach((node: any) => {
-          if (!globalVisited.has(node.id)) {
+          if (!globalVisited.has(node.id) && !spouseRendered.has(node.id)) {
               forest.push({...node, children: []})
               globalVisited.add(node.id)
           }
       })
 
-      const treeLayout = d3.tree<any>().nodeSize([200, 300])
+      // Build a set of node IDs that have spouses for dynamic separation
+      const nodesWithSpouse = new Set<number>()
+      links.value.filter(l => l.type === 'spouse').forEach((l: any) => {
+          nodesWithSpouse.add(l.source)
+          nodesWithSpouse.add(l.target)
+      })
+
+      const treeLayout = d3.tree<any>()
+        .nodeSize([200, 300])
+        .separation((a: any, b: any) => {
+            // Base separation = 1 (200px)
+            // If either node has a spouse, add extra space for the spouse card
+            const aHasSpouse = nodesWithSpouse.has(a.data?.id)
+            const bHasSpouse = nodesWithSpouse.has(b.data?.id)
+            if (aHasSpouse && bHasSpouse) return 2.5 // Both have spouses: 500px
+            if (aHasSpouse || bHasSpouse) return 2.2 // One has spouse: 440px
+            return a.parent === b.parent ? 1.5 : 2  // Siblings: 300px, cousins: 400px
+        })
+
       const forestGroups = forest.map((treeData) => {
           const strategyRoot = d3.hierarchy(treeData)
           treeLayout(strategyRoot)
           return strategyRoot
       })
 
+      // Calculate actual tree widths for dynamic spacing
+      const getTreeBounds = (root: any) => {
+          let minX = Infinity, maxX = -Infinity
+          root.descendants().forEach((d: any) => {
+              // Account for node card (75px half-width) plus possible spouse offset (180+75)
+              const nodeLeft = d.x - 75
+              const hasSpouse = nodesWithSpouse.has(d.data?.id)
+              const nodeRight = hasSpouse ? d.x + 180 + 75 : d.x + 75
+              if (nodeLeft < minX) minX = nodeLeft
+              if (nodeRight > maxX) maxX = nodeRight
+          })
+          return { minX, maxX, width: maxX - minX }
+      }
+
       let currentXOffset = width / 2
+      const forestOffsets: number[] = []
       forestGroups.forEach((root, i) => {
+          const bounds = getTreeBounds(root)
+          // Offset so tree starts after previous tree with padding
+          if (i > 0) currentXOffset += -bounds.minX + 80
+          
+          forestOffsets.push(currentXOffset)
           const treeG = g.append("g").attr("transform", `translate(${currentXOffset}, 100)`)
           
           if (i === 0) globalRoot = root 
@@ -354,8 +466,10 @@ const openMember = (m: FamilyMember) => { selectedMember.value = m }
             .join("path")
             .attr("class", "link")
             .attr("fill", "none")
-            .attr("stroke", "#A08050")
-            .attr("stroke-width", 2)
+            .attr("stroke", "#a89060")
+            .attr("stroke-width", 2.5)
+            .attr("stroke-linecap", "round")
+            .attr("stroke-opacity", 0.7)
             .attr("d", d3.linkVertical<any, d3.HierarchyPointNode<any>>()
                 .x(d => d.x)
                 .y(d => d.y) as any)
@@ -375,46 +489,86 @@ const openMember = (m: FamilyMember) => { selectedMember.value = m }
                    sel.append("line")
                       .attr("x1", 70).attr("x2", spouseOffset - 70) 
                       .attr("y1", 0).attr("y2", 0)
-                      .attr("stroke", "#A08050").attr("stroke-width", 2).attr("stroke-dasharray", "4,2")
+                      .attr("stroke", "#c9a96e").attr("stroke-width", 2).attr("stroke-dasharray", "6,4")
+                      .attr("stroke-linecap", "round")
                    renderCard(sel, spouseOffset, spouse)
                }
           })
 
-          currentXOffset += 1200 
+          // Advance offset past this tree's right edge
+          const treeBounds = getTreeBounds(root)
+          currentXOffset += treeBounds.maxX + 80
       })
 
       function renderCard(selection: d3.Selection<any, any, any, any>, dx=0, d: any) {
           if (!d) return
-          const cardWidth = 140
-          const cardHeight = 180
+          const cardWidth = 150
+          const cardHeight = 190
           const group = selection.append("g").attr("transform", `translate(${dx}, 0)`)
           const isUser = auth.user && d.username === auth.user.username
+          const isMale = d.gender === 'M'
           
-          // Unique ID for clipPath
+          // Color scheme based on gender
+          const cardFill = isUser ? '#FEF3C7' : (isMale ? '#f0f4f8' : '#fdf2f4')
+          const cardStroke = isUser ? '#c9a96e' : (isMale ? '#93a8c4' : '#d4a0ab')
+          const accentColor = isUser ? '#c9a96e' : (isMale ? '#4a6b8a' : '#9c4f63')
+          const avatarBg = isMale ? '#dce6f0' : '#f5dde1'
+          const avatarRing = isUser ? '#c9a96e' : (isMale ? '#7a9bbd' : '#c88a97')
+          
           const clipId = `clip-${d.id}-${Math.random().toString(36).substr(2, 9)}`
+          const gradId = `grad-${d.id}-${Math.random().toString(36).substr(2, 9)}`
 
-           group.append("rect")
+          // Card shadow (larger, colored)
+          group.append("rect")
+            .attr("x", -cardWidth/2 + 4).attr("y", -cardHeight/2 + 6)
+            .attr("width", cardWidth).attr("height", cardHeight).attr("rx", 16)
+            .attr("fill", "none")
+            .attr("filter", d.is_deceased ? "grayscale(100%)" : "")
+            .style("filter", `drop-shadow(0 8px 20px ${isMale ? 'rgba(74,107,138,0.15)' : 'rgba(156,79,99,0.15)'})`)
+
+          // Main card rect with rounded corners
+          group.append("rect")
             .attr("x", -cardWidth/2).attr("y", -cardHeight/2)
-            .attr("width", cardWidth).attr("height", cardHeight).attr("rx", 12)
-            .attr("fill", isUser ? "#FEFCE8" : "#ffffff")
-            .attr("stroke", isUser ? "#A08050" : "#cbd5e1")
-            .attr("stroke-width", isUser ? 2 : 1)
-            .attr("filter", d.is_deceased ? "grayscale(100%)" : "drop-shadow(0 4px 6px rgba(0,0,0,0.05))")
+            .attr("width", cardWidth).attr("height", cardHeight).attr("rx", 16)
+            .attr("fill", cardFill)
+            .attr("stroke", cardStroke)
+            .attr("stroke-width", isUser ? 2.5 : 1.5)
+            .attr("filter", d.is_deceased ? "grayscale(100%)" : "")
             .style("cursor", "pointer")
             .on("click", () => openMember(d))
 
-          // Define ClipPath
+          // Colored accent bar at top
           const defs = group.append("defs")
+          const grad = defs.append("linearGradient").attr("id", gradId)
+            .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%")
+          grad.append("stop").attr("offset", "0%").attr("stop-color", accentColor).attr("stop-opacity", 0.8)
+          grad.append("stop").attr("offset", "100%").attr("stop-color", accentColor).attr("stop-opacity", 0.3)
+
+          group.append("rect")
+            .attr("x", -cardWidth/2).attr("y", -cardHeight/2)
+            .attr("width", cardWidth).attr("height", 6).attr("rx", 0)
+            .attr("fill", `url(#${gradId})`)
+            .attr("clip-path", `inset(0 round 16px 16px 0 0)`)
+
+          // Avatar ring
+          group.append("circle")
+            .attr("cx", 0).attr("cy", -cardHeight/4 + 5)
+            .attr("r", 38)
+            .attr("fill", avatarBg)
+            .attr("stroke", avatarRing)
+            .attr("stroke-width", 2.5)
+
+          // Define ClipPath for photo
           defs.append("clipPath")
             .attr("id", clipId)
             .append("circle")
             .attr("cx", 0)
-            .attr("cy", -cardHeight/4)
+            .attr("cy", -cardHeight/4 + 5)
             .attr("r", 35)
 
           group.append("image")
-            .attr("href", resolveImage(d.photo || null) || `https://ui-avatars.com/api/?name=${d.name}&background=f1f5f9&color=64748b`)
-            .attr("x", -35).attr("y", -cardHeight/4 - 35).attr("width", 70).attr("height", 70)
+            .attr("href", resolveImage(d.photo || null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.name)}&background=${avatarBg.replace('#','')}&color=${accentColor.replace('#','')}&bold=true`)
+            .attr("x", -35).attr("y", -cardHeight/4 + 5 - 35).attr("width", 70).attr("height", 70)
             .attr("preserveAspectRatio", "xMidYMid slice")
             .attr("clip-path", `url(#${clipId})`)
             .style("pointer-events", "none")
@@ -422,38 +576,42 @@ const openMember = (m: FamilyMember) => { selectedMember.value = m }
           // Name
           group.append("text")
             .text(d.name.split(' ')[0])
-            .attr("x", 0).attr("y", 15)
+            .attr("x", 0).attr("y", 22)
             .attr("text-anchor", "middle")
-            .attr("fill", "#1e293b")
-            .attr("font-weight", "bold")
+            .attr("fill", accentColor)
+            .attr("font-weight", "800")
             .attr("font-size", "14px")
+            .attr("font-family", "'Inter', 'Segoe UI', sans-serif")
             .style("pointer-events", "none")
           
           // Role / Relation
           group.append("text")
             .text(d.role || d.relation || 'Member')
-            .attr("x", 0).attr("y", 32)
+            .attr("x", 0).attr("y", 38)
             .attr("text-anchor", "middle")
-            .attr("fill", d.is_committee ? "#A08050" : "#64748b")
-            .attr("font-weight", d.is_committee ? "bold" : "normal")
-            .attr("font-size", "11px")
+            .attr("fill", isUser ? '#92750c' : '#7a8494')
+            .attr("font-weight", "600")
+            .attr("font-size", "10px")
+            .attr("text-transform", "uppercase")
+            .attr("letter-spacing", "0.5px")
             .style("pointer-events", "none")
 
-          // Gender & Age
-          const metaGroup = group.append("g").attr("transform", "translate(0, 52)")
-          metaGroup.append("text")
-            .text(d.gender === 'M' ? '♂' : '♀')
-            .attr("x", -20).attr("y", 0)
-            .attr("fill", "#A08050")
-            .attr("font-size", "12px")
-            .attr("font-weight", "bold")
+          // Gender & Age pill
+          const pillWidth = 58
+          const pillHeight = 20
+          const pillY = 52
+          group.append("rect")
+            .attr("x", -pillWidth/2).attr("y", pillY - pillHeight/2)
+            .attr("width", pillWidth).attr("height", pillHeight).attr("rx", 10)
+            .attr("fill", isMale ? 'rgba(74,107,138,0.1)' : 'rgba(156,79,99,0.1)')
 
-          metaGroup.append("text")
-            .text(`${d.age} Yrs`)
-            .attr("x", 0).attr("y", 0)
-            .attr("text-anchor", "start")
-            .attr("fill", "#94a3b8")
-            .attr("font-size", "11px")
+          group.append("text")
+            .text(`${d.gender === 'M' ? '♂' : '♀'}  ${d.age || '?'} Yrs`)
+            .attr("x", 0).attr("y", pillY + 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", accentColor)
+            .attr("font-size", "10px")
+            .attr("font-weight", "700")
       }
 
       function getSpouse(id: number) {
@@ -463,26 +621,31 @@ const openMember = (m: FamilyMember) => { selectedMember.value = m }
           return nodes.value.find((n: any) => n.id === spouseId)
       }
       
-      // FOCUS ON USER
+      // Store forest data globally for search-to-focus
+      globalForestData = forestGroups.map((root, i) => ({
+          root,
+          xOffset: forestOffsets[i] || (width/2 + i * 1200)
+      }))
+      
+      // FOCUS ON LOGGED-IN USER (search all trees)
       let userCoords = {x: 0, y: 0, found: false}
       
-      forestGroups.forEach((root, i) => {
-          if (userCoords.found) return
+      for (const { root, xOffset } of globalForestData) {
+          if (userCoords.found) break
           
           root.descendants().forEach((d: any) => {
               if (userCoords.found) return
               const nodeUsername = d.data.username
               if (nodeUsername === auth.user?.username) {
-                  userCoords = { x: (i * 1200) + width/2 + (d.x || 0), y: 100 + (d.y || 0), found: true }
+                  userCoords = { x: xOffset + (d.x || 0), y: 100 + (d.y || 0), found: true }
                   return
               }
               const spouse = getSpouse(d.data.id)
               if (spouse && (spouse as any).username === auth.user?.username) {
-                  const spouseOffsetX = 180
-                  userCoords = { x: (i * 1200) + width/2 + (d.x || 0) + spouseOffsetX, y: 100 + (d.y || 0), found: true }
+                  userCoords = { x: xOffset + (d.x || 0) + 180, y: 100 + (d.y || 0), found: true }
               }
           })
-      })
+      }
       
       if (userCoords.found) {
          const scale = 1.2

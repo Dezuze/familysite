@@ -12,8 +12,6 @@ export const useFamilyStore = defineStore('family', {
 
   actions: {
     async fetchFamily() {
-      // Prevent multiple fetches if already loaded
-      if (this.members.length > 0 && this.links.length > 0) return
 
       this.loading = true
       this.error = null

@@ -29,6 +29,8 @@ export interface User {
     name: string
     profile_pic: string | null
     relation: string
+    is_independent: boolean
+    has_account: boolean
   }>
 }
 
@@ -182,6 +184,83 @@ export const useAuthStore = defineStore('auth', {
     updateProfile(partial: Partial<User>) {
       if (!this.user) return
       this.user = { ...this.user, ...partial }
+    },
+
+    // Guardian: give access to a managed member
+    async giveAccess(profileId: number, username: string, password: string) {
+      const base = apiBase()
+      try {
+        const csrfRes = await fetch(base + '/api/csrf/', { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
+
+        const res = await fetch(base + '/api/auth/give-access/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ profile_id: profileId, username, password }),
+        })
+        const data = await res.json()
+        if (!res.ok) return { ok: false, error: data.error || 'Failed' }
+        await this.fetchProfile() // Refresh managed_members
+        return { ok: true, data }
+      } catch (e) {
+        return { ok: false, error: String(e) }
+      }
+    },
+
+    // Claim account with a claim token
+    async claimAccount(token: string, newPassword?: string) {
+      const base = apiBase()
+      try {
+        const csrfRes = await fetch(base + '/api/csrf/', { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
+
+        const res = await fetch(base + '/api/auth/claim/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ token, new_password: newPassword }),
+        })
+        const data = await res.json()
+        if (!res.ok) return { ok: false, error: data.error || 'Claim failed' }
+        this.setAuth(data, null)
+        return { ok: true, data }
+      } catch (e) {
+        return { ok: false, error: String(e) }
+      }
+    },
+
+    // Go independent — revoke guardian access
+    async goIndependent() {
+      const base = apiBase()
+      try {
+        const csrfRes = await fetch(base + '/api/csrf/', { credentials: 'include' })
+        const csrfData = await csrfRes.json().catch(() => ({}))
+        const csrftoken = getCookie('csrftoken') || csrfData.csrfToken
+
+        const res = await fetch(base + '/api/auth/go-independent/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+          },
+          credentials: 'include',
+        })
+        const data = await res.json()
+        if (!res.ok) return { ok: false, error: data.error || 'Failed' }
+        await this.fetchProfile()
+        return { ok: true, data }
+      } catch (e) {
+        return { ok: false, error: String(e) }
+      }
     },
   },
 

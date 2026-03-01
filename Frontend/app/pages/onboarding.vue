@@ -136,7 +136,7 @@
                              <div class="space-y-6">
                                  <!-- Selected Relationships List -->
                                  <div v-if="form.relationships.length > 0" class="space-y-3">
-                                      <div v-for="rel in form.relationships" :key="rel.to_member" class="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-fade-in group/rel">
+                                      <div v-for="(rel, idx) in form.relationships" :key="rel.to_member" class="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-fade-in group/rel">
                                           <div class="w-10 h-10 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold font-bold">
                                               {{ rel.to_member_name.charAt(0) }}
                                           </div>
@@ -148,13 +148,27 @@
                                           <!-- Relation Type Picker -->
                                           <div class="flex items-center gap-2">
                                               <span class="text-xs font-bold text-slate-400">is my</span>
-                                              <select 
-                                                  :value="rel.relation_type" 
-                                                  @change="updateRelType(rel, $event.target.value)"
-                                                  class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-brand-gold-dark focus:ring-2 focus:ring-brand-gold/20 outline-none"
-                                              >
-                                                  <option v-for="t in relationTypes" :key="t" :value="t">{{ t }}</option>
-                                              </select>
+                                              <div class="relative">
+                                                  <input 
+                                                      :value="editingRelIdx === idx ? editingRelSearch : rel.relation_type"
+                                                      @input="editingRelSearch = $event.target.value"
+                                                      @focus="editingRelIdx = idx; editingRelSearch = ''"
+                                                      @blur="closeEditingRelDropdown()"
+                                                      class="w-36 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-brand-gold-dark focus:ring-2 focus:ring-brand-gold/20 outline-none"
+                                                      placeholder="Search..."
+                                                  >
+                                                  <div v-if="editingRelIdx === idx" class="absolute z-50 top-full mt-1 w-52 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1">
+                                                      <button 
+                                                          v-for="t in filteredEditRelTypes"
+                                                          :key="t" 
+                                                          @mousedown.prevent="updateRelType(rel, t); editingRelIdx = -1"
+                                                          type="button"
+                                                          class="w-full text-left px-3 py-2 text-sm font-medium hover:bg-brand-gold/10 hover:text-brand-gold transition-colors"
+                                                          :class="{'bg-brand-gold/10 text-brand-gold': t === rel.relation_type}"
+                                                      >{{ t }}</button>
+                                                      <div v-if="filteredEditRelTypes.length === 0" class="px-3 py-2 text-sm text-slate-400 text-center">No match</div>
+                                                  </div>
+                                              </div>
                                           </div>
 
                                           <button @click="removeRelationship(rel.to_member)" type="button" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
@@ -174,11 +188,35 @@
                                                  placeholder="Type a name to find member..."
                                              >
                                          </div>
-                                         <div class="w-full md:w-48 shrink-0">
-                                            <select v-model="selectedRelType" class="w-full h-full bg-white border border-slate-200 rounded-2xl px-4 py-4 font-bold text-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none appearance-none">
-                                                <option v-for="t in relationTypes" :key="t" :value="t">{{ t }}</option>
-                                            </select>
+                                         <div class="w-full md:w-56 shrink-0 relative">
+                                            <input 
+                                                v-model="relTypeSearch" 
+                                                @focus="showRelTypeDropdown = true"
+                                                @blur="closeRelTypeDropdown()"
+                                                class="w-full h-full bg-white border border-slate-200 rounded-2xl px-4 py-4 font-bold text-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none"
+                                                :placeholder="selectedRelType || 'Search relation...'"
+                                            >
+                                            <div v-if="showRelTypeDropdown" class="absolute z-50 top-full mt-1 w-full bg-white border border-slate-200 rounded-2xl shadow-xl max-h-56 overflow-y-auto py-1">
+                                                <button 
+                                                    v-for="t in filteredAddRelTypes"
+                                                    :key="t" 
+                                                    @mousedown.prevent="selectedRelType = t; relTypeSearch = ''; showRelTypeDropdown = false"
+                                                    type="button"
+                                                    class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-brand-gold/10 hover:text-brand-gold transition-colors"
+                                                    :class="{'bg-brand-gold/10 text-brand-gold font-bold': t === selectedRelType}"
+                                                >{{ t }}</button>
+                                                <div v-if="filteredAddRelTypes.length === 0" class="px-4 py-3 text-sm text-slate-400 text-center">No match</div>
+                                            </div>
                                          </div>
+                                     </div>
+
+                                     <!-- Married to? picker for in-law types -->
+                                     <div v-if="isInLawType(selectedRelType)" class="mt-3">
+                                        <label class="text-xs font-bold text-slate-400 uppercase mb-1 block ml-1">Married to?</label>
+                                        <select v-model="marriedToMemberId" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 font-bold text-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none">
+                                            <option :value="null">Select family member...</option>
+                                            <option v-for="sib in siblingMembers" :key="sib.to_member" :value="sib.to_member">{{ sib.to_member_name }}</option>
+                                        </select>
                                      </div>
 
                                       <!-- Search Results Dropdown -->
@@ -293,10 +331,20 @@
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-50">
+                                    <!-- Status badges -->
+                                    <div class="col-span-2 flex flex-wrap gap-2 mb-2">
+                                        <span v-if="m.is_independent" class="bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Independent</span>
+                                        <span v-else class="bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Managed</span>
+                                        <span v-if="m.has_account" class="bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Has Account</span>
+                                    </div>
                                      <button @click="editManagedMember(m)" type="button" class="flex-1 py-3 bg-slate-50 hover:bg-brand-gold/5 hover:text-brand-gold rounded-2xl text-slate-600 font-bold text-sm transition-all flex items-center justify-center gap-2">
                                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                          Details
                                      </button>
+                                    <button v-if="!m.has_account && !m.is_independent" @click="openGiveAccess(m)" type="button" class="flex-1 py-3 bg-brand-gold/10 hover:bg-brand-gold hover:text-white rounded-2xl text-brand-gold font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                        Give Access
+                                    </button>
                                     <button @click="confirmDeleteManaged(m)" type="button" class="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all flex items-center justify-center">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     </button>
@@ -376,13 +424,31 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-bold text-slate-500 uppercase mb-2 ml-1">Relation</label>
-                                 <select v-model="managedForm.relation" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-900 focus:bg-white focus:border-brand-gold outline-none transition-all text-lg font-bold">
-                                    <option>Child</option>
-                                    <option>Spouse</option>
-                                    <option>Parent</option>
-                                    <option>Sibling</option>
-                                    <option>Grandchild</option>
-                                    <option>Other</option>
+                                <select v-model="managedForm.relation" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-900 focus:bg-white focus:border-brand-gold outline-none transition-all text-lg font-bold">
+                                    <option value="Head">Head</option>
+                                    <option value="Spouse">Spouse</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Son">Son</option>
+                                    <option value="Daughter">Daughter</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Grandfather">Grandfather</option>
+                                    <option value="Grandmother">Grandmother</option>
+                                    <option value="Grandson">Grandson</option>
+                                    <option value="Granddaughter">Granddaughter</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Nephew">Nephew</option>
+                                    <option value="Niece">Niece</option>
+                                    <option value="Cousin">Cousin</option>
+                                    <option value="Father-in-law">Father-in-law</option>
+                                    <option value="Mother-in-law">Mother-in-law</option>
+                                    <option value="Son-in-law">Son-in-law</option>
+                                    <option value="Daughter-in-law">Daughter-in-law</option>
+                                    <option value="Brother-in-law">Brother-in-law</option>
+                                    <option value="Sister-in-law">Sister-in-law</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             <div>
@@ -397,8 +463,14 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-bold text-slate-500 uppercase mb-2 ml-1">Birthday</label>
-                                <input v-model="managedForm.date_of_birth" type="date" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-900 focus:bg-white focus:border-brand-gold outline-none transition-all text-lg font-bold">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-bold text-slate-500 uppercase ml-1">{{ managedUseDob ? 'Birthday' : 'Age' }}</label>
+                                    <button type="button" @click="managedUseDob = !managedUseDob" class="text-xs font-bold text-brand-gold hover:underline">
+                                        {{ managedUseDob ? 'Enter age instead' : 'Enter DOB instead' }}
+                                    </button>
+                                </div>
+                                <input v-if="managedUseDob" v-model="managedForm.date_of_birth" type="date" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-900 focus:bg-white focus:border-brand-gold outline-none transition-all text-lg font-bold">
+                                <input v-else v-model.number="managedForm.age" type="number" min="0" max="150" placeholder="Enter age" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-900 focus:bg-white focus:border-brand-gold outline-none transition-all text-lg font-bold">
                             </div>
                              <div>
                                 <label class="block text-sm font-bold text-slate-500 uppercase mb-2 ml-1">Blood Group</label>
@@ -439,6 +511,12 @@
                                  :class="['w-16 h-9 rounded-full transition-all relative flex items-center px-1.5 shadow-inner', managedForm.is_deceased ? 'bg-slate-900 border-2 border-slate-800' : 'bg-slate-200 border-2 border-slate-300']">
                                  <div :class="['w-6 h-6 rounded-full bg-white shadow-lg transition-all', managedForm.is_deceased ? 'translate-x-7' : 'translate-x-0']"></div>
                              </button>
+                        </div>
+
+                        <!-- Date of Death (shown when deceased) -->
+                        <div v-if="managedForm.is_deceased" class="animate-fade-in">
+                            <label class="block text-sm font-bold text-slate-500 uppercase mb-2 ml-1">Date of Death</label>
+                            <input v-model="managedForm.date_of_death" type="date" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-900 focus:bg-white focus:border-brand-gold outline-none transition-all text-lg font-bold">
                         </div>
                          
                          <div class="pt-6 flex gap-3">
@@ -487,6 +565,39 @@
       </div>
     </Teleport>
   </ClientOnly>
+
+  <!-- Give Access Modal -->
+  <ClientOnly>
+    <Teleport to="body">
+      <div v-if="showGiveAccess" class="fixed inset-0 z-100 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+          <h3 class="text-2xl font-black text-slate-900 mb-2">Give Access</h3>
+          <p class="text-slate-500 text-sm mb-6">Create login credentials for <span class="font-bold text-brand-gold">{{ giveAccessTarget?.name }}</span></p>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Username</label>
+              <input v-model="giveAccessUsername" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-medium focus:bg-white focus:border-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none transition-all" placeholder="Enter username">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+              <input v-model="giveAccessPassword" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-medium focus:bg-white focus:border-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none transition-all" placeholder="Set a temporary password">
+            </div>
+          </div>
+
+          <div v-if="giveAccessError" class="mt-3 text-sm text-red-600 font-medium">{{ giveAccessError }}</div>
+          <div v-if="giveAccessSuccess" class="mt-3 text-sm text-green-600 font-medium">{{ giveAccessSuccess }}</div>
+
+          <div class="flex gap-3 mt-6">
+            <button @click="submitGiveAccess" :disabled="giveAccessLoading" class="flex-1 py-3.5 bg-brand-gold text-white font-bold rounded-2xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
+              {{ giveAccessLoading ? 'Creating...' : 'Create Account' }}
+            </button>
+            <button @click="showGiveAccess = false" class="px-6 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <script setup>
@@ -501,6 +612,44 @@ import 'vue-advanced-cropper/dist/style.css'
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+
+// Give Access modal state
+const showGiveAccess = ref(false)
+const giveAccessTarget = ref(null)
+const giveAccessUsername = ref('')
+const giveAccessPassword = ref('')
+const giveAccessLoading = ref(false)
+const giveAccessError = ref('')
+const giveAccessSuccess = ref('')
+
+function openGiveAccess(member) {
+    giveAccessTarget.value = member
+    giveAccessUsername.value = member.name.toLowerCase().replace(/\s+/g, '_')
+    giveAccessPassword.value = ''
+    giveAccessError.value = ''
+    giveAccessSuccess.value = ''
+    showGiveAccess.value = true
+}
+
+async function submitGiveAccess() {
+    if (!giveAccessUsername.value || !giveAccessPassword.value) {
+        giveAccessError.value = 'Username and password are required.'
+        return
+    }
+    giveAccessLoading.value = true
+    giveAccessError.value = ''
+    giveAccessSuccess.value = ''
+    const result = await auth.giveAccess(giveAccessTarget.value.id, giveAccessUsername.value, giveAccessPassword.value)
+    giveAccessLoading.value = false
+    if (result.ok) {
+        giveAccessSuccess.value = result.data.message
+        // Refresh managed members list
+        await loadManagedMembers()
+        setTimeout(() => { showGiveAccess.value = false }, 2000)
+    } else {
+        giveAccessError.value = result.error
+    }
+}
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || 'http://localhost:8000'
 
@@ -542,6 +691,7 @@ const managedForm = ref({
     church_parish: '',
     bio: '',
     is_deceased: false,
+    date_of_death: '',
     avatar: null
 })
 const managedAvatarPreview = ref(null)
@@ -566,7 +716,9 @@ const openAddManaged = () => {
         church_parish: '',
         bio: '',
         is_deceased: false,
-        avatar: null
+        date_of_death: '',
+        avatar: null,
+        age: 0
     }
     managedAvatarPreview.value = null
     managedModal.value = true
@@ -594,6 +746,7 @@ const editManagedMember = (m) => {
         church_parish: m.church_parish || '',
         bio: m.bio || '',
         is_deceased: m.is_deceased || false,
+        date_of_death: m.date_of_death || '',
         avatar: m.photo || m.profile_pic
     }
     managedAvatarPreview.value = resolveImage(m.photo || m.profile_pic)
@@ -629,7 +782,7 @@ const saveManagedMember = async () => {
 
         const formData = new FormData()
         Object.keys(managedForm.value).forEach(key => {
-            if (key !== 'avatar' && managedForm.value[key] !== null) {
+            if (key !== 'avatar' && managedForm.value[key] !== null && managedForm.value[key] !== '') {
                 formData.append(key, managedForm.value[key])
             }
         })
@@ -720,8 +873,64 @@ const getMemberName = (id) => {
 
 // Fixed Relationship Helpers
 const relSearch = ref('')
-const selectedRelType = ref('Other')
-const relationTypes = ['Spouse', 'Aunt', 'Uncle', 'Cousin', 'Grandparent', 'Sibling', 'Father', 'Mother', 'Other']
+const selectedRelType = ref('Father')
+const relTypeSearch = ref('')
+const showRelTypeDropdown = ref(false)
+const relationTypes = [
+    'Father', 'Mother', 'Son', 'Daughter',
+    'Spouse',
+    'Brother', 'Sister',
+    'Grandfather', 'Grandmother',
+    'Grandson', 'Granddaughter',
+    'Uncle', 'Aunt',
+    'Nephew', 'Niece',
+    'Cousin',
+    'Paternal Grandfather', 'Paternal Grandmother',
+    'Maternal Grandfather', 'Maternal Grandmother',
+    'Father-in-law', 'Mother-in-law',
+    'Son-in-law', 'Daughter-in-law',
+    'Brother-in-law', 'Sister-in-law',
+    'Other'
+]
+
+// Searchable dropdown state for editing existing relations
+const editingRelIdx = ref(-1)
+const editingRelSearch = ref('')
+
+const filteredEditRelTypes = computed(() => {
+    const q = editingRelSearch.value.toLowerCase()
+    if (!q) return relationTypes
+    return relationTypes.filter(t => t.toLowerCase().includes(q))
+})
+
+const filteredAddRelTypes = computed(() => {
+    const q = relTypeSearch.value.toLowerCase()
+    if (!q) return relationTypes
+    return relationTypes.filter(t => t.toLowerCase().includes(q))
+})
+
+function closeEditingRelDropdown() {
+    window.setTimeout(() => { editingRelIdx.value = -1 }, 150)
+}
+
+function closeRelTypeDropdown() {
+    window.setTimeout(() => { showRelTypeDropdown.value = false }, 150)
+}
+
+// DOB/Age toggle
+const managedUseDob = ref(true)
+
+// In-law married-to assignment
+const marriedToMemberId = ref(null)
+const IN_LAW_TYPES = ['Sister-in-law', 'Brother-in-law', 'Daughter-in-law', 'Son-in-law']
+const isInLawType = (type) => IN_LAW_TYPES.includes(type)
+
+const siblingMembers = computed(() => {
+    // Return existing relationships that are siblings
+    return form.value.relationships.filter(r => 
+        ['Brother', 'Sister', 'Son', 'Daughter'].includes(r.relation_type)
+    )
+})
 
 const filteredRelatives = computed(() => {
     if (!relSearch.value) return []
@@ -734,23 +943,32 @@ const filteredRelatives = computed(() => {
 })
 
 const addRelationship = (m) => {
-    form.value.relationships.push({
+    const relData = {
         to_member: m.id,
         to_member_name: m.name,
         relation_type: selectedRelType.value
-    })
+    }
+    if (isInLawType(selectedRelType.value) && marriedToMemberId.value) {
+        relData.married_to = marriedToMemberId.value
+    }
+    form.value.relationships.push(relData)
     relSearch.value = ''
-    // Keep rel type for consecutive adds of same type
+    marriedToMemberId.value = null
 }
 
 const addNewRelationship = () => {
     if (!relSearch.value.trim()) return
-    form.value.relationships.push({
-        to_member: null, // This tells backend to create it
+    const relData = {
+        to_member: null,
         to_member_name: relSearch.value,
         relation_type: selectedRelType.value
-    })
+    }
+    if (isInLawType(selectedRelType.value) && marriedToMemberId.value) {
+        relData.married_to = marriedToMemberId.value
+    }
+    form.value.relationships.push(relData)
     relSearch.value = ''
+    marriedToMemberId.value = null
 }
 
 const removeRelationship = (toMemberId) => {
@@ -937,7 +1155,7 @@ const saveProfile = async () => {
         const formData = new FormData()
         // Append all fields
         Object.keys(form.value).forEach(key => {
-            if (key !== 'avatar' && key !== 'parents' && key !== 'relationships' && form.value[key] !== null) {
+            if (key !== 'avatar' && key !== 'parents' && key !== 'relationships' && form.value[key] !== null && form.value[key] !== '') {
                 formData.append(key, form.value[key])
             }
         })

@@ -1,14 +1,35 @@
+"""
+Families App Views
+==================
+REST API endpoints for managing family members, the interactive family tree,
+media galleries, and member relationships.
+
+Key Views:
+    - UserProfileView: CRUD for the authenticated user's own profile.
+    - FamilyTreeView: Builds hierarchical tree data (nodes + links) from
+      Relationship records, chaining all relation types into a renderable
+      parent/spouse graph for the D3.js frontend.
+    - ManagedMembersView: List/create members managed by the current user.
+    - FamilyMembersCRUD: Generic detail view for a single member.
+    - FamilyMediaCRUD: Gallery list/create and detail endpoints.
+"""
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import FamilyMember, FamilyMedia, Family, Relationship
 from .serializers import FamilyMemberSerializer, FamilyTreeSerializer, FamilyMediaSerializer
+from .permissions import IsGuardianOrSelf
 from rest_framework import generics
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from datetime import date
 
 class UserProfileView(APIView):
+    """
+    GET  /api/families/profile/  → Return the authenticated user's FamilyMember.
+    POST /api/families/profile/  → Create or update the user's profile,
+         including demographics, photo, parents (M2M), and relationships.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -126,14 +147,27 @@ class UserProfileView(APIView):
                         
                         if not to_id and name:
                             # Auto-create member if not found
+                            auto_gender = Relationship.GENDER_MAP.get(rel_type, 'M')
                             new_member = FamilyMember.objects.create(
                                 name=name,
-                                relation=rel_type, # Temporary
+                                relation=rel_type,
+                                gender=auto_gender,
                                 age=0, 
                                 created_by=request.user,
                                 family=member.family
                             )
                             to_id = new_member.id
+                        elif to_id and rel_type:
+                            # Auto-assign gender to existing member if not already set properly
+                            auto_gender = Relationship.GENDER_MAP.get(rel_type)
+                            if auto_gender:
+                                try:
+                                    target = FamilyMember.objects.get(id=to_id)
+                                    if target.gender != auto_gender:
+                                        target.gender = auto_gender
+                                        target.save(update_fields=['gender'])
+                                except FamilyMember.DoesNotExist:
+                                    pass
 
                         if to_id and rel_type:
                             Relationship.objects.create(
@@ -141,9 +175,21 @@ class UserProfileView(APIView):
                                 to_member_id=to_id,
                                 relation_type=rel_type
                             )
-                            # Special case: Father/Mother also go to parents M2M for tree
-                            if rel_type in ['Father', 'Mother']:
+                            # Also add to parents M2M for tree compatibility
+                            if rel_type in ('Father', 'Mother', 'Grandfather', 'Grandmother',
+                                            'Paternal Grandfather', 'Paternal Grandmother',
+                                            'Maternal Grandfather', 'Maternal Grandmother'):
                                 member.parents.add(to_id)
+                            
+                            # Handle in-law married_to: create spouse link
+                            married_to = item.get('married_to')
+                            if married_to and rel_type in ('Sister-in-law', 'Brother-in-law', 'Son-in-law', 'Daughter-in-law'):
+                                # Create Spouse relationship between the in-law and the family member
+                                Relationship.objects.get_or_create(
+                                    from_member_id=married_to,
+                                    to_member_id=to_id,
+                                    relation_type='Spouse'
+                                )
                 except Exception as e:
                     print(f"Error saving relationships: {e}")
 
@@ -163,15 +209,36 @@ class UserProfileView(APIView):
 
 
 class FamilyTreeView(APIView):
+    """
+    GET /api/families/tree/  → Return { nodes, links } for the D3 tree.
+
+    Link generation algorithm:
+        1. Collect all FamilyMembers as nodes.
+        2. Convert each Relationship into the correct link type:
+           - Father/Mother       → parent link (to_member is parent of from_member)
+           - Son/Daughter         → parent link (from_member is parent of to_member)
+           - Grandparent variants → chain through Father/Mother as intermediate
+           - Siblings             → share parent (both become children of Father)
+           - Uncle/Aunt           → child of grandparent (father's sibling)
+           - Cousin               → child of uncle/aunt
+           - In-laws              → spouse of sibling or parent of spouse
+           - Father/Mother-in-law → parent of the user's spouse
+           - Nephew/Niece         → child of sibling
+        3. Auto-detect co-parents (two parents sharing a child) and add
+           spouse links between them.
+    """
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         members = FamilyMember.objects.all()
+        relationships = Relationship.objects.all()
         
         nodes = []
         links = []
         
-        processed_spouses = set()
+        # Track added link pairs to avoid duplicates
+        added_links = set()
+        
         for m in members:
             # Username for centering focus
             username = None
@@ -195,20 +262,237 @@ class FamilyTreeView(APIView):
                 "place_of_work": m.place_of_work,
             })
             
-            # Parent-child links
+            # Parent-child links from M2M parents field
             for p in m.parents.all():
-                 links.append({"source": p.id, "target": m.id, "type": "parent"})
+                link_key = (p.id, m.id, 'parent')
+                if link_key not in added_links:
+                    links.append({"source": p.id, "target": m.id, "type": "parent"})
+                    added_links.add(link_key)
 
-            # Spouse Detection: Share the same children
-            children_ids = set(m.children.values_list('id', flat=True))
-            if children_ids:
-                # Find other parents of these children
-                other_parents = FamilyMember.objects.filter(children__id__in=children_ids).exclude(id=m.id).distinct()
-                for op in other_parents:
-                    spouse_pair = tuple(sorted([m.id, op.id]))
-                    if spouse_pair not in processed_spouses:
-                        links.append({"source": m.id, "target": op.id, "type": "spouse"})
-                        processed_spouses.add(spouse_pair)
+        # Add all Relationship model links
+        # Only Father/Mother create direct "parent" hierarchy links
+        # Grandparents chain through Father/Mother when possible
+        DIRECT_PARENT_TYPES = {'Father', 'Mother'}
+        DIRECT_CHILD_TYPES = {'Son', 'Daughter'}
+        GRANDPARENT_TYPES = {'Grandfather', 'Grandmother', 'Paternal Grandfather', 'Paternal Grandmother', 'Maternal Grandfather', 'Maternal Grandmother'}
+        GRANDCHILD_TYPES = {'Grandson', 'Granddaughter'}
+        SPOUSE_TYPE = {'Spouse'}
+        SIBLING_TYPES = {'Brother', 'Sister'}
+        IN_LAW_SIBLING_SPOUSE = {
+            'Sister-in-law': 'Brother',   # Sister-in-law is brother's wife
+            'Brother-in-law': 'Sister',   # Brother-in-law is sister's husband
+        }
+        
+        # First pass: collect who set Father/Mother for whom
+        father_of = {}  # member_id -> father_member_id
+        mother_of = {}  # member_id -> mother_member_id
+        
+        for rel in relationships:
+            if rel.relation_type == 'Father':
+                father_of[rel.from_member_id] = rel.to_member_id
+            elif rel.relation_type == 'Mother':
+                mother_of[rel.from_member_id] = rel.to_member_id
+        
+        for rel in relationships:
+            from_id = rel.from_member_id
+            to_id = rel.to_member_id
+            rtype = rel.relation_type
+            
+            if rtype in DIRECT_PARENT_TYPES:
+                # "Alex is my Father" -> Alex is parent of me
+                link_key = (to_id, from_id, 'parent')
+                if link_key not in added_links:
+                    links.append({"source": to_id, "target": from_id, "type": "parent"})
+                    added_links.add(link_key)
+                    
+            elif rtype in DIRECT_CHILD_TYPES:
+                # "Bob is my Son" -> I am parent of Bob
+                link_key = (from_id, to_id, 'parent')
+                if link_key not in added_links:
+                    links.append({"source": from_id, "target": to_id, "type": "parent"})
+                    added_links.add(link_key)
+                    
+            elif rtype in GRANDPARENT_TYPES:
+                # Chain through correct parent based on side
+                # Paternal -> Father, Maternal -> Mother, generic -> first available
+                if 'Paternal' in rtype:
+                    parent_id = father_of.get(from_id)
+                elif 'Maternal' in rtype:
+                    parent_id = mother_of.get(from_id)
+                else:
+                    parent_id = father_of.get(from_id) or mother_of.get(from_id)
+                
+                if parent_id:
+                    link_key = (to_id, parent_id, 'parent')
+                    if link_key not in added_links:
+                        links.append({"source": to_id, "target": parent_id, "type": "parent"})
+                        added_links.add(link_key)
+                else:
+                    link_key = (to_id, from_id, 'parent')
+                    if link_key not in added_links:
+                        links.append({"source": to_id, "target": from_id, "type": "parent"})
+                        added_links.add(link_key)
+
+            elif rtype in GRANDCHILD_TYPES:
+                # "X is my Grandchild" -> I am grandparent, chain through child if known
+                link_key = (from_id, to_id, rtype.lower())
+                if link_key not in added_links:
+                    links.append({"source": from_id, "target": to_id, "type": rtype.lower()})
+                    added_links.add(link_key)
+
+            elif rtype in SPOUSE_TYPE:
+                pair = tuple(sorted([from_id, to_id]))
+                link_key = (pair[0], pair[1], 'spouse')
+                if link_key not in added_links:
+                    links.append({"source": from_id, "target": to_id, "type": "spouse"})
+                    added_links.add(link_key)
+                    
+            elif rtype in SIBLING_TYPES:
+                # Siblings share parents — make them children of the same parent
+                # If I have a Father, make Brother also a child of Father
+                father_id = father_of.get(from_id)
+                mother_id = mother_of.get(from_id)
+                
+                if father_id:
+                    link_key = (father_id, to_id, 'parent')
+                    if link_key not in added_links:
+                        links.append({"source": father_id, "target": to_id, "type": "parent"})
+                        added_links.add(link_key)
+                elif mother_id:
+                    link_key = (mother_id, to_id, 'parent')
+                    if link_key not in added_links:
+                        links.append({"source": mother_id, "target": to_id, "type": "parent"})
+                        added_links.add(link_key)
+                else:
+                    # No parent to share, just add sibling link
+                    pair = tuple(sorted([from_id, to_id]))
+                    link_key = (pair[0], pair[1], 'sibling')
+                    if link_key not in added_links:
+                        links.append({"source": from_id, "target": to_id, "type": "sibling"})
+                        added_links.add(link_key)
+            else:
+                # Handle in-law types by creating spouse links with siblings
+                sibling_match = IN_LAW_SIBLING_SPOUSE.get(rtype)
+                if sibling_match:
+                    # Find the sibling this in-law is connected to
+                    sibling_rel = relationships.filter(
+                        from_member_id=from_id, relation_type=sibling_match
+                    ).first()
+                    if sibling_rel:
+                        # Add spouse link: Brother <-> Sister-in-law
+                        pair = tuple(sorted([sibling_rel.to_member_id, to_id]))
+                        link_key = (pair[0], pair[1], 'spouse')
+                        if link_key not in added_links:
+                            links.append({"source": sibling_rel.to_member_id, "target": to_id, "type": "spouse"})
+                            added_links.add(link_key)
+
+                elif rtype in ('Uncle', 'Aunt'):
+                    # Uncle/Aunt = father's/mother's sibling → child of grandparent
+                    # Find grandparent (father's father or mother's father)
+                    father_id = father_of.get(from_id)
+                    mother_id = mother_of.get(from_id)
+                    # Check if grandfather/grandmother exists for this person
+                    gf_id = None
+                    for r in relationships:
+                        if r.from_member_id == from_id and r.relation_type in GRANDPARENT_TYPES:
+                            gf_id = r.to_member_id
+                            break
+                    # If no grandparent, try to chain through father's parent
+                    if not gf_id and father_id:
+                        for r in relationships:
+                            if r.to_member_id == father_id and r.relation_type == 'parent':
+                                gf_id = r.from_member_id if r.from_member_id != from_id else None
+                                if gf_id:
+                                    break
+                    
+                    if gf_id:
+                        link_key = (gf_id, to_id, 'parent')
+                        if link_key not in added_links:
+                            links.append({"source": gf_id, "target": to_id, "type": "parent"})
+                            added_links.add(link_key)
+                    elif father_id:
+                        # Fallback: make uncle sibling of father (child of same parent)
+                        # Find any parent link for father
+                        for link in links:
+                            if link['type'] == 'parent' and link['target'] == father_id:
+                                gp_id = link['source']
+                                lk = (gp_id, to_id, 'parent')
+                                if lk not in added_links:
+                                    links.append({"source": gp_id, "target": to_id, "type": "parent"})
+                                    added_links.add(lk)
+                                break
+
+                elif rtype == 'Cousin':
+                    # Cousin = uncle/aunt's child → find uncle/aunt and make cousin their child
+                    uncle_rel = relationships.filter(
+                        from_member_id=from_id, relation_type__in=['Uncle', 'Aunt']
+                    ).first()
+                    if uncle_rel:
+                        link_key = (uncle_rel.to_member_id, to_id, 'parent')
+                        if link_key not in added_links:
+                            links.append({"source": uncle_rel.to_member_id, "target": to_id, "type": "parent"})
+                            added_links.add(link_key)
+
+                elif rtype in ('Father-in-law', 'Mother-in-law'):
+                    # Father-in-law/Mother-in-law = spouse's parent
+                    # Find the user's spouse
+                    spouse_rel = relationships.filter(
+                        from_member_id=from_id, relation_type='Spouse'
+                    ).first()
+                    if spouse_rel:
+                        link_key = (to_id, spouse_rel.to_member_id, 'parent')
+                        if link_key not in added_links:
+                            links.append({"source": to_id, "target": spouse_rel.to_member_id, "type": "parent"})
+                            added_links.add(link_key)
+
+                elif rtype in ('Son-in-law', 'Daughter-in-law'):
+                    # Son/Daughter-in-law = child's spouse
+                    # Find the child (Son/Daughter) this in-law is married to
+                    child_rel = relationships.filter(
+                        from_member_id=from_id, relation_type__in=['Son', 'Daughter']
+                    ).first()
+                    if child_rel:
+                        pair = tuple(sorted([child_rel.to_member_id, to_id]))
+                        link_key = (pair[0], pair[1], 'spouse')
+                        if link_key not in added_links:
+                            links.append({"source": child_rel.to_member_id, "target": to_id, "type": "spouse"})
+                            added_links.add(link_key)
+
+                elif rtype in ('Nephew', 'Niece'):
+                    # Nephew/Niece = sibling's child
+                    sibling_rel = relationships.filter(
+                        from_member_id=from_id, relation_type__in=['Brother', 'Sister']
+                    ).first()
+                    if sibling_rel:
+                        link_key = (sibling_rel.to_member_id, to_id, 'parent')
+                        if link_key not in added_links:
+                            links.append({"source": sibling_rel.to_member_id, "target": to_id, "type": "parent"})
+                            added_links.add(link_key)
+
+                else:
+                    # Truly unknown types - add generic link
+                    link_key = (from_id, to_id, rtype)
+                    if link_key not in added_links:
+                        links.append({"source": from_id, "target": to_id, "type": rtype.lower()})
+                        added_links.add(link_key)
+
+        # Auto-detect co-parents (share same child) and add spouse links
+        from collections import defaultdict
+        children_parents = defaultdict(set)
+        for link in links:
+            if link['type'] == 'parent':
+                children_parents[link['target']].add(link['source'])
+        
+        for child_id, parent_ids in children_parents.items():
+            if len(parent_ids) > 1:
+                parent_list = list(parent_ids)
+                for i in range(len(parent_list)):
+                    for j in range(i + 1, len(parent_list)):
+                        pair = tuple(sorted([parent_list[i], parent_list[j]]))
+                        link_key = (pair[0], pair[1], 'spouse')
+                        if link_key not in added_links:
+                            links.append({"source": parent_list[i], "target": parent_list[j], "type": "spouse"})
+                            added_links.add(link_key)
 
         return Response({"nodes": nodes, "links": links})
 
@@ -230,8 +514,8 @@ class ManagedMembersView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # List all members created by this user
-        members = FamilyMember.objects.filter(created_by=request.user)
+        # List all members created by this user that are NOT independent
+        members = FamilyMember.objects.filter(created_by=request.user, is_independent=False)
         serializer = FamilyMemberSerializer(members, many=True)
         return Response(serializer.data)
 
@@ -330,14 +614,20 @@ class ManagedMemberDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self, pk, user):
-        return get_object_or_404(FamilyMember, pk=pk, created_by=user)
+        member = get_object_or_404(FamilyMember, pk=pk, created_by=user)
+        # Enforce guardian permission: can only edit if not independent
+        if member.is_independent:
+            return None
+        return member
 
     def get(self, request, pk):
-        member = self.get_object(pk, request.user)
+        member = get_object_or_404(FamilyMember, pk=pk, created_by=request.user)
         return Response(FamilyMemberSerializer(member).data)
 
     def put(self, request, pk):
         member = self.get_object(pk, request.user)
+        if member is None:
+            return Response({"error": "This profile is independent and cannot be edited by the guardian."}, status=403)
         # Prevent editing if the member has their own account now?
         # The user said "if there isnt an account for them".
         if hasattr(member, 'user_account') and member.user_account:
@@ -426,6 +716,8 @@ class ManagedMemberDetailView(APIView):
 
     def delete(self, request, pk):
         member = self.get_object(pk, request.user)
+        if member is None:
+            return Response({"error": "This profile is independent and cannot be deleted by the guardian."}, status=403)
         if hasattr(member, 'user_account') and member.user_account:
              return Response({"error": "Member has their own account and cannot be deleted by others."}, status=403)
         member.delete()

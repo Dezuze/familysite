@@ -53,7 +53,7 @@ class LoginView(APIView):
         return Response(UserSerializer(user).data)
 
 
-from .models import InviteToken
+from .models import InviteToken, ClaimToken
 
 class SignupView(APIView):
     authentication_classes = [] # Disable CSRF via SessionAuth for this endpoint
@@ -134,12 +134,139 @@ class GenerateInviteTokenView(APIView):
             return Response({"error": "User must be linked to a Family Member to generate invites."}, status=status.HTTP_400_BAD_REQUEST)
         
         # Create a new token
-        token_obj = InviteToken.objects.create(member=None) # member=None because anyone can use this token to sign up
-        # We could also pre-link it if we wanted, but for general invites, member=None is fine
-        # Or if the user wants to "sponsor" someone specifically, we'd need more logic.
-        # For now, let's just generate a general token.
+        token_obj = InviteToken.objects.create(member=None)
         
         return Response({"token": str(token_obj.token)}, status=status.HTTP_201_CREATED)
+
+
+class GiveAccessView(APIView):
+    """
+    Guardian sets a username + password for a managed member.
+    Creates a ClaimToken and a User account immediately.
+    The managed member can then log in with the provided credentials.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from families.models import FamilyMember
+        
+        profile_id = request.data.get('profile_id')
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not all([profile_id, username, password]):
+            return Response({"error": "profile_id, username, and password are required."}, status=400)
+
+        # Validate the managed member
+        try:
+            profile = FamilyMember.objects.get(id=profile_id)
+        except FamilyMember.DoesNotExist:
+            return Response({"error": "Profile not found."}, status=404)
+
+        # Check guardian permission
+        if profile.created_by != request.user:
+            return Response({"error": "You are not the guardian of this profile."}, status=403)
+        if profile.is_independent:
+            return Response({"error": "This profile is already independent."}, status=400)
+        if hasattr(profile, 'user_account') and profile.user_account:
+            return Response({"error": "This profile already has a user account."}, status=400)
+
+        # Check username uniqueness
+        User = get_user_model()
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already taken."}, status=400)
+
+        # Create the User account for the profile
+        user = User.objects.create_user(
+            username=username,
+            email=f"{username}@placeholder.local",  # Placeholder email, member can update later
+            password=password,
+            member=profile
+        )
+
+        # Create a ClaimToken record for tracking
+        claim = ClaimToken.objects.create(
+            profile=profile,
+            username=username,
+            temp_password="[set by guardian]",  # Don't store actual password
+            created_by=request.user,
+            is_claimed=True  # Already claimed since we created the user directly
+        )
+
+        return Response({
+            "message": f"Account created for {profile.name}. They can now log in with username '{username}'.",
+            "username": username,
+            "profile_name": profile.name,
+        }, status=201)
+
+
+class ClaimAccountView(APIView):
+    """
+    A new member claims their profile via a claim token.
+    They can optionally set a new password.
+    """
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token_str = request.data.get('token')
+        new_password = request.data.get('new_password')
+
+        if not token_str:
+            return Response({"error": "Claim token is required."}, status=400)
+
+        try:
+            claim = ClaimToken.objects.get(token=token_str, is_claimed=False)
+        except ClaimToken.DoesNotExist:
+            return Response({"error": "Invalid or already claimed token."}, status=400)
+
+        User = get_user_model()
+
+        # Check if a user already exists for this profile
+        if hasattr(claim.profile, 'user_account') and claim.profile.user_account:
+            # Already has an account — just authenticate with temp credentials
+            user = claim.profile.user_account
+            if new_password:
+                user.set_password(new_password)
+                user.save()
+        else:
+            # Create user account
+            user = User.objects.create_user(
+                username=claim.username,
+                email=f"{claim.username}@placeholder.local",
+                password=new_password or claim.temp_password,
+                member=claim.profile
+            )
+
+        claim.is_claimed = True
+        claim.save()
+
+        login(request, user)
+        return Response(UserSerializer(user).data, status=200)
+
+
+class GoIndependentView(APIView):
+    """
+    Authenticated user declares their profile independent.
+    This revokes the guardian's write access.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        member = getattr(request.user, 'member', None)
+        if not member:
+            return Response({"error": "No linked profile found."}, status=400)
+
+        if member.is_independent:
+            return Response({"message": "Profile is already independent."}, status=200)
+
+        member.is_independent = True
+        member.save()
+
+        return Response({
+            "message": "Your profile is now independent. Your guardian can no longer edit your profile.",
+            "is_independent": True
+        }, status=200)
 
 
 from django.middleware.csrf import get_token

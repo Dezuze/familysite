@@ -2,7 +2,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.admin.sites import NotRegistered
-from .models import User, InviteToken
+from .models import User, InviteToken, ClaimToken
 
 # Unregister any existing registration for the User model (prevents duplicate links)
 try:
@@ -28,3 +28,10 @@ class InviteTokenAdmin(ModelAdmin):
     list_display = ('token', 'member', 'is_used', 'created_at')
     list_filter = ('is_used', 'created_at')
     readonly_fields = ('token', 'created_at')
+
+@admin.register(ClaimToken)
+class ClaimTokenAdmin(ModelAdmin):
+    list_display = ('token', 'profile', 'username', 'created_by', 'is_claimed', 'created_at')
+    list_filter = ('is_claimed', 'created_at')
+    readonly_fields = ('token', 'created_at')
+    search_fields = ('username', 'profile__name')

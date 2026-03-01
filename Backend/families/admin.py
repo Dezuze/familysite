@@ -38,8 +38,8 @@ class FamilyHeadAdmin(ModelAdmin):
 
 @admin.register(models.FamilyMember)
 class FamilyMemberAdmin(ModelAdmin):
-    list_display = ('name', 'family', 'relation', 'age', 'blood_group')
-    list_filter = ('relation', 'blood_group', 'family')
+    list_display = ('name', 'family', 'relation', 'age', 'blood_group', 'is_independent')
+    list_filter = ('relation', 'blood_group', 'family', 'is_independent')
     search_fields = ('name', 'temp_member_id')
 
     tabs = [
