@@ -1,0 +1,17 @@
+{
+  "short_name": "CampusBus",
+  "name": "Live Campus Bus Tracker & Pass App",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["navigation", "transportation", "education"]
+}
