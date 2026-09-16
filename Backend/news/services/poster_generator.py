@@ -153,7 +153,7 @@ class PosterGenerator:
         Returns the relative media path (e.g. 'media_gallery/auto_posters/...').
         """
         template_name = cls.TEMPLATE_FILES.get(event_type, 'birthday_template.png')
-        template_path = os.path.join(settings.MEDIA_ROOT, 'poster_templates', template_name)
+        template_path = os.path.join(settings.BASE_DIR, 'news', 'poster_templates', template_name)
 
         if not os.path.exists(template_path):
             raise FileNotFoundError(f"Poster template not found at {template_path}")
