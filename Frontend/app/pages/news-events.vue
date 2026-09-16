@@ -33,22 +33,22 @@
           @click="openDetails(item)"
           class="break-inside-avoid group relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl border border-slate-100 transition-all duration-500 cursor-pointer flex flex-col"
         >
-          <!-- Image Section (Auto Fit) -->
-          <div class="relative overflow-hidden bg-slate-100">
+          <!-- Image Section (Fixed Frame) -->
+          <div class="relative overflow-hidden bg-slate-100 border-b border-slate-100/50 h-64 sm:h-72">
             <img 
               :src="resolveImage(item.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=Family+News'" 
               :alt="item.title"
-              class="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+              class="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
             />
-            <div class="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
             
             <!-- Type Badge -->
             <div class="absolute top-4 right-4">
                 <span 
                    class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg backdrop-blur-md border border-white/20"
-                   :class="item.type === 'event' ? 'bg-brand-gold text-white' : 'bg-white/90 text-slate-800'"
+                   :class="item.is_auto_generated ? 'bg-amber-500 text-white shadow-amber-500/30' : (item.type === 'event' ? 'bg-brand-gold text-white shadow-brand-gold/30' : 'bg-white/90 text-slate-800')"
                 >
-                   {{ getTypeLabel(item.type) }}
+                   {{ getTypeLabel(item.type, item.is_auto_generated) }}
                 </span>
             </div>
           </div>
@@ -98,9 +98,9 @@
         
         <div class="relative bg-white rounded-4xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 flex flex-col md:flex-row">
           <!-- Image Part -->
-          <div class="md:w-1/2 bg-slate-100 h-64 md:h-auto overflow-hidden relative">
-            <img :src="resolveImage(selectedItem.image) || 'https://placehold.co/800x1200/f1f5f9/d4af37?text=News'" :alt="selectedItem.title || t('newsEvents.modal.newsImageAlt')" class="w-full h-full object-contain md:object-cover" />
-             <div class="absolute inset-0 bg-linear-to-t from-black/40 to-transparent md:hidden"></div>
+          <div class="md:w-1/2 bg-slate-900/5 h-64 md:h-auto overflow-hidden relative flex items-center justify-center p-4">
+            <img :src="resolveImage(selectedItem.image) || 'https://placehold.co/800x1200/f1f5f9/d4af37?text=News'" :alt="selectedItem.title || t('newsEvents.modal.newsImageAlt')" class="w-full h-full object-contain rounded-xl" />
+             <div class="absolute inset-0 bg-linear-to-t from-black/40 to-transparent md:hidden pointer-events-none"></div>
           </div>
 
           <!-- Content Part -->
@@ -110,8 +110,11 @@
             </button>
 
             <div class="mb-8">
-               <span class="inline-block px-4 py-1.5 bg-brand-gold/10 text-brand-gold text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6 border border-brand-gold/10">
-                 {{ getTypeLabel(selectedItem.type) }}
+               <span 
+                 class="inline-block px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-6 border"
+                 :class="selectedItem.is_auto_generated ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 'bg-brand-gold/10 text-brand-gold border-brand-gold/10'"
+               >
+                 {{ getTypeLabel(selectedItem.type, selectedItem.is_auto_generated) }}
                </span>
                <h2 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 leading-[1.1] mb-4">{{ selectedItem.title }}</h2>
                <p class="text-sm font-bold text-slate-400 tracking-wide">{{ formatDate(selectedItem.created_at) }}</p>
@@ -194,6 +197,7 @@ interface NewsItem {
   location?: string
   author_name?: string
   author_id?: number
+  is_auto_generated?: boolean
 }
 
 const items = ref<NewsItem[]>([])
@@ -229,7 +233,8 @@ const closeAddModal = () => {
   editingItem.value = null
 }
 
-const getTypeLabel = (type?: string) => {
+const getTypeLabel = (type?: string, isAuto?: boolean) => {
+  if (isAuto) return 'Celebration'
   if (type === 'event') return t('shared.types.event')
   if (type === 'news') return t('shared.types.news')
   return t('shared.types.announcement')

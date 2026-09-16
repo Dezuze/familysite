@@ -48,17 +48,52 @@ const resolvePhoto = (path: string) => {
   return `${apiBase}/${path.replace(/^\/+/, '')}`
 }
 
-const links = [
-  { name: 'Family Tree', to: '/familytree' },
-  { name: 'Gallery', to: '/gallery' },
-  { name: 'Family History', to: '/history' },
-  { name: 'Committee Members', to: '/committee' },
-  // { name: 'Donations', to: '/donations' },
-  { name: 'Contact', to: '/contact' },
+interface NavLink {
+  name: string
+  to: string
+  primary?: boolean
+}
+
+const links: NavLink[] = [
+  { name: 'Family Tree', to: '/familytree', primary: true },
+  { name: 'Gallery', to: '/gallery', primary: true },
+  { name: 'Family History', to: '/history', primary: true },
+  { name: 'Committee Members', to: '/committee', primary: true },
+  { name: 'Donate', to: '/donate', primary: false },
+  { name: 'Contact', to: '/contact', primary: false },
 ]
 
-const restrictedPaths = new Set(['/gallery', '/familytree', '/donate', '/donations'])
+const restrictedPaths = new Set(['/gallery', '/familytree'])
 const visibleLinks = computed(() => links.filter((l) => !restrictedPaths.has(l.to) || auth.isAuthenticated))
+
+// Desktop navigation: primary links are always displayed when permitted
+const desktopPrimaryLinks = computed(() => {
+  return links.filter((l) => l.primary && (!restrictedPaths.has(l.to) || auth.isAuthenticated))
+})
+
+// Desktop navigation: secondary links (Donate, Contact)
+const desktopSecondaryLinks = computed(() => {
+  return links.filter((l) => !l.primary && (!restrictedPaths.has(l.to) || auth.isAuthenticated))
+})
+
+// Hover state to reveal secondary links when logged in
+const isNavbarHovered = ref(false)
+let hoverTimeout: ReturnType<typeof setTimeout> | null = null
+
+const onNavMouseEnter = () => {
+  if (hoverTimeout) {
+    clearTimeout(hoverTimeout)
+    hoverTimeout = null
+  }
+  isNavbarHovered.value = true
+}
+
+const onNavMouseLeave = () => {
+  if (hoverTimeout) clearTimeout(hoverTimeout)
+  hoverTimeout = setTimeout(() => {
+    isNavbarHovered.value = false
+  }, 250)
+}
 
 // Mobile menu actions
 const mobileLogin = () => {
@@ -127,6 +162,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll)
+    if (hoverTimeout) clearTimeout(hoverTimeout)
 })
 </script>
 
@@ -135,24 +171,76 @@ onUnmounted(() => {
   <nav 
     class="fixed top-0 left-0 w-full lg:w-200 z-50 bg-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
     :class="[ showNavbar ? 'translate-y-0' : '-translate-y-full' ]"
+    @mouseenter="onNavMouseEnter"
+    @mouseleave="onNavMouseLeave"
   >
       <!-- Desktop Navbar -->
       <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
         <div class="flex items-center gap-4 h-full">
-          <NuxtLink to="/" class="flex font-fleur text-2xl items-center text-right h-full">
+          <NuxtLink to="/" class="flex font-fleur text-2xl items-center text-right h-full shrink-0">
            Kollamparampil<br>Family
          </NuxtLink>
           <div class="flex absolute items-center right-5 gap-1">
+            <!-- Primary Links (Always visible on desktop) -->
             <NuxtLink
-              v-for="link in visibleLinks"
+              v-for="link in desktopPrimaryLinks"
               :key="link.to"
               :to="link.to"
-              class="py-2 px-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-brand-gold hover:shadow-sm transition-all duration-300 active:scale-95"
+              class="py-2 px-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-brand-gold hover:shadow-sm transition-all duration-300 active:scale-95 whitespace-nowrap"
             >
               {{ link.name }}
             </NuxtLink>
 
-            <label class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white pl-2 pr-1 py-1 text-slate-600 shadow-sm">
+            <!-- For Guests (Logged Out): Donate and Contact are visible in the top row -->
+            <template v-if="!auth.isAuthenticated">
+              <NuxtLink
+                v-for="link in desktopSecondaryLinks"
+                :key="link.to"
+                :to="link.to"
+                class="py-2 px-2 rounded-md text-sm font-bold text-slate-800 hover:bg-slate-50 hover:text-brand-gold hover:shadow-sm transition-all duration-300 active:scale-95 whitespace-nowrap"
+              >
+                {{ link.name }}
+              </NuxtLink>
+            </template>
+
+            <!-- Downward indicator chevron & seamless dropdown when logged in -->
+            <div v-if="auth.isAuthenticated" class="relative flex items-center">
+              <div 
+                class="px-1 py-2 text-slate-400 hover:text-brand-gold transition-colors flex items-center cursor-pointer"
+                title="More options"
+              >
+                <svg 
+                  class="w-3.5 h-3.5 transition-transform duration-300 ease-out"
+                  :class="isNavbarHovered ? 'rotate-180 text-brand-gold' : ''"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              <!-- Seamless Dropdown Menu for secondary options (Donate, Contact) -->
+              <div
+                class="absolute top-full right-0 min-w-36 bg-white rounded-b-2xl rounded-t-none shadow-2xl border-x border-b border-slate-100/90 p-1.5 flex flex-col gap-0.5 z-50 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-right overflow-hidden"
+                :class="[
+                  isNavbarHovered 
+                    ? 'opacity-100 translate-y-0 max-h-40 pointer-events-auto scale-100' 
+                    : 'opacity-0 -translate-y-2 max-h-0 pointer-events-none scale-95'
+                ]"
+              >
+                <NuxtLink
+                  v-for="link in desktopSecondaryLinks"
+                  :key="link.to"
+                  :to="link.to"
+                  class="py-2.5 px-4 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-gold transition-all duration-200 active:scale-95 whitespace-nowrap"
+                >
+                  {{ link.name }}
+                </NuxtLink>
+              </div>
+            </div>
+
+            <label class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white pl-2 pr-1 py-1 text-slate-600 shadow-sm ml-1 shrink-0">
               <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12h18M12 3a15.3 15.3 0 014 9 15.3 15.3 0 01-4 9 15.3 15.3 0 01-4-9 15.3 15.3 0 014-9z" />
               </svg>

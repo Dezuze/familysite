@@ -12,3 +12,5 @@ django-unfold
 easy-thumbnails
 django-image-cropping
 django-redis
+opencv-python-headless
+numpy

@@ -107,11 +107,11 @@
                     v-for="item in newsList" 
                     :key="item.id" 
                     @click="openDetails(item)"
-                    class="snap-start min-w-65 w-65 bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer shrink-0 group hover:-translate-y-1 border border-slate-200"
+                    class="snap-start min-w-65 w-65 bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer shrink-0 group hover:-translate-y-1 border border-slate-200 flex flex-col"
                 >
-                    <div class="relative h-36 overflow-hidden">
-                        <img :src="resolveImage(item.image) || 'https://placehold.co/600x400/f1f5f9/64748b?text=News'" :alt="item.title" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-brand-gold text-white text-xs font-bold px-2 py-0.5 rounded shadow">
+                    <div class="relative h-48 overflow-hidden bg-slate-100 border-b border-slate-100/50">
+                        <img :src="resolveImage(item.image) || 'https://placehold.co/600x400/f1f5f9/64748b?text=News'" :alt="item.title" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                        <div v-if="item.type === 'event'" class="absolute top-2 right-2 bg-brand-gold text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow">
                             {{ t('shared.types.event') }}
                         </div>
                     </div>
@@ -142,9 +142,9 @@
                 </button>
 
                 <!-- Modal Image -->
-                <div class="relative h-64 sm:h-80 shrink-0">
-                    <img :src="resolveImage(selectedItem.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=News'" :alt="selectedItem?.title || t('home.modal.newsImageAlt')" class="w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
+                <div class="relative h-64 sm:h-80 shrink-0 bg-slate-900/5">
+                    <img :src="resolveImage(selectedItem.image) || 'https://placehold.co/800x600/f1f5f9/d4af37?text=News'" :alt="selectedItem?.title || t('home.modal.newsImageAlt')" class="w-full h-full object-contain p-2" />
+                    <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
 
                     <div class="absolute bottom-4 left-6">
                         <span class="inline-block px-3 py-1 bg-brand-gold text-white text-xs font-bold uppercase tracking-wider rounded-md mb-2">

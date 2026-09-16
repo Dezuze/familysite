@@ -6,12 +6,21 @@ __pycache__/
 # Django
 *.log
 local_settings.py
-db.sqlite3
-media/
-staticfiles/
-node_modules/
-.output/
-dist/
+**/db.sqlite3
+Backend/db.sqlite3
+**/media/
+Backend/media/
+Backend/staticfiles/
+
+# Node
+**/node_modules/
+Frontend/node_modules/
+**/.output/
+Frontend/.output/
+**/dist/
+Frontend/dist/
+**/.nuxt/
+Frontend/.nuxt/
 .DS_Store
 
 # VSCode
@@ -21,9 +30,12 @@ dist/
 venv/
 **/venv/
 .venv/
+**/.venv/
+Backend/.venv/
 
 # Backup directory
 Backup/
+familysite_backup_*/
 
 # Deployment Keys
 github-actions

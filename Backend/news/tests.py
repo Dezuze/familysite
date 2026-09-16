@@ -58,3 +58,35 @@ class NewsTests(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn("linked to a Family Member", response.data['error'])
+
+    def test_anniversary_detector_and_poster_command(self):
+        from django.core.management import call_command
+        from news.services.anniversary_detector import AnniversaryDetector
+
+        # Set up a member with birthday on March 15
+        bday_member = FamilyMember.objects.create(
+            family=self.family,
+            name="Birthday Star",
+            age=25,
+            relation="Member",
+            date_of_birth=datetime.date(2001, 3, 15),
+            blood_group="A+"
+        )
+
+        test_date = datetime.date(2026, 3, 15)
+        events = AnniversaryDetector.get_events_for_date(test_date)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['event_type'], 'birthday')
+        self.assertEqual(events[0]['member'], bday_member)
+
+        # Run generate_daily_posters command
+        call_command('generate_daily_posters', date='2026-03-15')
+        self.assertEqual(Post.objects.filter(is_auto_generated=True).count(), 1)
+        auto_post = Post.objects.filter(is_auto_generated=True).first()
+        self.assertIn("Birthday Star", auto_post.title)
+        self.assertEqual(auto_post.media.count(), 1)
+
+        # Verify duplicate prevention: running again should not create a duplicate
+        call_command('generate_daily_posters', date='2026-03-15')
+        self.assertEqual(Post.objects.filter(is_auto_generated=True).count(), 1)
+
