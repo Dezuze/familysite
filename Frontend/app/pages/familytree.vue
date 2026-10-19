@@ -1,77 +1,104 @@
 <template>
-    <div class="h-screen w-screen text-slate-800 font-sans pt-20 relative overflow-hidden flex flex-col" style="background: linear-gradient(135deg, #faf8f5 0%, #f0ede6 30%, #e8e4db 60%, #f5f2ec 100%);">
+    <div class="h-screen w-screen text-slate-800 font-sans pt-20 relative overflow-hidden flex flex-col bg-[#F8FAFC]">
     
-    <!-- Subtle decorative background pattern -->
-    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23A08050&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+    <!-- Subtle dark lineage grid pattern -->
+    <div class="absolute inset-0 opacity-[0.04] pointer-events-none" style="background-image: radial-gradient(circle, #CBD5E1 1.2px, transparent 1.2px); background-size: 26px 26px;"></div>
     
     <!-- Floating Unified Controls Area -->
-    <div class="w-full px-4 sm:px-6 lg:px-8 shrink-0 z-40 mt-4 mb-2 pointer-events-none">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 bg-white/90 backdrop-blur-xl p-3 px-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white pointer-events-auto">
-            <!-- View Mode Toggle -->
-            <div class="bg-slate-100 rounded-xl p-1 flex border border-slate-200 shadow-inner relative z-40 pointer-events-auto">
-                <button 
-                    @click="viewMode = 'visual'"
-                    :class="['px-6 py-2 rounded-lg text-sm font-bold transition-all', viewMode==='visual' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-brand-gold']"
-                >
-                    {{ t('familyTree.labels.visualMap') }}
-                </button>
-                <button 
-                    @click="viewMode = 'grid'"
-                    :class="['px-6 py-2 rounded-lg text-sm font-bold transition-all', viewMode==='grid' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-brand-gold']"
-                >
-                    {{ t('familyTree.labels.directory') }}
-                </button>
+    <div class="w-full px-4 sm:px-6 lg:px-8 shrink-0 z-40 mt-3 mb-2 pointer-events-none">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 bg-white/95 backdrop-blur-xl p-2.5 px-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/90 pointer-events-auto">
+            
+            <!-- View Mode & Branch Jump Controls -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- View Mode Toggle -->
+                <div class="bg-slate-100 rounded-xl p-1 flex border border-slate-200 shadow-inner">
+                    <button 
+                        @click="viewMode = 'visual'"
+                        :class="['px-4 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='visual' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
+                    >
+                        {{ t('familyTree.labels.visualMap') }}
+                    </button>
+                    <button 
+                        @click="viewMode = 'grid'"
+                        :class="['px-4 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='grid' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
+                    >
+                        {{ t('familyTree.labels.directory') }}
+                    </button>
+                </div>
+
+                <!-- Branch Quick Jump Dropdown -->
+                <div class="relative">
+                    <select 
+                        v-model="selectedBranchJump" 
+                        @change="jumpToBranch" 
+                        class="px-3 py-1.5 bg-slate-50 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 cursor-pointer shadow-sm transition-all"
+                    >
+                        <option value="all">Entire Lineage Tree</option>
+                        <option value="33">Kollamparampil Thazhe Branch</option>
+                        <option value="196">Kulathammackal Sub-Branch</option>
+                        <option value="31">Thazhe Sub-Branch</option>
+                        <option value="189">Karottu Branch</option>
+                        <option value="221">Tharavadu Branch</option>
+                    </select>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div class="hidden sm:flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-1">
+                    <button @click="zoomIn" title="Zoom in" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200 text-sm font-bold transition">+</button>
+                    <button @click="zoomOut" title="Zoom out" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200 text-sm font-bold transition">−</button>
+                    <button @click="resetZoom" title="Fit whole tree" class="px-2 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200 text-[11px] font-bold transition">Fit</button>
+                </div>
             </div>
 
-            <div v-if="activeBranch" class="pointer-events-auto shrink-0 flex items-center">
-                <button @click="backToOverview" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl shadow hover:bg-slate-700 transition">
-                    &larr; Back to Branches
-                </button>
-            </div>
-
+            <!-- Edit Mode Toggle -->
             <div class="flex items-center gap-2">
                 <button
                     @click="toggleEditMode"
                     :class="[
-                        'px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 border active:scale-95',
+                        'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 border active:scale-95',
                         editMode
                             ? 'bg-brand-gold text-white border-brand-gold shadow-md'
-                            : 'bg-white text-slate-600 border-slate-200 hover:text-brand-gold hover:border-brand-gold/40'
+                            : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'
                     ]"
                 >
                     {{ editMode ? t('familyTree.editor.editModeOn') : t('familyTree.editor.editMode') }}
                 </button>
             </div>
 
-            <!-- Contextual Controls (Search/Layout) -->
-            <div class="flex flex-1 items-center justify-center md:justify-end gap-4 w-full">
+            <!-- Contextual Controls (Search/Filter) -->
+            <div class="flex items-center justify-end gap-3 w-full md:w-auto">
                 <!-- Search -->
-                <div class="relative flex-1 max-w-xs">
-                    <input v-model="searchQuery" @keyup.enter="performSearch" type="search" :placeholder="t('familyTree.header.findMember')" 
-                            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/40 transition-all">
-                    <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div class="relative w-full md:w-64">
+                    <input 
+                        v-model="searchQuery" 
+                        @keyup.enter="performSearch" 
+                        type="search" 
+                        :placeholder="t('familyTree.header.findMember')" 
+                        class="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all"
+                    >
+                    <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     
                     <!-- Search Results Dropdown -->
                     <Transition name="fade-scale">
                         <div v-if="searchResults.length > 0 && viewMode === 'visual'" class="absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-2xl border border-slate-200 max-h-60 overflow-y-auto z-50">
-                            <div v-for="res in searchResults" :key="res.id" @click="focusOnMember(res)" class="px-4 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors duration-200">
-                                <div class="font-bold text-slate-800 text-sm">{{ res.name }}</div>
-                                <div class="text-xs text-slate-500">{{ res.relation || t('familyTree.labels.member') }}</div>
+                            <div v-for="res in searchResults" :key="res.id" @click="focusOnMember(res)" class="px-3 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors">
+                                <div class="font-bold text-slate-800 text-xs">{{ res.name }}</div>
+                                <div class="text-[10px] text-slate-500">{{ res.relation || t('familyTree.labels.member') }}</div>
                             </div>
                         </div>
                     </Transition>
                 </div>
 
                 <!-- Directory Filter Controls -->
-                <div v-if="viewMode === 'grid'" class="flex flex-wrap items-center gap-3 text-sm bg-white/50 backdrop-blur-sm p-3 rounded-2xl border border-slate-200/60 shadow-sm mt-2">
-                    <input type="text" v-model="filterLocation" placeholder="Filter by Location..." class="w-full sm:w-48 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 text-slate-700 placeholder-slate-400 shadow-sm" />
-                    <input type="text" v-model="filterOccupation" placeholder="Filter by Occupation..." class="w-full sm:w-48 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 text-slate-700 placeholder-slate-400 shadow-sm" />
-                    <select v-model="filterGender" class="w-full sm:w-36 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 text-slate-700 shadow-sm">
+                <div v-if="viewMode === 'grid'" class="flex flex-wrap items-center gap-2 text-xs">
+                    <input type="text" v-model="filterLocation" placeholder="Location..." class="w-28 bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-gold" />
+                    <input type="text" v-model="filterOccupation" placeholder="Occupation..." class="w-28 bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-gold" />
+                    <select v-model="filterGender" class="bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 focus:outline-none">
                         <option value="">Any Gender</option>
                         <option value="M">Male</option>
                         <option value="F">Female</option>
                     </select>
-                    <select v-model="filterBloodGroup" class="w-full sm:w-40 bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 text-slate-700 shadow-sm">
+                    <select v-model="filterBloodGroup" class="bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 focus:outline-none">
                         <option value="">Any Blood Grp</option>
                         <option v-for="bg in uniqueBloodGroups" :key="bg" :value="bg">{{ bg }}</option>
                     </select>
@@ -80,135 +107,10 @@
         </div>
     </div>
 
-    <!-- Overview View -->
+    <!-- Visual View (Primary Tree Canvas) -->
     <div
-        v-if="!activeBranch"
-        class="w-full flex-1 relative flex flex-col items-center justify-start p-8 overflow-y-auto"
-    >
-        <div v-if="loading" class="text-slate-500 font-medium mt-10">Loading branches...</div>
-        <div v-else-if="overviewData" class="w-full max-w-6xl flex flex-col items-center pt-4">
-            <!-- Root Member -->
-            <div v-if="overviewData.root_member" class="flex flex-col items-center relative z-10">
-                <div class="text-xs font-bold tracking-widest text-brand-gold uppercase mb-3">Root Ancestor</div>
-                <div @click="openMember(overviewData.root_member)" class="bg-white p-5 rounded-3xl shadow-xl hover:shadow-2xl hover:border-brand-gold/60 cursor-pointer transition-all duration-300 hover:-translate-y-2 border border-brand-gold/30 flex flex-col items-center w-64 relative group">
-                    <div class="absolute inset-0 bg-gradient-to-b from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
-                    
-                    <div v-if="overviewData.root_partner" class="flex justify-center mb-4 relative">
-                        <img v-if="overviewData.root_member.photo" :src="overviewData.root_member.photo" class="w-20 h-20 rounded-full object-cover shadow-md border-[3px] border-white relative z-10" />
-                        <div v-else class="w-20 h-20 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold shadow-inner border-[3px] border-white relative z-10">
-                            <UserIcon class="w-8 h-8" />
-                        </div>
-                        
-                        <img v-if="overviewData.root_partner.photo" :src="overviewData.root_partner.photo" class="w-20 h-20 rounded-full object-cover shadow-md border-[3px] border-white -ml-6 relative z-0" />
-                        <div v-else class="w-20 h-20 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold shadow-inner border-[3px] border-white -ml-6 relative z-0">
-                            <UserIcon class="w-8 h-8" />
-                        </div>
-                    </div>
-                    <div v-else>
-                        <img v-if="overviewData.root_member.photo" :src="overviewData.root_member.photo" class="w-24 h-24 rounded-full object-cover shadow-md mb-4 border-[3px] border-white relative z-10" />
-                        <div v-else class="w-24 h-24 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-4 shadow-inner border-[3px] border-white relative z-10">
-                            <UserIcon class="w-10 h-10" />
-                        </div>
-                    </div>
-
-                    <div class="text-xl font-black text-slate-800 text-center tracking-tight relative z-10">{{ overviewData.root_member.name }}</div>
-                    <div v-if="overviewData.root_partner" class="text-sm font-bold text-slate-500 text-center tracking-tight mt-1 relative z-10">{{ overviewData.root_partner.name }}</div>
-                    <div v-else-if="overviewData.root_member.name_ml" class="text-sm font-semibold text-brand-brown/60 font-malayalam mt-1 relative z-10">{{ overviewData.root_member.name_ml }}</div>
-                </div>
-            </div>
-
-            <!-- Trunk (Desktop only) -->
-            <div class="w-[2px] h-10 bg-brand-gold/40 hidden lg:block"></div>
-
-            <!-- Branches -->
-            <div class="w-full relative mt-8 lg:mt-6 flex flex-col items-center">
-                <div class="text-sm font-bold tracking-widest text-slate-400 uppercase text-center mb-4 lg:hidden">Select a Branch</div>
-                
-                <div class="flex flex-col lg:flex-row justify-center items-start gap-8 lg:gap-4 xl:gap-8 w-full max-w-7xl relative">
-                    <!-- Main Branch Connecting Line (Desktop) -->
-                    <div class="absolute top-0 left-[16.66%] right-[16.66%] h-[2px] bg-brand-gold/40 hidden lg:block"></div>
-                    
-                    <div 
-                        v-for="(mainBranch, i) in hierarchicalBranches" 
-                        :key="mainBranch.id"
-                        class="relative flex flex-col items-center w-full lg:w-1/3 h-full"
-                    >
-                        <!-- Vertical Drop from Main Line (Desktop) -->
-                        <div class="absolute top-0 left-1/2 w-[2px] h-6 bg-brand-gold/40 -translate-x-1/2 hidden lg:block"></div>
-                        
-                        <!-- Main Branch Card -->
-                        <div 
-                            @click="selectBranch(mainBranch.id)"
-                            class="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg hover:shadow-2xl border border-slate-200 hover:border-brand-gold/60 cursor-pointer transition-all duration-300 hover:-translate-y-1 group flex flex-col items-center justify-between text-center relative overflow-hidden w-[200px] sm:w-[220px] h-[100px] z-10 lg:mt-6"
-                        >
-                            <div class="absolute inset-0 bg-gradient-to-b from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 text-brand-gold/80 flex items-center justify-center mb-1 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                <UsersIcon class="w-4 h-4" />
-                            </div>
-                            <h3 class="font-extrabold text-slate-700 leading-tight text-xs md:text-sm flex-1 flex items-center">{{ mainBranch.cleanName }}</h3>
-                            <div class="text-[9px] font-bold text-slate-400 bg-slate-100/50 px-2 py-0.5 rounded-full border border-slate-200/50 shrink-0">{{ mainBranch.member_count }} Members</div>
-                        </div>
-
-                        <!-- Sub-branches -->
-                        <div v-if="mainBranch.subBranches && mainBranch.subBranches.length > 0" class="flex flex-col items-center relative w-full mt-4">
-                            <!-- Vertical Line connecting main to sub-branches -->
-                            <div class="w-[2px] h-6 bg-brand-gold/40"></div>
-                            
-                            <div class="flex flex-row justify-center gap-3 w-full relative">
-                                <!-- Horizontal line connecting sub-branches if more than 1 -->
-                                <div v-if="mainBranch.subBranches.length > 1" class="absolute top-0 h-[2px] bg-brand-gold/40" 
-                                     :style="{ left: `calc(50% / ${mainBranch.subBranches.length})`, right: `calc(50% / ${mainBranch.subBranches.length})` }"></div>
-
-                                <div 
-                                    v-for="(subBranch, j) in mainBranch.subBranches" 
-                                    :key="subBranch.id"
-                                    class="relative flex flex-col items-center flex-1"
-                                >
-                                    <!-- Vertical drop for each sub-branch -->
-                                    <div v-if="mainBranch.subBranches.length > 1" class="w-[2px] h-4 bg-brand-gold/40"></div>
-                                    
-                                    <!-- Sub Branch Card -->
-                                    <div 
-                                        @click="selectBranch(subBranch.id)"
-                                        class="bg-white/95 backdrop-blur-sm p-2 rounded-xl shadow hover:shadow-md border border-slate-200 hover:border-brand-gold/60 cursor-pointer transition-all duration-300 hover:-translate-y-1 group flex flex-col items-center justify-between text-center relative overflow-hidden w-[100px] sm:w-[120px] h-[90px]"
-                                    >
-                                        <div class="absolute inset-0 bg-gradient-to-b from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                        <div class="w-6 h-6 rounded-md bg-slate-50 border border-slate-100 text-brand-gold/80 flex items-center justify-center mb-1 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                            <UsersIcon class="w-3 h-3" />
-                                        </div>
-                                        <h3 class="font-extrabold text-slate-600 leading-tight text-[10px] sm:text-xs flex-1 flex items-center justify-center w-full break-words">{{ subBranch.cleanName }}</h3>
-                                        <div class="text-[8px] font-bold text-slate-400 bg-slate-100/50 px-1.5 py-0.5 rounded-full border border-slate-200/50 shrink-0">{{ subBranch.member_count }} Members</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- All Members / Unassigned -->
-                <div class="w-full relative mt-12 flex flex-col items-center pb-8">
-                    <div class="absolute -top-12 left-1/2 w-[2px] h-12 bg-brand-gold/40 -translate-x-1/2 hidden lg:block"></div>
-                    
-                    <div 
-                        @click="selectBranch('Unassigned')"
-                        class="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow border border-slate-200 hover:border-brand-gold/60 cursor-pointer transition-all duration-300 hover:-translate-y-1 group flex flex-col items-center justify-between text-center relative overflow-hidden w-[200px] sm:w-[220px] h-[90px] z-10"
-                    >
-                        <div class="absolute inset-0 bg-gradient-to-b from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 text-brand-gold/80 flex items-center justify-center mb-1 shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
-                            <UsersIcon class="w-4 h-4" />
-                        </div>
-                        <h3 class="font-extrabold text-slate-700 leading-tight text-xs md:text-sm flex-1 flex items-center">Unassigned Members</h3>
-                        <div class="text-[9px] font-bold text-slate-400 bg-slate-100/50 px-2 py-0.5 rounded-full border border-slate-200/50 shrink-0">View members without a branch</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Visual View -->
-    <div
-        v-show="viewMode === 'visual' && activeBranch"
-        :class="['w-full flex-1 relative cursor-move touch-pan-y md:touch-none transition-all duration-300', editMode ? 'md:pr-[430px]' : '']"
+        v-show="viewMode === 'visual'"
+        :class="['w-full flex-1 relative cursor-move bg-[#F8FAFC] select-none touch-pan-y md:touch-none transition-all duration-300', editMode ? 'md:pr-[430px]' : '']"
         :style="isMobileView ? { touchAction: 'pan-y pinch-zoom' } : {}"
         ref="chartContainer"
     >
@@ -284,7 +186,7 @@
     </div>
 
      <!-- Grid View -->
-    <div v-show="viewMode === 'grid' && activeBranch" class="w-full flex-1 relative overflow-y-auto bg-slate-50/50">
+    <div v-show="viewMode === 'grid'" class="w-full flex-1 relative overflow-y-auto bg-slate-50/50">
 
          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <!-- Skeleton Grid -->
@@ -863,6 +765,80 @@
 </template>
 
 <script setup lang="ts">
+
+// --- Branch Banners & Historical Lineage Data (Picture 1 Design) ---
+const branchBanners: Record<number, { title: string; color: string; isMain: boolean }> = {
+    33: { title: 'KOLLAMPARAMBIL THAZHE BRANCH', color: '#0F766E', isMain: true },
+    196: { title: 'KULATHAMMACKAL SUB-BRANCH', color: '#1D4ED8', isMain: false },
+    31: { title: 'THAZHE SUB-BRANCH', color: '#1D4ED8', isMain: false },
+    189: { title: 'KAROTTU BRANCH', color: '#0F766E', isMain: true },
+    224: { title: 'KAROTTU SUB-BRANCH', color: '#1D4ED8', isMain: false },
+    188: { title: 'THARAVADU BRANCH', color: '#0F766E', isMain: true },
+    221: { title: 'THARAVADU BRANCH', color: '#0F766E', isMain: true },
+}
+
+const historicalMetadata: Record<number, { dates?: string; spouse?: string; status?: string }> = {
+    33: { dates: 'b. 1838', spouse: 'Anna' },
+    35: { spouse: 'Mariam' },
+    196: { dates: '1867–1944', spouse: 'Sosamma' },
+    201: { dates: '1898–1972', spouse: 'Sosamma' },
+    202: { status: '† young' },
+    203: { spouse: 'Cherian Mathew' },
+    204: { dates: '1904–1987', spouse: 'Mariamma' },
+    205: { dates: '1907–1994', spouse: 'Rachel' },
+    206: { spouse: 'Chacko' },
+}
+
+const selectedBranchJump = ref<string>('all')
+
+const jumpToBranch = () => {
+    const val = selectedBranchJump.value
+    if (val === 'all') {
+        resetZoom()
+        return
+    }
+    const targetId = Number(val)
+    if (Number.isFinite(targetId)) {
+        focusOnMember({ id: targetId }, { select: false })
+    }
+}
+
+const zoomIn = () => {
+    if (globalSVG && globalZoom) {
+        globalSVG.transition().duration(250).call(globalZoom.scaleBy as any, 1.25)
+    }
+}
+
+const zoomOut = () => {
+    if (globalSVG && globalZoom) {
+        globalSVG.transition().duration(250).call(globalZoom.scaleBy as any, 0.8)
+    }
+}
+
+const resetZoom = () => {
+    if (globalSVG && globalZoom && chartContainer.value) {
+        const width = chartContainer.value.clientWidth
+        const height = chartContainer.value.clientHeight
+        const coords = Array.from(globalNodeCoords.values())
+        if (!coords.length) return
+        const minX = Math.min(...coords.map(c => c.x))
+        const maxX = Math.max(...coords.map(c => c.x))
+        const minY = Math.min(...coords.map(c => c.y))
+        const maxY = Math.max(...coords.map(c => c.y))
+        const contentW = Math.max(1, maxX - minX + 320)
+        const contentH = Math.max(1, maxY - minY + 320)
+        const scale = Math.min(1.15, Math.max(0.32, Math.min((width - 40) / contentW, (height - 40) / contentH)))
+        const centerX = (minX + maxX) / 2
+        const centerY = (minY + maxY) / 2
+        const tx = width / 2 - centerX * scale
+        const ty = Math.max(40, height / 2 - centerY * scale)
+        globalSVG.transition().duration(400).call(
+            globalZoom.transform as any,
+            d3.zoomIdentity.translate(tx, ty).scale(scale)
+        )
+    }
+}
+
 import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
 import { useHead, useRuntimeConfig, useRoute, useRouter } from '#imports'
 import { useI18n } from 'vue-i18n'
@@ -1235,7 +1211,36 @@ const selectedTargetAlreadyLinked = computed(() => {
     return false
 })
 
-const branchPalette = ['#C9A96E', '#7A9BBD', '#C88A97', '#8BB174', '#C0825A']
+interface LevelTheme {
+    accent: string       // Refined theme color
+    darkAccent: string   // Darker legible tone for text & icons
+    border: string       // Delicate border tone
+    cardFill: string     // Clean background
+    headerWash: string   // Subtle soft header tint
+    badgeBg: string      // Pill background
+    badgeText: string    // Pill text color
+    avatarRing: string   // Avatar ring stroke
+    avatarBg: string     // Avatar placeholder bg
+    label: string        // Generation label
+}
+
+const levelPalette: LevelTheme[] = [
+    { accent: '#D97706', darkAccent: '#78350F', border: '#D97706', cardFill: '#FFFBEB', headerWash: '#FEF3C7', badgeBg: '#FEF3C7', badgeText: '#92400E', avatarRing: '#D97706', avatarBg: '#FEF3C7', label: 'Generation I' },
+    { accent: '#0D9488', darkAccent: '#115E59', border: '#0D9488', cardFill: '#F0FDFA', headerWash: '#CCFBF1', badgeBg: '#CCFBF1', badgeText: '#115E59', avatarRing: '#0D9488', avatarBg: '#CCFBF1', label: 'Generation II' },
+    { accent: '#2563EB', darkAccent: '#1E40AF', border: '#2563EB', cardFill: '#EFF6FF', headerWash: '#DBEAFE', badgeBg: '#DBEAFE', badgeText: '#1E40AF', avatarRing: '#2563EB', avatarBg: '#DBEAFE', label: 'Generation III' },
+    { accent: '#7C3AED', darkAccent: '#5B21B6', border: '#7C3AED', cardFill: '#F5F3FF', headerWash: '#EDE9FE', badgeBg: '#EDE9FE', badgeText: '#5B21B6', avatarRing: '#7C3AED', avatarBg: '#EDE9FE', label: 'Generation IV' },
+    { accent: '#E11D48', darkAccent: '#9F1239', border: '#E11D48', cardFill: '#FFF1F2', headerWash: '#FFE4E6', badgeBg: '#FFE4E6', badgeText: '#9F1239', avatarRing: '#E11D48', avatarBg: '#FFE4E6', label: 'Generation V' },
+    { accent: '#0891B2', darkAccent: '#155E75', border: '#0891B2', cardFill: '#ECFEFF', headerWash: '#CFFAFE', badgeBg: '#CFFAFE', badgeText: '#155E75', avatarRing: '#0891B2', avatarBg: '#CFFAFE', label: 'Generation VI' },
+    { accent: '#EA580C', darkAccent: '#9A3412', border: '#EA580C', cardFill: '#FFF7ED', headerWash: '#FFEDD5', badgeBg: '#FFEDD5', badgeText: '#9A3412', avatarRing: '#EA580C', avatarBg: '#FFEDD5', label: 'Generation VII' },
+    { accent: '#4F46E5', darkAccent: '#3730A3', border: '#4F46E5', cardFill: '#EEF2FF', headerWash: '#E0E7FF', badgeBg: '#E0E7FF', badgeText: '#3730A3', avatarRing: '#4F46E5', avatarBg: '#E0E7FF', label: 'Generation VIII' },
+]
+
+const getLevelTheme = (level: number): LevelTheme => {
+    const idx = Math.max(0, Math.floor(level)) % levelPalette.length
+    return levelPalette[idx]!
+}
+
+const branchPalette = levelPalette.map(t => t.accent)
 
 const duplicateRelationWarning = computed(() => {
     if (selectedTargetAlreadyLinked.value) {
@@ -1639,7 +1644,7 @@ const focusOnMember = (targetMember: any, options?: { select?: boolean }) => {
         if (container) {
             const width = container.clientWidth
             const height = container.clientHeight
-            const scale = isMobileViewport() ? 0.74 : 1.5
+            const scale = isMobileViewport() ? 0.72 : 0.88
             globalSVG.transition().duration(1500).call(
                 globalZoom.transform as any, 
                 d3.zoomIdentity.translate(width/2 - targetX*scale, height/2 - targetY*scale).scale(scale)
@@ -2381,14 +2386,14 @@ const initGraph = () => {
     globalSVG = svg
 
     const isCompactMobileCard = isMobileViewport()
-    const cardWidth = isCompactMobileCard ? 128 : 164
-    const cardHeight = isCompactMobileCard ? 170 : 210
-    const siblingGap = isCompactMobileCard ? 20 : 40
-    const levelGap = isCompactMobileCard ? 260 : 320
-    const topOffset = isCompactMobileCard ? 96 : 120
-    const spouseGap = isCompactMobileCard ? 32 : 48
+    const cardWidth = isCompactMobileCard ? 130 : 152
+    const cardHeight = isCompactMobileCard ? 62 : 74
+    const siblingGap = isCompactMobileCard ? 18 : 32
+    const levelGap = isCompactMobileCard ? 165 : 185
+    const topOffset = isCompactMobileCard ? 85 : 110
+    const spouseGap = 0
     const cardHalfWidth = cardWidth / 2
-    const spouseCenterOffset = (cardWidth + spouseGap) / 2
+    const spouseCenterOffset = 0
 
     const visibleNodeMap = new Map<number, any>()
     const duplicateNodeIds = new Set<number>()
@@ -2636,20 +2641,10 @@ const initGraph = () => {
         for (const treeNode of realNodes) {
             const x = xOffset + treeNode.x
             const members = treeNode.data.memberIds
-            if (members.length > 1) {
-                const leftId = members[0]
-                const rightId = members[1]
-                const leftGen = leftId !== undefined ? memberById.get(leftId)?.generation : null
-                const rightGen = rightId !== undefined ? memberById.get(rightId)?.generation : null
-                const leftY = topOffset + ((leftGen !== null && leftGen !== undefined) ? leftGen : (treeNode.depth - 1)) * levelGap
-                const rightY = topOffset + ((rightGen !== null && rightGen !== undefined) ? rightGen : (treeNode.depth - 1)) * levelGap
-                if (leftId !== undefined) coords.set(leftId, { x: x - spouseCenterOffset, y: leftY })
-                if (rightId !== undefined) coords.set(rightId, { x: x + spouseCenterOffset, y: rightY })
-            } else {
-                const singleId = members[0]
-                const gen = singleId !== undefined ? memberById.get(singleId)?.generation : null
-                const y = topOffset + ((gen !== null && gen !== undefined) ? gen : (treeNode.depth - 1)) * levelGap
-                if (singleId !== undefined) coords.set(singleId, { x, y })
+            const depthIndex = Math.max(0, treeNode.depth - 1)
+            const y = topOffset + depthIndex * levelGap
+            for (const memberId of members) {
+                if (memberId !== undefined) coords.set(memberId, { x, y })
             }
         }
 
@@ -2719,6 +2714,11 @@ const initGraph = () => {
         const rendered: Array<{ key: string; members: any[]; primary: any; partner: any | null; x: number; y: number; branchIndex: number }> = []
         const seen = new Set<string>()
 
+        const childCountByMemberId = new Map<number, number>()
+        for (const link of parentLinks) {
+            childCountByMemberId.set(link.source, (childCountByMemberId.get(link.source) || 0) + 1)
+        }
+
         for (const node of visibleNodes) {
             const id = Number(node.id)
             if (seen.has(String(id))) continue
@@ -2735,28 +2735,46 @@ const initGraph = () => {
                 seen.add(String(partner.id))
                 const primaryCoord = nodeCanvasCoords.get(Number(primary.id))
                 const partnerCoord = nodeCanvasCoords.get(Number(partner.id))
+                const coupleNodeY = ((primaryCoord?.y || 0) + (partnerCoord?.y || 0)) / 2
+                const coupleMemberGen = primary.generation ?? partner.generation
+                const coupleLevel = (coupleMemberGen !== null && coupleMemberGen !== undefined)
+                    ? Math.max(0, Number(coupleMemberGen))
+                    : Math.max(0, Math.round((coupleNodeY - topOffset) / levelGap))
+                const coupleChildCount = Math.max(
+                    childCountByMemberId.get(Number(primary.id)) || 0,
+                    childCountByMemberId.get(Number(partner.id)) || 0
+                )
                 rendered.push({
                     key,
                     members: [primary, partner],
                     primary,
                     partner,
                     x: ((primaryCoord?.x || 0) + (partnerCoord?.x || 0)) / 2,
-                    y: ((primaryCoord?.y || 0) + (partnerCoord?.y || 0)) / 2,
+                    y: coupleNodeY,
                     branchIndex: componentIndexByNodeId.get(Number(primary.id)) || componentIndexByNodeId.get(Number(partner.id)) || 0,
+                    level: coupleLevel,
+                    childCount: coupleChildCount,
                 })
                 continue
             }
 
             seen.add(String(id))
             const coord = nodeCanvasCoords.get(id)
+            const nodeY = coord?.y || topOffset
+            const memberGen = node.generation
+            const level = (memberGen !== null && memberGen !== undefined)
+                ? Math.max(0, Number(memberGen))
+                : Math.max(0, Math.round((nodeY - topOffset) / levelGap))
             rendered.push({
                 key: `single-${id}`,
                 members: [node],
                 primary: node,
                 partner: null,
                 x: coord?.x || width / 2,
-                y: coord?.y || topOffset,
+                y: nodeY,
                 branchIndex: componentIndexByNodeId.get(id) || 0,
+                level,
+                childCount: childCountByMemberId.get(id) || 0,
             })
         }
 
@@ -2794,6 +2812,12 @@ const initGraph = () => {
                 const spouseLink = pending.splice(spouseIndex, 1)[0]!
                 const firstParent = getRenderCoord(link.source)!
                 const secondParent = getRenderCoord(spouseLink.source)!
+                const childCoupleCoord = nodeCanvasCoords.get(childId)
+                const childCoupleNode = membersById.get(childId)
+                const childCoupleGen = childCoupleNode?.generation
+                const childCoupleLevel = (childCoupleGen !== null && childCoupleGen !== undefined)
+                    ? Math.max(0, Number(childCoupleGen))
+                    : Math.max(0, Math.round(((childCoupleCoord?.y || topOffset) - topOffset) / levelGap))
                 parentOverlayData.push({
                     source: {
                         x: (firstParent.x + secondParent.x) / 2,
@@ -2805,18 +2829,24 @@ const initGraph = () => {
                     crossFamily:
                         membersById.get(link.source)?.family_id !== membersById.get(childId)?.family_id ||
                         membersById.get(spouseLink.source)?.family_id !== membersById.get(childId)?.family_id,
-                    branchColor: branchPalette[(componentIndexByNodeId.get(childId) || 0) % branchPalette.length],
+                    branchColor: getLevelTheme(childCoupleLevel).accent,
                 })
                 continue
             }
 
+            const childSingleCoord = nodeCanvasCoords.get(childId)
+            const childSingleNode = membersById.get(childId)
+            const childSingleGen = childSingleNode?.generation
+            const childSingleLevel = (childSingleGen !== null && childSingleGen !== undefined)
+                ? Math.max(0, Number(childSingleGen))
+                : Math.max(0, Math.round(((childSingleCoord?.y || topOffset) - topOffset) / levelGap))
             parentOverlayData.push({
                 source: getRenderCoord(link.source)!,
                 target,
                 childId,
                 parentIds: [link.source],
                 crossFamily: membersById.get(link.source)?.family_id !== membersById.get(childId)?.family_id,
-                branchColor: branchPalette[(componentIndexByNodeId.get(childId) || 0) % branchPalette.length],
+                branchColor: getLevelTheme(childSingleLevel).accent,
             })
         }
     }
@@ -2838,12 +2868,16 @@ const initGraph = () => {
 
     const spouseOverlayData = activeSpouseLinks
         .filter((link) => getRenderCoord(link.source) && getRenderCoord(link.target))
-        .map((link) => ({
-            a: getRenderCoord(link.source)!,
-            b: getRenderCoord(link.target)!,
-            crossFamily: membersById.get(link.source)?.family_id !== membersById.get(link.target)?.family_id,
-            branchColor: branchPalette[(componentIndexByNodeId.get(link.source) || 0) % branchPalette.length],
-        }))
+        .map((link) => {
+            const coordA = getRenderCoord(link.source)!
+            const lvl = Math.max(0, Math.round(((coordA.y || topOffset) - topOffset) / levelGap))
+            return {
+                a: coordA,
+                b: getRenderCoord(link.target)!,
+                crossFamily: membersById.get(link.source)?.family_id !== membersById.get(link.target)?.family_id,
+                branchColor: getLevelTheme(lvl).accent,
+            }
+        })
 
     g.append('g')
         .attr('class', 'parent-links')
@@ -2851,25 +2885,24 @@ const initGraph = () => {
         .data(parentOverlayData)
         .join('path')
         .attr('fill', 'none')
-        .attr('stroke', (d: any) => d.crossFamily ? '#7f6640' : d.branchColor || '#6f5a36')
-        .attr('stroke-width', 2.4)
+        .attr('stroke', (d: any) => d.crossFamily ? '#948375' : d.branchColor || '#7D7065')
+        .attr('stroke-width', 1.8)
+        .attr('stroke-opacity', 0.82)
         .attr('stroke-dasharray', (d) => d.crossFamily ? '4,4' : null)
         .attr('stroke-linecap', 'round')
         .attr('stroke-opacity', (d) => d.crossFamily ? 0.6 : 1)
         .attr('data-child-id', (d) => d.childId)
         .attr('data-parent-ids', (d) => d.parentIds.join(','))
         .attr('d', (d: any) => {
-            const sourceY = d.source.y + (isCompactMobileCard ? 76 : 96)
-            const targetY = d.target.y - (isCompactMobileCard ? 84 : 104)
-            const spread = isCompactMobileCard ? 8 : 14
-            const groupSize = Number(d._groupSize || 1)
-            const groupIndex = Number(d._groupIndex || 0)
-            const centerIndex = (groupSize - 1) / 2
-            const offsetIndex = groupSize > 1 ? (groupIndex - centerIndex) : ((Number(d.childId) % 7) - 3)
-            const midYBase = sourceY + (targetY - sourceY) * 0.5
-            const midY = midYBase + offsetIndex * (spread * 0.4)
-            return `M ${d.source.x} ${sourceY} C ${d.source.x} ${midY} ${d.target.x} ${midY} ${d.target.x} ${targetY}`
+            const sourceY = d.source.y + cardHeight / 2
+            const banner = branchBanners[d.childId]
+            const bannerOffset = banner ? (banner.isMain ? 44 : 36) : 0
+            const targetY = d.target.y - cardHeight / 2 - bannerOffset
+            const midY = sourceY + 22
+            return `M ${d.source.x} ${sourceY} V ${midY} H ${d.target.x} V ${targetY}`
         })
+        .attr('stroke', '#64748B')
+        .attr('stroke-width', 1.6)
 
     g.append('g')
         .attr('class', 'spouse-links')
@@ -2877,8 +2910,9 @@ const initGraph = () => {
         .data(spouseOverlayData)
         .join('path')
         .attr('fill', 'none')
-        .attr('stroke', (d: any) => d.crossFamily ? '#b08f48' : d.branchColor || '#a07b44')
-        .attr('stroke-width', 2.4)
+        .attr('stroke', (d: any) => d.crossFamily ? '#A69684' : d.branchColor || '#8A7B6E')
+        .attr('stroke-width', 1.8)
+        .attr('stroke-opacity', 0.8)
         .attr('stroke-dasharray', (d) => d.crossFamily ? '6,6' : '6,4')
         .attr('stroke-linecap', 'round')
         .attr('stroke-linejoin', 'round')
@@ -2897,6 +2931,59 @@ const initGraph = () => {
             return `M ${startX} ${startY} C ${c1x} ${startY} ${c2x} ${endY} ${endX} ${endY}`
         })
 
+    // Background Level Guides (Clean, Non-Intrusive)
+    const uniqueLevels = Array.from(new Set(renderedNodes.map((n: any) => n.level ?? 0))).sort((a: number, b: number) => a - b)
+    if (uniqueLevels.length > 0 && Number.isFinite(bounds.minX) && Number.isFinite(bounds.maxX)) {
+        const guideGroup = g.append('g').attr('class', 'level-guides')
+        guideGroup.lower()
+
+        const leftX = bounds.minX - 160
+        const rightX = bounds.maxX + 160
+
+        for (const lvl of uniqueLevels) {
+            const theme = getLevelTheme(lvl)
+            const lvlY = topOffset + lvl * levelGap
+
+            // Subtle dashed separator line
+            guideGroup.append('line')
+                .attr('x1', leftX)
+                .attr('x2', rightX)
+                .attr('y1', lvlY)
+                .attr('y2', lvlY)
+                .attr('stroke', '#CBD5E1')
+                .attr('stroke-width', 1.2)
+                .attr('stroke-dasharray', '4,4')
+                .attr('stroke-opacity', 0.6)
+
+            // Refined minimalist level badge on left
+            const tagW = 74
+            const tagH = 22
+            const tagX = leftX - 10
+            const tagY = lvlY - tagH / 2
+
+            guideGroup.append('rect')
+                .attr('x', tagX)
+                .attr('y', tagY)
+                .attr('width', tagW)
+                .attr('height', tagH)
+                .attr('rx', tagH / 2)
+                .attr('fill', '#FFFFFF')
+                .attr('stroke', theme.border)
+                .attr('stroke-width', 1.2)
+                .style('filter', 'drop-shadow(0 2px 5px rgba(0,0,0,0.04))')
+
+            guideGroup.append('text')
+                .attr('x', tagX + tagW / 2)
+                .attr('y', lvlY + 3.5)
+                .attr('text-anchor', 'middle')
+                .attr('fill', theme.darkAccent)
+                .attr('font-size', '10px')
+                .attr('font-weight', '800')
+                .attr('letter-spacing', '0.04em')
+                .text(`LEVEL ${lvl + 1}`)
+        }
+    }
+
     const nodeGroup = g.append('g')
         .attr('class', 'nodes')
         .selectAll('.node')
@@ -2907,217 +2994,188 @@ const initGraph = () => {
         .attr('transform', (d: any) => `translate(${d.x},${d.y})`)
 
     nodeGroup.each(function(this: any, d: any) {
-        renderCard(d3.select(this), 0, d, branchPalette[d.branchIndex % branchPalette.length])
+        renderCard(d3.select(this), 0, d, getLevelTheme(d.level ?? 0))
     })
 
 }
 
-function renderCard(selection: d3.Selection<any, any, any, any>, dx=0, d: any, branchColor?: string) {
+function renderCard(selection: d3.Selection<any, any, any, any>, dx=0, d: any, levelThemeInput?: LevelTheme | string) {
     if (!d) return
     const compact = isMobileViewport()
     const members = Array.isArray(d.members) && d.members.length ? d.members.filter(Boolean) : [d.primary || d]
     const primary = d.primary || members[0] || d
     const partner = d.partner || members[1] || null
-    const isCouple = Boolean(partner)
-    const cardWidth = compact ? 128 : 164
-    const cardHeight = compact ? (isCouple ? 188 : 170) : (isCouple ? 224 : 210)
-    const cardRadius = compact ? 13 : 16
-    const avatarRadius = compact ? 30 : 40
-    const avatarClipRadius = compact ? 27 : 36
-    const avatarDiameter = avatarClipRadius * 2
-    const avatarCenterY = isCouple ? (compact ? -56 : -66) : -cardHeight/4 + 2
-    const nameFontSize = compact ? 11.5 : 13
-    const coupleNameFontSize = compact ? 10.8 : 12.2
-    const pillWidth = compact ? 62 : 72
-    const pillHeight = compact ? 20 : 22
-    const pillY = isCouple ? (compact ? 55 : 68) : (compact ? 43 : 52)
-    const pillFontSize = compact ? 9.5 : 10.5
+    
+    // Historical metadata & spouse lookup
+    const meta = historicalMetadata[primary.id] || (partner ? historicalMetadata[partner.id] : undefined)
+    const partnerName = partner ? getDisplayName(partner) : (meta?.spouse || '')
+    const isCouple = Boolean(partner || meta?.spouse)
+    
+    const cardWidth = compact ? 130 : 152
+    const cardHeight = compact ? 62 : 74
+    const cardRadius = 8
+    
     const group = selection.append("g").attr("transform", `translate(${dx}, 0)`)
-    const isUser = auth.user && (primary.username === auth.user.username || partner?.username === auth.user.username)
-    const isMale = primary.gender === 'M'
-    const isFemale = primary.gender === 'F'
-    const genderSymbol = isCouple ? '2' : (isMale ? 'M' : (isFemale ? 'F' : 'O'))
+    
+    const levelIndex = (d.primary?.generation !== null && d.primary?.generation !== undefined)
+      ? Math.max(0, Number(d.primary.generation))
+      : (d.level ?? Math.max(0, Math.round((d.y - topOffset) / levelGap)))
+    const currentTheme = (typeof levelThemeInput === 'object' && levelThemeInput !== null)
+      ? levelThemeInput
+      : getLevelTheme(levelIndex)
+
     const primaryName = getDisplayName(primary)
-    const partnerName = partner ? getDisplayName(partner) : ''
-    const displayMemberId = partner
-      ? `${primary.member_id || primary.id} / ${partner.member_id || partner.id}`
-      : `${primary.member_id || primary.id}`
+    
+    // Lifespan / Status string
+    let dateStr = ''
+    if (meta?.dates) {
+        dateStr = meta.dates
+    } else if (meta?.status) {
+        dateStr = meta.status
+    } else {
+        const bYear = primary.date_of_birth ? new Date(primary.date_of_birth).getFullYear() : null
+        const dYear = primary.date_of_death ? new Date(primary.date_of_death).getFullYear() : null
+        if (bYear && dYear) {
+            dateStr = `${bYear}–${dYear}`
+        } else if (bYear) {
+            dateStr = `b. ${bYear}`
+        } else if (dYear) {
+            dateStr = `d. ${dYear}`
+        } else if (primary.is_deceased || partner?.is_deceased) {
+            dateStr = 'Deceased'
+        }
+    }
+    
+    // Child count for this card
+    const childCount = Number(d.childCount || 0)
+    const romanGenerations = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX']
+    const nextGenIndex = Math.min(romanGenerations.length - 1, levelIndex + 1)
+    const nextGenLabel = romanGenerations[nextGenIndex]
 
-    const cardFill = isUser ? '#FDFBF7' : '#FFFFFF'
-    const cardStroke = isUser ? '#E2C881' : 'rgba(15,23,42,0.08)'
-    const accentColor = branchColor || (isUser ? '#A08050' : (isMale ? '#4A6B8A' : isFemale ? '#9C4F63' : '#596577'))
-    const avatarBg = isUser ? '#F5E6B3' : (isMale ? '#E6F0FA' : isFemale ? '#FAE6EB' : '#F1F5F9')
-    const avatarRing = '#FFFFFF'
+    // 1. Branch Banner Pill (if this member is a branch or sub-branch head)
+    const banner = branchBanners[primary.id] || (partner ? branchBanners[partner.id] : undefined)
+    if (banner) {
+        const bannerW = compact ? (banner.isMain ? 240 : 190) : (banner.isMain ? 280 : 220)
+        const bannerH = banner.isMain ? 32 : 26
+        const bannerY = -cardHeight / 2 - (banner.isMain ? 34 : 28)
+        
+        const bannerG = group.append("g").attr("class", "branch-banner")
+        
+        bannerG.append("rect")
+            .attr("x", -bannerW / 2)
+            .attr("y", bannerY - bannerH / 2)
+            .attr("width", bannerW)
+            .attr("height", bannerH)
+            .attr("rx", banner.isMain ? 10 : 8)
+            .attr("fill", banner.color)
+            .attr("stroke", "rgba(255,255,255,0.3)")
+            .attr("stroke-width", 1.2)
+            .style("filter", "drop-shadow(0 4px 14px rgba(0,0,0,0.5))")
+            
+        bannerG.append("text")
+            .text(banner.title)
+            .attr("x", 0)
+            .attr("y", bannerY + (banner.isMain ? 4.5 : 4))
+            .attr("text-anchor", "middle")
+            .attr("fill", "#FFFFFF")
+            .attr("font-size", banner.isMain ? (compact ? "11px" : "12.5px") : (compact ? "10px" : "11px"))
+            .attr("font-weight", "800")
+            .attr("letter-spacing", "0.8px")
+            .style("pointer-events", "none")
+            
+        // Connector from banner bottom to card top
+        bannerG.append("line")
+            .attr("x1", 0).attr("x2", 0)
+            .attr("y1", bannerY + bannerH / 2)
+            .attr("y2", -cardHeight / 2)
+            .attr("stroke", "rgba(148, 163, 184, 0.7)")
+            .attr("stroke-width", 1.6)
+    }
 
-    const clipId = `clip-${members.map((member: any) => Number(member.id)).join('-')}`
-    const avatarSource = primary.photo || partner?.photo || null
-
-    group.append("rect")
-        .attr("x", -cardWidth/2).attr("y", -cardHeight/2)
-        .attr("width", cardWidth).attr("height", cardHeight).attr("rx", cardRadius)
-        .attr("fill", "rgba(0,0,0,0)")
-        .style("filter", "drop-shadow(0 15px 35px rgba(15,23,42,0.06)) drop-shadow(0 5px 15px rgba(15,23,42,0.03))")
-
-    group.append("rect")
-        .attr("x", -cardWidth/2).attr("y", -cardHeight/2)
-        .attr("width", cardWidth).attr("height", cardHeight).attr("rx", cardRadius)
-        .attr("fill", cardFill)
-        .attr("stroke", cardStroke)
-        .attr("stroke-width", isUser ? 2 : 1)
-        .attr("filter", primary.is_deceased || partner?.is_deceased ? "grayscale(100%) opacity(90%)" : "")
+    // 2. Main Card Surface (Light mode generation fill with top accent bar)
+    const cardG = group.append("g")
         .style("cursor", "pointer")
         .on("click", () => openMember(primary))
 
-    const defs = group.append("defs")
+    // Card background
+    cardG.append("rect")
+        .attr("x", -cardWidth / 2)
+        .attr("y", -cardHeight / 2)
+        .attr("width", cardWidth)
+        .attr("height", cardHeight)
+        .attr("rx", cardRadius)
+        .attr("fill", currentTheme.cardFill)
+        .attr("stroke", currentTheme.border)
+        .attr("stroke-width", 1.5)
+        .style("filter", "drop-shadow(0 4px 12px rgba(15,23,42,0.06))")
+
+    // Top color accent bar showing generation level
+    cardG.append("path")
+        .attr("d", `M ${-cardWidth/2 + cardRadius} ${-cardHeight/2} h ${cardWidth - cardRadius*2} a ${cardRadius} ${cardRadius} 0 0 1 ${cardRadius} ${cardRadius} v 2 h ${-cardWidth} v -2 a ${cardRadius} ${cardRadius} 0 0 1 ${cardRadius} ${-cardRadius} Z`)
+        .attr("fill", currentTheme.accent)
+
+    // 3. Card Typography (Deep crisp dark slate text for light mode)
+    const primaryY = isCouple
+        ? (dateStr ? -cardHeight / 2 + 20 : -cardHeight / 2 + 27)
+        : (dateStr ? -cardHeight / 2 + 28 : -cardHeight / 2 + 37)
+
+    cardG.append("text")
+        .text(primaryName)
+        .attr("x", 0)
+        .attr("y", primaryY)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#0F172A")
+        .attr("font-size", compact ? "11.5px" : "12.5px")
+        .attr("font-weight", "700")
 
     if (isCouple) {
-        const shift = avatarRadius * 0.75;
-        group.append("circle")
-            .attr("cx", shift).attr("cy", avatarCenterY)
-            .attr("r", avatarRadius)
-            .attr("fill", avatarBg)
-            .attr("stroke", avatarRing)
-            .attr("stroke-width", 3.5)
-            .style("filter", "drop-shadow(0 6px 12px rgba(15,23,42,0.08))")
-
-        defs.append("clipPath")
-            .attr("id", clipId + '-partner')
-            .append("circle")
-            .attr("cx", shift)
-            .attr("cy", avatarCenterY)
-            .attr("r", avatarClipRadius)
-
-        group.append("image")
-            .attr("href", resolveImage(partner?.photo || null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(partnerName)}&background=e2e8f0&color=475569&bold=true`)
-            .attr("x", shift - avatarClipRadius).attr("y", avatarCenterY - avatarClipRadius).attr("width", avatarDiameter).attr("height", avatarDiameter)
-            .attr("preserveAspectRatio", "xMidYMid slice")
-            .attr("clip-path", `url(#${clipId}-partner)`)
-            .style("pointer-events", "none")
-
-        group.append("circle")
-            .attr("cx", -shift).attr("cy", avatarCenterY)
-            .attr("r", avatarRadius)
-            .attr("fill", avatarBg)
-            .attr("stroke", avatarRing)
-            .attr("stroke-width", 3.5)
-            .style("filter", "drop-shadow(0 6px 12px rgba(15,23,42,0.08))")
-
-        defs.append("clipPath")
-            .attr("id", clipId + '-primary')
-            .append("circle")
-            .attr("cx", -shift)
-            .attr("cy", avatarCenterY)
-            .attr("r", avatarClipRadius)
-
-        group.append("image")
-            .attr("href", resolveImage(primary.photo || null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(primaryName)}&background=${avatarBg.replace('#','')}&color=${accentColor.replace('#','')}&bold=true`)
-            .attr("x", -shift - avatarClipRadius).attr("y", avatarCenterY - avatarClipRadius).attr("width", avatarDiameter).attr("height", avatarDiameter)
-            .attr("preserveAspectRatio", "xMidYMid slice")
-            .attr("clip-path", `url(#${clipId}-primary)`)
-            .style("pointer-events", "none")
-    } else {
-        group.append("circle")
-            .attr("cx", 0).attr("cy", avatarCenterY)
-            .attr("r", avatarRadius)
-            .attr("fill", avatarBg)
-            .attr("stroke", avatarRing)
-            .attr("stroke-width", 3.5)
-            .style("filter", "drop-shadow(0 6px 12px rgba(15,23,42,0.08))")
-
-        defs.append("clipPath")
-            .attr("id", clipId)
-            .append("circle")
-            .attr("cx", 0)
-            .attr("cy", avatarCenterY)
-            .attr("r", avatarClipRadius)
-
-        group.append("image")
-            .attr("href", resolveImage(avatarSource || null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(primaryName)}&background=${avatarBg.replace('#','')}&color=${accentColor.replace('#','')}&bold=true`)
-            .attr("x", -avatarClipRadius).attr("y", avatarCenterY - avatarClipRadius).attr("width", avatarDiameter).attr("height", avatarDiameter)
-            .attr("preserveAspectRatio", "xMidYMid slice")
-            .attr("clip-path", `url(#${clipId})`)
-            .style("pointer-events", "none")
-    }
-
-    if (isCouple) {
-      group.append("text")
-          .text(primaryName)
-          .attr("x", 0).attr("y", compact ? 24 : 30)
-          .attr("text-anchor", "middle")
-          .attr("fill", "#0f172a")
-          .attr("font-weight", "800")
-          .attr("font-size", `${coupleNameFontSize + 0.5}px`)
-          .style("pointer-events", "none")
-
-      group.append("text")
-          .text(partnerName)
-          .attr("x", 0).attr("y", compact ? 40 : 48)
-          .attr("text-anchor", "middle")
-          .attr("fill", "#334155")
-          .attr("font-weight", "600")
-          .attr("font-size", `${coupleNameFontSize - 0.5}px`)
-          .style("pointer-events", "none")
-
-      const couplePillWidth = cardWidth - 20;
-      group.append("rect")
-        .attr("x", -couplePillWidth / 2).attr("y", pillY - pillHeight/2)
-        .attr("width", couplePillWidth).attr("height", pillHeight).attr("rx", pillHeight/2)
-        .attr("fill", 'rgba(241,245,249,0.7)')
-        .attr("stroke", 'rgba(226,232,240,0.8)')
-
-      group.append("text")
-          .text(`ID ${displayMemberId}`)
-          .attr("x", 0).attr("y", pillY + 3.5)
-          .attr("text-anchor", "middle")
-          .attr("fill", "#64748b")
-          .attr("font-size", `${pillFontSize}px`)
-          .attr("font-weight", "700")
-    } else {
-      group.append("text")
-          .text(primaryName)
-          .attr("x", 0).attr("y", 26)
-          .attr("text-anchor", "middle")
-          .attr("fill", "#0f172a")
-          .attr("font-weight", "800")
-          .attr("font-size", `${nameFontSize + 0.5}px`)
-          .style("pointer-events", "none")
-
-      group.append("rect")
-        .attr("x", -pillWidth/2).attr("y", pillY - pillHeight/2)
-        .attr("width", pillWidth).attr("height", pillHeight).attr("rx", pillHeight/2)
-        .attr("fill", 'rgba(241,245,249,0.7)')
-        .attr("stroke", 'rgba(226,232,240,0.8)')
-
-      group.append("text")
-          .text(t('familyTree.labels.agePill', { symbol: genderSymbol, age: getDisplayAge(primary) }))
-          .attr("x", 0).attr("y", pillY + 3.5)
-          .attr("text-anchor", "middle")
-          .attr("fill", "#64748b")
-          .attr("font-size", `${pillFontSize}px`)
-          .attr("font-weight", "700")
-    }
-
-    if (primary.is_deceased || partner?.is_deceased) {
-        const badgeR = 9
-        const badgeCx = cardWidth / 2 - 14
-        const badgeCy = -cardHeight / 2 + 14
-
-        group.append("circle")
-            .attr("cx", badgeCx)
-            .attr("cy", badgeCy)
-            .attr("r", badgeR)
-            .attr("fill", "#0f172a")
-            .style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.15))")
-
-        group.append("text")
-            .text("†")
-            .attr("x", badgeCx)
-            .attr("y", badgeCy + 4)
+        cardG.append("text")
+            .text(`& ${partnerName}`)
+            .attr("x", 0)
+            .attr("y", primaryY + 14)
             .attr("text-anchor", "middle")
-            .attr("fill", "#F8FAFC")
-            .attr("font-size", "13px")
-            .attr("font-weight", "800")
-            .style("pointer-events", "none")
+            .attr("fill", "#334155")
+            .attr("font-size", compact ? "10px" : "11px")
+            .attr("font-weight", "600")
+    }
+
+    if (dateStr) {
+        const dateY = isCouple ? primaryY + 28 : primaryY + 15
+        cardG.append("text")
+            .text(dateStr)
+            .attr("x", 0)
+            .attr("y", dateY)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#64748B")
+            .attr("font-size", compact ? "9px" : "10px")
+            .attr("font-weight", "500")
+    }
+
+    // 4. Red Child Badge Pill (e.g. "6 children in Gen V")
+    if (childCount > 0) {
+        const badgeW = compact ? 88 : 98
+        const badgeH = 15
+        const badgeY = cardHeight / 2 - badgeH / 2 - 4
+        
+        const badgeG = cardG.append("g")
+        badgeG.append("rect")
+            .attr("x", -badgeW / 2)
+            .attr("y", badgeY - badgeH / 2)
+            .attr("width", badgeW)
+            .attr("height", badgeH)
+            .attr("rx", badgeH / 2)
+            .attr("fill", "#BE123C")
+            .attr("stroke", "rgba(255,255,255,0.25)")
+            .attr("stroke-width", 0.8)
+            
+        badgeG.append("text")
+            .text(`${childCount} children in Gen ${nextGenLabel}`)
+            .attr("x", 0)
+            .attr("y", badgeY + 3.5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#FFFFFF")
+            .attr("font-size", compact ? "7.5px" : "8.5px")
+            .attr("font-weight", "700")
     }
 }
 
@@ -3134,10 +3192,15 @@ onMounted(async () => {
         return
     }
     await Promise.all([
-        familyStore.fetchOverview(),
+        familyStore.fetchFamily(''),
         fetchCommunityRoles(),
     ])
     nodes.value = [...familyStore.flatList()]
+    setTimeout(() => {
+        if (viewMode.value === 'visual') {
+            initGraph()
+        }
+    }, 100)
     mobileEditorSheetVh.value = clampMobileEditorHeight(MOBILE_EDITOR_DEFAULT_VH)
 })
 
@@ -3151,19 +3214,19 @@ onUnmounted(() => {
 })
 
 watch([nodes, links], () => {
-    if (viewMode.value === 'visual' && activeBranch.value) {
+    if (viewMode.value === 'visual') {
         setTimeout(initGraph, 100)
     }
 }, { deep: true })
 
 watch(viewMode, (newVal) => {
-    if (newVal === 'visual' && activeBranch.value) {
+    if (newVal === 'visual') {
         setTimeout(initGraph, 50)
     }
 })
 
 watch(locale, () => {
-    if (viewMode.value === 'visual' && activeBranch.value) {
+    if (viewMode.value === 'visual') {
         setTimeout(initGraph, 100)
     }
 })
