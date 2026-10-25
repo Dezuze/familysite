@@ -246,6 +246,12 @@
     },
     "labels": {
       "visualMap": "Visual Map",
+      "treeOverview": "Tree Overview",
+      "branchLineage": "Branch Lineage",
+      "backToOverview": "Back to Overview Tree",
+      "viewingBranch": "Viewing Branch",
+      "historicalBranch": "Historical Branch Line",
+      "exploreParentBranch": "Explore Parent Branch",
       "directory": "Directory",
       "perspective": "Perspective",
       "layout": "Layout",

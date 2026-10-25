@@ -13,14 +13,20 @@
                 <!-- View Mode Toggle -->
                 <div class="bg-slate-100 rounded-xl p-1 flex border border-slate-200 shadow-inner">
                     <button 
-                        @click="viewMode = 'visual'"
-                        :class="['px-4 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='visual' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
+                        @click="switchToOverview"
+                        :class="['px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='visual' && visualSubMode==='overview' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
                     >
-                        {{ t('familyTree.labels.visualMap') }}
+                        {{ t('familyTree.labels.treeOverview') }}
+                    </button>
+                    <button 
+                        @click="switchToLineage"
+                        :class="['px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='visual' && visualSubMode==='lineage' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
+                    >
+                        {{ t('familyTree.labels.branchLineage') }}
                     </button>
                     <button 
                         @click="viewMode = 'grid'"
-                        :class="['px-4 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='grid' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
+                        :class="['px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all', viewMode==='grid' ? 'bg-brand-gold text-white shadow-md' : 'text-slate-500 hover:text-slate-800']"
                     >
                         {{ t('familyTree.labels.directory') }}
                     </button>
@@ -33,12 +39,25 @@
                         @change="jumpToBranch" 
                         class="px-3 py-1.5 bg-slate-50 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 cursor-pointer shadow-sm transition-all"
                     >
-                        <option value="all">Entire Lineage Tree</option>
-                        <option value="33">Kollamparampil Thazhe Branch</option>
-                        <option value="196">Kulathammackal Sub-Branch</option>
-                        <option value="31">Thazhe Sub-Branch</option>
-                        <option value="189">Karottu Branch</option>
-                        <option value="221">Tharavadu Branch</option>
+                        <option value="overview">Tree Overview (All Branches)</option>
+                        <option value="35">I 1 Chandy (Whole Tree)</option>
+                        <optgroup label="1. Thazhe (Lower) Branch">
+                            <option value="33">II 1 Chandy Chandy (Thazhe Branch)</option>
+                            <option value="196">III 1 Chandy Chandy (Kulathammakkal)</option>
+                            <option value="31">III 2 Chandy Kurian (Thazhe Sub-branch)</option>
+                        </optgroup>
+                        <optgroup label="2. Karottu (Upper) Branch">
+                            <option value="188">II 2 Chandy Kurian (Karottu Branch)</option>
+                            <option value="akkare">III 4 Kurian Abraham (Akkare)</option>
+                            <option value="218">III 5 Kurian Kora (Mulekkunnu)</option>
+                            <option value="kuttikkal">III 6 Kurian Anthrayose (Kuttikkal)</option>
+                            <option value="221">III 7 Kurian Chacko (Karottu Sub-branch)</option>
+                        </optgroup>
+                        <optgroup label="3. Tharavadu (Ancestral Home) Branch">
+                            <option value="189">II 3 Chandy Kora (Tharavadu Branch)</option>
+                            <option value="tharavadu-line-1">III 9 Kora Chandy (Tharavadu Line 1)</option>
+                            <option value="224">III 12 Kora Kurian (Tharavadu Line 2)</option>
+                        </optgroup>
                     </select>
                 </div>
 
@@ -182,7 +201,86 @@
               ↔
           </button>
       </div>
+        <!-- Floating Back to Overview Banner inside Visual Canvas -->
+        <Transition name="fade-scale">
+            <div 
+                v-if="visualSubMode === 'lineage' && !editMode" 
+                class="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 bg-white/95 backdrop-blur-xl px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.08)] pointer-events-auto max-w-[92vw] overflow-hidden"
+            >
+                <button 
+                    @click="switchToOverview" 
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-brand-gold text-white text-xs font-bold rounded-xl hover:brightness-110 shadow-sm transition-all active:scale-95 shrink-0"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>{{ t('familyTree.labels.backToOverview') }}</span>
+                </button>
+                <div class="h-4 w-px bg-slate-200 shrink-0"></div>
+                <div class="flex items-center gap-1.5 truncate text-xs">
+                    <span class="font-bold text-slate-800 truncate">{{ activeBranchHeaderTitle }}</span>
+                    <span v-if="activeBranchMembersCount" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">
+                        {{ activeBranchMembersCount }} {{ activeBranchMembersCount === 1 ? 'member' : 'members' }}
+                    </span>
+                </div>
+            </div>
+        </Transition>
             <svg ref="svgRef" class="w-full h-full relative z-1 touch-pan-y md:touch-none"></svg>
+
+      <!-- Historical Branch Line Modal -->
+      <Transition name="fade-scale">
+          <div 
+              v-if="selectedHistoricalNode" 
+              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+              @click.self="selectedHistoricalNode = null"
+          >
+              <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                  <div class="flex items-start justify-between">
+                      <div>
+                          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-amber-50 text-amber-700 border border-amber-200 mb-1.5">
+                              {{ t('familyTree.labels.historicalBranch') }}
+                          </span>
+                          <h3 class="text-xl font-black text-slate-900">
+                              {{ selectedHistoricalNode.titleMl }} • {{ selectedHistoricalNode.title }}
+                          </h3>
+                          <p class="text-sm font-semibold text-slate-600 mt-0.5">
+                              {{ selectedHistoricalNode.romanId }} {{ selectedHistoricalNode.nameMl }} ({{ selectedHistoricalNode.name }})
+                          </p>
+                      </div>
+                      <button 
+                          @click="selectedHistoricalNode = null" 
+                          class="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 text-sm font-bold transition-colors"
+                      >
+                          ✕
+                      </button>
+                  </div>
+                  
+                  <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 leading-relaxed space-y-1.5">
+                      <p>
+                          <strong class="text-slate-800">Branch Lineage:</strong> 
+                          Part of the {{ selectedHistoricalNode.parentBranchTitle }} (കുടുംബ ശാഖ).
+                      </p>
+                      <p>
+                          This is an official lineage line established in the family annals. Digital profile records for descendants of this line can be added via the Tree Editor.
+                      </p>
+                  </div>
+
+                  <div class="flex gap-2 pt-2">
+                      <button 
+                          v-if="selectedHistoricalNode.parentMemberIdNum"
+                          @click="viewBranchFamilyById(selectedHistoricalNode.parentMemberIdNum); selectedHistoricalNode = null"
+                          class="flex-1 px-4 py-2 bg-brand-gold text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all"
+                      >
+                          {{ t('familyTree.labels.exploreParentBranch') }} ({{ selectedHistoricalNode.parentBranchTitle }})
+                      </button>
+                      <button 
+                          @click="selectedHistoricalNode = null"
+                          class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold rounded-xl transition-colors"
+                      >
+                          Close
+                      </button>
+                  </div>
+              </div>
+          </div>
+      </Transition>
     </div>
 
      <!-- Grid View -->
@@ -765,22 +863,227 @@
 </template>
 
 <script setup lang="ts">
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
+import { useHead, useRuntimeConfig, useRoute, useRouter } from '#imports'
+import { useI18n } from 'vue-i18n'
+import * as d3 from 'd3'
+import { useFamilyStore } from '~/stores/family'
+import type { FamilyMember } from '~/types/family'
+import { useAuthStore } from '~/stores/auth'
+import friendlyErrorMessage from '~/utils/errorNormalizer'
+import MemberDetailsModal from '~/components/MemberDetailsModal.vue'
+import MemberCard from '~/components/MemberCard.vue'
+import { Cropper, CircleStencil } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
-// --- Branch Banners & Historical Lineage Data (Picture 1 Design) ---
+// --- Global D3 State ---
+let globalZoom: any = null        
+let globalSVG: any = null         
+let globalNodeCoords = new Map<number, { x: number; y: number }>()
+
+// --- Overview Structure Model (Diagram Hierarchy) ---
+export interface OverviewBranchItem {
+    id: string
+    memberIdNum?: number
+    romanId: string
+    name: string
+    nameMl: string
+    title: string
+    titleMl: string
+    subtitle?: string
+    subtitleMl?: string
+    isFounder?: boolean
+    isBranchHead?: boolean
+    parentBranchTitle?: string
+    parentMemberIdNum?: number
+    memberCount?: number
+}
+
+const founderNode: OverviewBranchItem = {
+    id: 'root',
+    memberIdNum: 35,
+    romanId: 'I 1',
+    name: 'Chandy',
+    nameMl: 'ചാണ്ടി',
+    title: 'Root / Founder',
+    titleMl: 'സ്ഥാപകൻ',
+    subtitle: 'Founder · Wife: Mariyam',
+    subtitleMl: 'സ്ഥാപകൻ · ഭാര്യ മറിയം',
+    isFounder: true,
+    memberCount: 169,
+}
+
+const thazheBranch = {
+    header: {
+        id: 'thazhe',
+        memberIdNum: 33,
+        romanId: 'II 1',
+        name: 'Chandy Chandy',
+        nameMl: 'ചാണ്ടി ചാണ്ടി',
+        title: 'Thazhe (Lower) Branch',
+        titleMl: 'താഴെ ശാഖ',
+        isBranchHead: true,
+        memberCount: 76,
+    } as OverviewBranchItem,
+    subBranches: [
+        {
+            id: 'kulathammakkal',
+            memberIdNum: 196,
+            romanId: 'III 1',
+            name: 'Chandy Chandy',
+            nameMl: 'ചാണ്ടി ചാണ്ടി',
+            title: 'Kulathammakkal',
+            titleMl: 'കുളത്താമ്മാക്കൽ',
+            parentBranchTitle: 'Thazhe Branch',
+            parentMemberIdNum: 33,
+            memberCount: 23,
+        },
+        {
+            id: 'thazhe-sub',
+            memberIdNum: 31,
+            romanId: 'III 2',
+            name: 'Chandy Kurian',
+            nameMl: 'ചാണ്ടി കുര്യൻ',
+            title: 'Thazhe Sub-branch',
+            titleMl: 'താഴെ ഉപശാഖ',
+            parentBranchTitle: 'Thazhe Branch',
+            parentMemberIdNum: 33,
+            memberCount: 50,
+        },
+    ] as OverviewBranchItem[]
+}
+
+const karottuBranch = {
+    header: {
+        id: 'karottu',
+        memberIdNum: 188,
+        romanId: 'II 2',
+        name: 'Chandy Kurian',
+        nameMl: 'ചാണ്ടി കുര്യൻ',
+        title: 'Karottu (Upper) Branch',
+        titleMl: 'കരോട്ട് ശാഖ',
+        isBranchHead: true,
+        memberCount: 61,
+    } as OverviewBranchItem,
+    subBranches: [
+        {
+            id: 'akkare',
+            romanId: 'III 4',
+            name: 'Kurian Abraham',
+            nameMl: 'കുര്യൻ എബ്രഹാം',
+            title: 'Akkare',
+            titleMl: 'അക്കരെ',
+            parentBranchTitle: 'Karottu Branch',
+            parentMemberIdNum: 188,
+        },
+        {
+            id: 'mulekkunnu',
+            memberIdNum: 218,
+            romanId: 'III 5',
+            name: 'Kurian Kora',
+            nameMl: 'കുര്യൻ കോര',
+            title: 'Mulekkunnu',
+            titleMl: 'മുളേക്കുന്ന്',
+            parentBranchTitle: 'Karottu Branch',
+            parentMemberIdNum: 188,
+            memberCount: 23,
+        },
+        {
+            id: 'kuttikkal',
+            romanId: 'III 6',
+            name: 'Kurian Anthrayose',
+            nameMl: 'കുര്യൻ അന്ത്രയോസ്',
+            title: 'Kuttikkal',
+            titleMl: 'കുറ്റിക്കൽ',
+            parentBranchTitle: 'Karottu Branch',
+            parentMemberIdNum: 188,
+        },
+        {
+            id: 'karottu-sub',
+            memberIdNum: 221,
+            romanId: 'III 7',
+            name: 'Kurian Chacko',
+            nameMl: 'കുര്യൻ ചാക്കോ',
+            title: 'Karottu Sub-branch',
+            titleMl: 'കരോട്ട് ഉപശാഖ',
+            parentBranchTitle: 'Karottu Branch',
+            parentMemberIdNum: 188,
+            memberCount: 36,
+        },
+    ] as OverviewBranchItem[]
+}
+
+const tharavaduBranch = {
+    header: {
+        id: 'tharavadu',
+        memberIdNum: 189,
+        romanId: 'II 3',
+        name: 'Chandy Kora',
+        nameMl: 'ചാണ്ടി കോര',
+        title: 'Tharavadu (Ancestral Home) Branch',
+        titleMl: 'തറവാട് ശാഖ',
+        isBranchHead: true,
+        memberCount: 26,
+    } as OverviewBranchItem,
+    subBranches: [
+        {
+            id: 'tharavadu-line-1',
+            romanId: 'III 9',
+            name: 'Kora Chandy',
+            nameMl: 'കോര ചാണ്ടി',
+            title: 'Tharavadu Line 1',
+            titleMl: 'തറവാട് വരി 1',
+            parentBranchTitle: 'Tharavadu Branch',
+            parentMemberIdNum: 189,
+        },
+        {
+            id: 'tharavadu-line-2',
+            memberIdNum: 224,
+            romanId: 'III 12',
+            name: 'Kora Kurian',
+            nameMl: 'കോര കുര്യൻ',
+            title: 'Tharavadu Line 2',
+            titleMl: 'തറവാട് വരി 2',
+            parentBranchTitle: 'Tharavadu Branch',
+            parentMemberIdNum: 189,
+            memberCount: 24,
+        },
+    ] as OverviewBranchItem[]
+}
+
+const allOverviewItems: OverviewBranchItem[] = [
+    founderNode,
+    thazheBranch.header,
+    ...thazheBranch.subBranches,
+    karottuBranch.header,
+    ...karottuBranch.subBranches,
+    tharavaduBranch.header,
+    ...tharavaduBranch.subBranches,
+]
+
+// Accurate branch banners for visual lineage tree cards
 const branchBanners: Record<number, { title: string; color: string; isMain: boolean }> = {
-    33: { title: 'KOLLAMPARAMBIL THAZHE BRANCH', color: '#0F766E', isMain: true },
-    196: { title: 'KULATHAMMACKAL SUB-BRANCH', color: '#1D4ED8', isMain: false },
+    35: { title: 'KOLLAMPARAMPIL FOUNDER', color: '#D97706', isMain: true },
+    33: { title: 'KOLLAMPARAMPIL THAZHE BRANCH', color: '#0F766E', isMain: true },
+    196: { title: 'KULATHAMMAKKAL SUB-BRANCH', color: '#1D4ED8', isMain: false },
     31: { title: 'THAZHE SUB-BRANCH', color: '#1D4ED8', isMain: false },
-    189: { title: 'KAROTTU BRANCH', color: '#0F766E', isMain: true },
-    224: { title: 'KAROTTU SUB-BRANCH', color: '#1D4ED8', isMain: false },
-    188: { title: 'THARAVADU BRANCH', color: '#0F766E', isMain: true },
-    221: { title: 'THARAVADU BRANCH', color: '#0F766E', isMain: true },
+    188: { title: 'KAROTTU BRANCH', color: '#0F766E', isMain: true },
+    218: { title: 'MULEKKUNNU SUB-BRANCH', color: '#1D4ED8', isMain: false },
+    221: { title: 'KAROTTU SUB-BRANCH', color: '#1D4ED8', isMain: false },
+    189: { title: 'THARAVADU BRANCH', color: '#0F766E', isMain: true },
+    224: { title: 'THARAVADU LINE 2', color: '#1D4ED8', isMain: false },
 }
 
 const historicalMetadata: Record<number, { dates?: string; spouse?: string; status?: string }> = {
+    35: { dates: 'Founder', spouse: 'Mariam' },
     33: { dates: 'b. 1838', spouse: 'Anna' },
-    35: { spouse: 'Mariam' },
     196: { dates: '1867–1944', spouse: 'Sosamma' },
+    31: { spouse: 'Aleyamma' },
+    188: { spouse: 'Achamma' },
+    218: { spouse: 'Sosamma' },
+    221: { spouse: 'Sosamma' },
+    189: { spouse: 'Mariam' },
+    224: { spouse: 'Aleyamma' },
     201: { dates: '1898–1972', spouse: 'Sosamma' },
     202: { status: '† young' },
     203: { spouse: 'Cherian Mathew' },
@@ -789,17 +1092,197 @@ const historicalMetadata: Record<number, { dates?: string; spouse?: string; stat
     206: { spouse: 'Chacko' },
 }
 
-const selectedBranchJump = ref<string>('all')
+const selectedBranchJump = ref<string>('overview')
+const visualSubMode = ref<'overview' | 'lineage'>('overview')
+const activeSubtreeRootId = ref<number | null>(null)
+const activeBranchInfo = ref<OverviewBranchItem | null>(null)
+const selectedHistoricalNode = ref<OverviewBranchItem | null>(null)
+
+// Nodes & Links references defined early for computed helpers
+const nodes = ref<FamilyMember[]>([])
+const links = computed(() => familyStore.edges)
+
+// Descendant lookup helper for branch focusing
+const getDescendantIds = (rootMemberId: number): Set<number> => {
+    const parentLinks = (links.value || []).filter((l: any) => l && l.type === 'parent')
+    const spouseLinks = (links.value || []).filter((l: any) => l && l.type === 'spouse')
+
+    const childrenMap = new Map<number, number[]>()
+    for (const l of parentLinks) {
+        const s = Number(l.source)
+        const t = Number(l.target)
+        if (!childrenMap.has(s)) childrenMap.set(s, [])
+        childrenMap.get(s)!.push(t)
+    }
+
+    const spouseMap = new Map<number, number[]>()
+    for (const l of spouseLinks) {
+        const s = Number(l.source)
+        const t = Number(l.target)
+        if (!spouseMap.has(s)) spouseMap.set(s, [])
+        if (!spouseMap.has(t)) spouseMap.set(t, [])
+        spouseMap.get(s)!.push(t)
+        spouseMap.get(t)!.push(s)
+    }
+
+    const result = new Set<number>()
+    const queue = [rootMemberId]
+
+    while (queue.length > 0) {
+        const curr = queue.shift()!
+        if (result.has(curr)) continue
+        result.add(curr)
+
+        for (const sp of spouseMap.get(curr) || []) {
+            if (!result.has(sp)) {
+                result.add(sp)
+                for (const spChild of childrenMap.get(sp) || []) {
+                    if (!result.has(spChild)) {
+                        queue.push(spChild)
+                    }
+                }
+            }
+        }
+
+        for (const ch of childrenMap.get(curr) || []) {
+            if (!result.has(ch)) {
+                queue.push(ch)
+            }
+        }
+    }
+
+    return result
+}
+
+const dynamicMemberCounts = computed(() => {
+    const counts = new Map<number, number>()
+    if (!nodes.value.length) {
+        counts.set(35, 169)
+        counts.set(33, 76)
+        counts.set(196, 23)
+        counts.set(31, 50)
+        counts.set(188, 61)
+        counts.set(218, 23)
+        counts.set(221, 36)
+        counts.set(189, 26)
+        counts.set(224, 24)
+        return counts
+    }
+    for (const id of [35, 33, 188, 189, 196, 31, 218, 221, 224]) {
+        const desc = getDescendantIds(id)
+        counts.set(id, desc.size)
+    }
+    return counts
+})
+
+const activeBranchHeaderTitle = computed(() => {
+    const isMl = locale.value === 'ml'
+    if (activeBranchInfo.value) {
+        const info = activeBranchInfo.value
+        const title = isMl ? info.titleMl : info.title
+        const name = isMl ? info.nameMl : info.name
+        return `${title} • ${info.romanId} ${name}`
+    }
+    if (activeSubtreeRootId.value) {
+        const found = allOverviewItems.find(x => x.memberIdNum === activeSubtreeRootId.value)
+        if (found) {
+            const title = isMl ? found.titleMl : found.title
+            const name = isMl ? found.nameMl : found.name
+            return `${title} • ${found.romanId} ${name}`
+        }
+        const member = nodes.value.find((n: any) => n.id === activeSubtreeRootId.value)
+        if (member) return getDisplayName(member)
+    }
+    return t('familyTree.labels.branchLineage')
+})
+
+const activeBranchMembersCount = computed(() => {
+    if (activeSubtreeRootId.value) {
+        return getDescendantIds(activeSubtreeRootId.value).size
+    }
+    return nodes.value.length
+})
+
+const viewBranchFamily = (item: OverviewBranchItem) => {
+    if (!item) return
+    if (item.memberIdNum) {
+        activeSubtreeRootId.value = item.memberIdNum
+        activeBranchInfo.value = item
+        visualSubMode.value = 'lineage'
+        selectedBranchJump.value = String(item.memberIdNum)
+        setTimeout(() => {
+            initGraph()
+        }, 50)
+    } else {
+        selectedHistoricalNode.value = item
+    }
+}
+
+const viewBranchFamilyById = (memberId: number) => {
+    const item = allOverviewItems.find(x => x.memberIdNum === memberId)
+    if (item) {
+        viewBranchFamily(item)
+    } else {
+        activeSubtreeRootId.value = memberId
+        visualSubMode.value = 'lineage'
+        selectedBranchJump.value = String(memberId)
+        setTimeout(() => {
+            initGraph()
+        }, 50)
+    }
+}
+
+const switchToOverview = () => {
+    visualSubMode.value = 'overview'
+    activeSubtreeRootId.value = null
+    activeBranchInfo.value = null
+    selectedBranchJump.value = 'overview'
+    selectedHistoricalNode.value = null
+    setTimeout(() => {
+        drawOverviewGraph()
+    }, 50)
+}
+
+const switchToLineage = () => {
+    visualSubMode.value = 'lineage'
+    if (!activeSubtreeRootId.value) {
+        activeSubtreeRootId.value = 35
+        activeBranchInfo.value = founderNode
+        selectedBranchJump.value = '35'
+    }
+    setTimeout(() => {
+        initGraph()
+    }, 50)
+}
 
 const jumpToBranch = () => {
     const val = selectedBranchJump.value
-    if (val === 'all') {
-        resetZoom()
+    if (val === 'overview') {
+        switchToOverview()
+        return
+    }
+    if (val === 'all' || val === '35') {
+        visualSubMode.value = 'lineage'
+        activeSubtreeRootId.value = 35
+        activeBranchInfo.value = founderNode
+        initGraph()
+        return
+    }
+    if (val === 'akkare' || val === 'kuttikkal' || val === 'tharavadu-line-1') {
+        const item = allOverviewItems.find(x => x.id === val)
+        if (item) selectedHistoricalNode.value = item
         return
     }
     const targetId = Number(val)
     if (Number.isFinite(targetId)) {
-        focusOnMember({ id: targetId }, { select: false })
+        const item = allOverviewItems.find(x => x.memberIdNum === targetId)
+        if (item) {
+            viewBranchFamily(item)
+        } else {
+            visualSubMode.value = 'lineage'
+            activeSubtreeRootId.value = targetId
+            initGraph()
+        }
     }
 }
 
@@ -816,6 +1299,10 @@ const zoomOut = () => {
 }
 
 const resetZoom = () => {
+    if (visualSubMode.value === 'overview') {
+        drawOverviewGraph()
+        return
+    }
     if (globalSVG && globalZoom && chartContainer.value) {
         const width = chartContainer.value.clientWidth
         const height = chartContainer.value.clientHeight
@@ -839,30 +1326,370 @@ const resetZoom = () => {
     }
 }
 
-import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
-import { useHead, useRuntimeConfig, useRoute, useRouter } from '#imports'
-import { useI18n } from 'vue-i18n'
-import friendlyErrorMessage from '~/utils/errorNormalizer'
-import MemberDetailsModal from '~/components/MemberDetailsModal.vue'
-import MemberCard from '~/components/MemberCard.vue'
-import { Cropper, CircleStencil } from 'vue-advanced-cropper'
-import 'vue-advanced-cropper/dist/style.css'
+// --- Overview Structure Drawing (Consistent Card Design & Diagram Hierarchy) ---
+const drawOverviewGraph = () => {
+    if (!svgRef.value || !chartContainer.value) return
+    const width = chartContainer.value.clientWidth
+    const height = chartContainer.value.clientHeight
+    if (width === 0 || height === 0) {
+        setTimeout(drawOverviewGraph, 200)
+        return
+    }
 
-// ============================================================
-// familytree.vue — Interactive Family Tree & Member Directory
-// ============================================================
-// Renders an interactive D3.js genealogy tree with:
-//   • Gender-coded cards (blue=male, rose=female, gold=current user)
-//   • Dynamic separation (spouse-aware spacing prevents overlap)
-//   • Multi-tree forest rendering (separate family heads side-by-side)
-//   • Pan, zoom, auto-focus on logged-in user, search-to-focus
-//   • Switchable grid/list/compact directory view
-// ============================================================
+    const svg = d3.select(svgRef.value) as d3.Selection<SVGSVGElement, unknown, null, undefined>
+    svg.attr('viewBox', `0 0 ${width} ${height}`)
+    svg.selectAll('*').remove()
 
-import * as d3 from 'd3'
-import { useFamilyStore } from '~/stores/family'
-import type { FamilyMember } from '~/types/family'
-import { useAuthStore } from '~/stores/auth'
+    const g = svg.append('g').attr('class', 'overview-tree-group')
+    const mobileTwoFingerOnly = isMobileViewport()
+
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.25, 3.5])
+        .filter((event: any) => {
+            if (event.type === 'wheel') return Boolean(event.ctrlKey || event.metaKey)
+            const isTouchEvent = String(event.type || '').startsWith('touch')
+            if (!mobileTwoFingerOnly || !isTouchEvent) return true
+            if (event.type === 'touchend' || event.type === 'touchcancel') return true
+            return Number(event.touches?.length || 0) >= 2
+        })
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform)
+        })
+    svg.call(zoom)
+
+    globalZoom = zoom
+    globalSVG = svg
+
+    const isMl = locale.value === 'ml'
+
+    // Consistent Card Dimensions across the whole diagram
+    const cardW = 260
+    const branchH = 70
+    const subCardH = 64
+    const rootW = 276
+    const rootH = 76
+
+    // Columns - all 3 columns aligned with balanced spacing
+    const centerX = width / 2
+    const rootY = 60
+    const colSpacing = 310
+    const col1X = centerX - colSpacing // Thazhe
+    const col2X = centerX              // Karottu
+    const col3X = centerX + colSpacing // Tharavadu
+
+    const busY = rootY + rootH / 2 + 30
+    const branchY = busY + 44
+    const subCardGap = 80
+    const subCardStartY = branchY + branchH / 2 + 46
+
+    // 1. Draw Links
+    const linksGroup = g.append('g').attr('class', 'overview-links parent-links')
+
+    // Root to Bus and branch drops
+    const rootBottomY = rootY + rootH / 2
+    let rootPath = `M ${centerX} ${rootBottomY} V ${busY}`
+    rootPath += ` M ${col1X} ${busY} H ${col3X}`
+    rootPath += ` M ${col1X} ${busY} V ${branchY - branchH / 2}`
+    rootPath += ` M ${col2X} ${busY} V ${branchY - branchH / 2}`
+    rootPath += ` M ${col3X} ${busY} V ${branchY - branchH / 2}`
+
+    linksGroup.append('path')
+        .attr('d', rootPath)
+        .attr('fill', 'none')
+        .attr('stroke', '#A08050')
+        .attr('stroke-width', 2)
+        .attr('stroke-linecap', 'round')
+        .attr('stroke-linejoin', 'round')
+
+    // Junction dots at bus joints
+    const junctions = [
+        { x: centerX, y: busY },
+        { x: col1X, y: busY },
+        { x: col3X, y: busY },
+    ]
+    for (const pt of junctions) {
+        linksGroup.append('circle')
+            .attr('cx', pt.x)
+            .attr('cy', pt.y)
+            .attr('r', 3.5)
+            .attr('fill', '#A08050')
+            .attr('stroke', '#FFFFFF')
+            .attr('stroke-width', 1.5)
+    }
+
+    // Branch columns spines & horizontal arms
+    const columnsData = [
+        { colX: col1X, branch: thazheBranch, subCount: thazheBranch.subBranches.length },
+        { colX: col2X, branch: karottuBranch, subCount: karottuBranch.subBranches.length },
+        { colX: col3X, branch: tharavaduBranch, subCount: tharavaduBranch.subBranches.length },
+    ]
+
+    const spineOffset = cardW / 2 + 18 // exactly 18px to the left of the card column
+
+    for (const col of columnsData) {
+        const branchBottomY = branchY + branchH / 2
+        const bracketY = branchBottomY + 18
+        const spineX = col.colX - spineOffset
+        const lastSubY = subCardStartY + (col.subCount - 1) * subCardGap
+
+        let colPath = `M ${col.colX} ${branchBottomY} V ${bracketY} H ${spineX} V ${lastSubY}`
+        for (let i = 0; i < col.subCount; i++) {
+            const subY = subCardStartY + i * subCardGap
+            const cardLeftEdge = col.colX - cardW / 2
+            colPath += ` M ${spineX} ${subY} H ${cardLeftEdge}`
+        }
+
+        linksGroup.append('path')
+            .attr('d', colPath)
+            .attr('fill', 'none')
+            .attr('stroke', '#CBD5E1')
+            .attr('stroke-width', 1.8)
+            .attr('stroke-linecap', 'round')
+            .attr('stroke-linejoin', 'round')
+
+        // Small junction dot at branch bracket turn
+        linksGroup.append('circle')
+            .attr('cx', spineX)
+            .attr('cy', bracketY)
+            .attr('r', 3)
+            .attr('fill', '#94A3B8')
+            .attr('stroke', '#FFFFFF')
+            .attr('stroke-width', 1.2)
+    }
+
+    // 2. Nodes rendering (Unified Design System)
+    const nodesGroup = g.append('g').attr('class', 'overview-nodes nodes')
+
+    const renderCard = (container: any, item: any, x: number, y: number, w: number, h: number, type: 'root' | 'branch' | 'sub') => {
+        const cardG = container.append('g')
+            .attr('class', 'overview-card node')
+            .attr('data-member-id', item.memberIdNum || item.id)
+            .attr('transform', `translate(${x}, ${y})`)
+            .style('cursor', 'pointer')
+            .on('click', () => {
+                viewBranchFamily(item)
+            })
+
+        const rx = 12
+
+        // Unified Card Background
+        const rect = cardG.append('rect')
+            .attr('x', -w / 2)
+            .attr('y', -h / 2)
+            .attr('width', w)
+            .attr('height', h)
+            .attr('rx', rx)
+            .attr('fill', '#FFFFFF')
+            .attr('stroke', type === 'root' ? '#A08050' : type === 'branch' ? '#94A3B8' : '#E2E8F0')
+            .attr('stroke-width', type === 'root' ? 2 : 1.2)
+            .style('filter', 'drop-shadow(0 3px 12px rgba(15, 23, 42, 0.06))')
+            .style('transition', 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)')
+
+        cardG.on('mouseenter', function() {
+            rect.attr('stroke', '#A08050')
+                .attr('stroke-width', 2)
+                .style('filter', 'drop-shadow(0 6px 20px rgba(160, 128, 80, 0.2))')
+        }).on('mouseleave', function() {
+            rect.attr('stroke', type === 'root' ? '#A08050' : type === 'branch' ? '#94A3B8' : '#E2E8F0')
+                .attr('stroke-width', type === 'root' ? 2 : 1.2)
+                .style('filter', 'drop-shadow(0 3px 12px rgba(15, 23, 42, 0.06))')
+        })
+
+        const count = item.memberIdNum ? (dynamicMemberCounts.value.get(item.memberIdNum) || item.memberCount) : null
+
+        if (type === 'root') {
+            // Founder Pill at top
+            const tagW = 76
+            const tagH = 16
+            const tagY = -h / 2 + 11
+            cardG.append('rect')
+                .attr('x', -tagW / 2)
+                .attr('y', tagY - tagH / 2)
+                .attr('width', tagW)
+                .attr('height', tagH)
+                .attr('rx', tagH / 2)
+                .attr('fill', '#FEF3C7')
+                .attr('stroke', 'rgba(160, 128, 80, 0.4)')
+                .attr('stroke-width', 0.8)
+
+            cardG.append('text')
+                .text(isMl ? 'സ്ഥാപകൻ' : 'FOUNDER')
+                .attr('x', 0)
+                .attr('y', tagY + 3)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#92400E')
+                .attr('font-size', '8px')
+                .attr('font-weight', '800')
+                .attr('letter-spacing', '0.04em')
+
+            // Line 1: Main Name
+            const mainName = isMl ? `${item.romanId} ${item.nameMl}` : `${item.romanId} ${item.name}`
+            cardG.append('text')
+                .text(mainName)
+                .attr('x', 0)
+                .attr('y', 2)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#0F172A')
+                .attr('font-size', '13.5px')
+                .attr('font-weight', '800')
+
+            // Line 2: Subtitle
+            const subTitle = isMl ? 'ഭാര്യ: മറിയം' : 'Wife: Mariyam'
+            cardG.append('text')
+                .text(subTitle)
+                .attr('x', 0)
+                .attr('y', 18)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#64748B')
+                .attr('font-size', '10.5px')
+                .attr('font-weight', '500')
+
+            // Line 3: Member Count Chip
+            const countStr = count ? `${count} ${isMl ? 'അംഗങ്ങൾ' : 'members'}` : (isMl ? '169 അംഗങ്ങൾ' : '169 members')
+            cardG.append('text')
+                .text(`${countStr}  →`)
+                .attr('x', 0)
+                .attr('y', h / 2 - 6)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#A08050')
+                .attr('font-size', '8.5px')
+                .attr('font-weight', '700')
+
+        } else if (type === 'branch') {
+            // Line 1: Branch Title
+            const title = isMl ? item.titleMl : item.title
+            cardG.append('text')
+                .text(title)
+                .attr('x', 0)
+                .attr('y', -h / 2 + 20)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#0F172A')
+                .attr('font-size', '13px')
+                .attr('font-weight', '800')
+
+            // Line 2: Branch Head
+            const personName = isMl ? `${item.romanId} ${item.nameMl}` : `${item.romanId} ${item.name}`
+            cardG.append('text')
+                .text(personName)
+                .attr('x', 0)
+                .attr('y', -h / 2 + 38)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#475569')
+                .attr('font-size', '11.5px')
+                .attr('font-weight', '600')
+
+            // Line 3: Count badge
+            const countStr = count ? `${count} ${isMl ? 'അംഗങ്ങൾ' : 'members'}` : ''
+            if (countStr) {
+                cardG.append('text')
+                    .text(`${countStr}  →`)
+                    .attr('x', 0)
+                    .attr('y', h / 2 - 8)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#0284C7')
+                    .attr('font-size', '8.5px')
+                    .attr('font-weight', '700')
+            }
+
+        } else {
+            // Sub-branch Card
+            // Line 1: Sub-branch Title
+            const title = isMl ? item.titleMl : item.title
+            cardG.append('text')
+                .text(title)
+                .attr('x', 0)
+                .attr('y', -h / 2 + 20)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#0F172A')
+                .attr('font-size', '12.5px')
+                .attr('font-weight', '800')
+
+            // Line 2: Person Name
+            const personName = isMl ? `${item.romanId} ${item.nameMl}` : `${item.romanId} ${item.name}`
+            cardG.append('text')
+                .text(personName)
+                .attr('x', 0)
+                .attr('y', -h / 2 + 37)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#475569')
+                .attr('font-size', '11px')
+                .attr('font-weight', '500')
+
+            // Line 3: Badge chip
+            if (count) {
+                cardG.append('text')
+                    .text(`${count} ${isMl ? 'അംഗങ്ങൾ' : 'members'}  →`)
+                    .attr('x', 0)
+                    .attr('y', h / 2 - 8)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#15803D')
+                    .attr('font-size', '8px')
+                    .attr('font-weight', '700')
+            } else {
+                cardG.append('text')
+                    .text(isMl ? 'പാരമ്പര്യം' : 'Historical Line')
+                    .attr('x', 0)
+                    .attr('y', h / 2 - 8)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#94A3B8')
+                    .attr('font-size', '8px')
+                    .attr('font-weight', '600')
+            }
+        }
+    }
+
+    // Render Root
+    renderCard(nodesGroup, founderNode, centerX, rootY, rootW, rootH, 'root')
+
+    // Render 3 Branch Headers (Centered at col1X, col2X, col3X)
+    renderCard(nodesGroup, thazheBranch.header, col1X, branchY, cardW, branchH, 'branch')
+    renderCard(nodesGroup, karottuBranch.header, col2X, branchY, cardW, branchH, 'branch')
+    renderCard(nodesGroup, tharavaduBranch.header, col3X, branchY, cardW, branchH, 'branch')
+
+    // Render Sub-branches (Exact same colX centers for perfect vertical alignment!)
+    for (let i = 0; i < thazheBranch.subBranches.length; i++) {
+        const sub = thazheBranch.subBranches[i]
+        const subY = subCardStartY + i * subCardGap
+        renderCard(nodesGroup, sub, col1X, subY, cardW, subCardH, 'sub')
+    }
+
+    for (let i = 0; i < karottuBranch.subBranches.length; i++) {
+        const sub = karottuBranch.subBranches[i]
+        const subY = subCardStartY + i * subCardGap
+        renderCard(nodesGroup, sub, col2X, subY, cardW, subCardH, 'sub')
+    }
+
+    for (let i = 0; i < tharavaduBranch.subBranches.length; i++) {
+        const sub = tharavaduBranch.subBranches[i]
+        const subY = subCardStartY + i * subCardGap
+        renderCard(nodesGroup, sub, col3X, subY, cardW, subCardH, 'sub')
+    }
+
+    // Auto fit overview bounds into viewport
+    const minX = col1X - cardW / 2 - 32
+    const maxX = col3X + cardW / 2 + 15
+    const minY = rootY - rootH / 2 - 15
+    const maxY = subCardStartY + 3 * subCardGap + subCardH / 2 + 25
+
+    const contentWidth = maxX - minX
+    const contentHeight = maxY - minY
+    const padding = isMobileViewport() ? 20 : 40
+
+    const scale = Math.min(1.05, Math.max(0.35, Math.min((width - padding * 2) / contentWidth, (height - padding * 2) / contentHeight)))
+    const tx = (width - contentWidth * scale) / 2 - minX * scale
+    const ty = (height - contentHeight * scale) / 2 - minY * scale
+
+    svg.call(zoom.transform as any, d3.zoomIdentity.translate(tx, ty).scale(scale))
+}
+
+const renderVisualTree = () => {
+    if (viewMode.value !== 'visual') return
+    if (visualSubMode.value === 'overview') {
+        drawOverviewGraph()
+    } else {
+        initGraph()
+    }
+}
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase as string
@@ -1424,11 +2251,7 @@ const lookupMalayalamNameForQuickEdit = async () => {
     quickEditError.value = ''
 }
 
-// --- Computed Data ---
-// Flatten the store's tree data into a simple array of nodes and links.
-// Nodes = all FamilyMembers, Links = parent/spouse/sibling connections.
-const nodes = ref<FamilyMember[]>([])
-const links = computed(() => familyStore.edges)
+// Computed data and member directory helpers
 
 // When user presses Enter in search, auto-focus the first result
 const performSearch = () => {
@@ -1522,11 +2345,6 @@ const selectedMemberForModal = computed(() => {
         children,
     }
 })
-
-// --- Global D3 State ---
-let globalZoom: any = null        
-let globalSVG: any = null         
-let globalNodeCoords = new Map<number, { x: number; y: number }>()
 
 const horizontalScale = ref(1)
 
@@ -1632,7 +2450,23 @@ const focusOnMember = (targetMember: any, options?: { select?: boolean }) => {
     searchResults.value = []
     const shouldSelect = options?.select ?? true
     
-    if (!targetMember || !globalZoom || !globalSVG) return
+    if (!targetMember) return
+
+    if (visualSubMode.value === 'overview') {
+        visualSubMode.value = 'lineage'
+        activeSubtreeRootId.value = null
+        selectedBranchJump.value = '35'
+        initGraph()
+        setTimeout(() => {
+            focusOnMemberInCanvas(targetMember, shouldSelect)
+        }, 150)
+        return
+    }
+    focusOnMemberInCanvas(targetMember, shouldSelect)
+}
+
+const focusOnMemberInCanvas = (targetMember: any, shouldSelect: boolean) => {
+    if (!globalZoom || !globalSVG) return
 
     const coords = globalNodeCoords.get(targetMember.id)
     const found = Boolean(coords)
@@ -2289,6 +3123,9 @@ const handleResize = () => {
         showMobileTreeHelp.value = false
     }
     mobileEditorSheetVh.value = clampMobileEditorHeight(mobileEditorSheetVh.value)
+    if (viewMode.value === 'visual' && visualSubMode.value === 'overview') {
+        drawOverviewGraph()
+    }
 }
 
 const toggleEditMode = () => {
@@ -2395,11 +3232,16 @@ const initGraph = () => {
     const cardHalfWidth = cardWidth / 2
     const spouseCenterOffset = 0
 
+    const targetNodeIds = activeSubtreeRootId.value
+        ? getDescendantIds(activeSubtreeRootId.value)
+        : null
+
     const visibleNodeMap = new Map<number, any>()
     const duplicateNodeIds = new Set<number>()
     for (const node of nodes.value) {
         const id = Number((node as any)?.id)
         if (!Number.isFinite(id)) continue
+        if (targetNodeIds && !targetNodeIds.has(id)) continue
         if (visibleNodeMap.has(id)) {
             duplicateNodeIds.add(id)
             continue
@@ -3196,9 +4038,16 @@ onMounted(async () => {
         fetchCommunityRoles(),
     ])
     nodes.value = [...familyStore.flatList()]
+    const hasFounder = nodes.value.some((n: any) => n.id === 35 || n.name === 'Chandy')
+    if (!hasFounder) {
+        visualSubMode.value = 'lineage'
+    } else if (route.query.branch) {
+        selectedBranchJump.value = String(route.query.branch)
+        jumpToBranch()
+    }
     setTimeout(() => {
         if (viewMode.value === 'visual') {
-            initGraph()
+            renderVisualTree()
         }
     }, 100)
     mobileEditorSheetVh.value = clampMobileEditorHeight(MOBILE_EDITOR_DEFAULT_VH)
@@ -3215,19 +4064,19 @@ onUnmounted(() => {
 
 watch([nodes, links], () => {
     if (viewMode.value === 'visual') {
-        setTimeout(initGraph, 100)
+        setTimeout(renderVisualTree, 100)
     }
 }, { deep: true })
 
 watch(viewMode, (newVal) => {
     if (newVal === 'visual') {
-        setTimeout(initGraph, 50)
+        setTimeout(renderVisualTree, 50)
     }
 })
 
 watch(locale, () => {
     if (viewMode.value === 'visual') {
-        setTimeout(initGraph, 100)
+        setTimeout(renderVisualTree, 100)
     }
 })
 

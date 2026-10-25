@@ -246,6 +246,12 @@
     },
     "labels": {
       "visualMap": "ദൃശ്യ മാപ്പ്",
+      "treeOverview": "ശാഖാ വൃക്ഷം",
+      "branchLineage": "വംശാവലി രേഖ",
+      "backToOverview": "ശാഖാ വൃക്ഷത്തിലേക്ക് മടങ്ങുക",
+      "viewingBranch": "നിലവിലെ ശാഖ",
+      "historicalBranch": "ചരിത്രപരമായ ശാഖാ വരി",
+      "exploreParentBranch": "മാതൃ ശാഖ കാണുക",
       "directory": "ഡയറക്ടറി",
       "perspective": "പേഴ്സ്പെക്ടീവ്",
       "layout": "ലേഔട്ട്",
