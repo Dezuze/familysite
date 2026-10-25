@@ -2,8 +2,9 @@
 ARG NODE_IMAGE=node:22-bookworm-slim
 FROM ${NODE_IMAGE} AS builder
 
-# Install security updates + build dependencies
-RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
+# Install build dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3 \
     pkg-config \
@@ -22,9 +23,6 @@ RUN npx nuxt build
 FROM ${NODE_IMAGE}
 
 WORKDIR /app
-
-# Apply runtime security updates
-RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 
 # Install production dependencies for runtime if needed (usually not for nuxt .output)
 # But let's keep it minimal
