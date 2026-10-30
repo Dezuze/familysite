@@ -5,6 +5,7 @@ from django.db.models import Q
 from .models import Post
 from .serializers import PostSerializer
 from .permissions import IsAuthorOrReadOnly
+from .services.daily_posters import ensure_daily_posters
 
 
 class EventsListView(ListAPIView):
@@ -22,6 +23,9 @@ class NewsListView(ListAPIView):
     serializer_class = PostSerializer
 
     def get_queryset(self):
+        # Trigger daily celebration poster generation if not yet run today
+        ensure_daily_posters()
+
         # News items OR Past events
         now = timezone.now()
         return Post.objects.filter(
@@ -61,4 +65,3 @@ class NewsDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthorOrReadOnly]
-

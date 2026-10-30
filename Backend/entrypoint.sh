@@ -8,4 +8,8 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
+# Generate celebration posters for today on startup
+echo "Generating daily celebration posters..."
+python manage.py generate_daily_posters || true
+
 exec "$@"

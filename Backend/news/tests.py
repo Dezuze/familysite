@@ -5,11 +5,13 @@ from news.models import Post
 from news.serializers import PostSerializer
 from rest_framework.test import APIClient
 import datetime
+from django.core.cache import cache
 
 User = get_user_model()
 
 class NewsTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.family = Family.objects.create(sl_no="1", branch="Main", member_no="M100")
         self.member = FamilyMember.objects.create(
             family=self.family,
@@ -90,3 +92,24 @@ class NewsTests(TestCase):
         call_command('generate_daily_posters', date='2026-03-15')
         self.assertEqual(Post.objects.filter(is_auto_generated=True).count(), 1)
 
+    def test_auto_poster_generation_on_news_list_request(self):
+        today = datetime.date.today()
+        # Create a member whose birthday is today
+        FamilyMember.objects.create(
+            family=self.family,
+            name="Today Birthday Member",
+            age=28,
+            relation="Member",
+            date_of_birth=datetime.date(1998, today.month, today.day),
+            blood_group="B+"
+        )
+
+        # Calling the news list endpoint should automatically trigger generation
+        response = self.client.get('/api/news/list/')
+        self.assertEqual(response.status_code, 200)
+
+        # Verify post was created and is included in the response
+        posts = Post.objects.filter(is_auto_generated=True)
+        self.assertEqual(posts.count(), 1)
+        self.assertIn("Today Birthday Member", posts.first().title)
+        self.assertTrue(any("Today Birthday Member" in item['title'] for item in response.data))

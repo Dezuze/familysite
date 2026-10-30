@@ -111,6 +111,28 @@ services:
         condition: service_started
     restart: always
 
+  poster-scheduler:
+    image: ghcr.io/${OWNER_LC:-dezuze}/family-backend:latest
+    env_file: ../../.env
+    environment:
+      DB_ENGINE: postgresql
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_HOST: db
+      REDIS_URL: redis://redis:6379/1
+    command: ["python", "manage.py", "run_poster_scheduler", "--interval", "3600"]
+    volumes:
+      - ../../Backend/media:/app/media
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    restart: always
+
   frontend:
     image: ghcr.io/${OWNER_LC:-dezuze}/family-frontend:latest
     env_file: ../../.env
