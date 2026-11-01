@@ -1,13 +1,55 @@
 import logging
+import os
+import re
 from datetime import date
+from django.conf import settings
 from django.utils import timezone
 from django.core.cache import cache
-from families.models import FamilyMember
+from families.models import FamilyMember, Relationship
 from news.models import Post, Media
 from news.services.anniversary_detector import AnniversaryDetector
 from news.services.poster_generator import PosterGenerator
 
 logger = logging.getLogger(__name__)
+
+
+def repair_missing_auto_posters():
+    """
+    Ensures all existing auto-generated poster Media records have their image file
+    present on disk, regenerating any missing files automatically.
+    """
+    pattern = re.compile(r'^(birthday|wedding_anniversary|death_anniversary)_(\d+)_([A-Za-z]+)_(\d+)_(\d+)\.jpg$')
+    for m_obj in Media.objects.filter(media_url__contains='auto_posters/'):
+        rel_path = m_obj.media_url.name
+        full_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+        if os.path.exists(full_path):
+            continue
+        fname = os.path.basename(rel_path)
+        match = pattern.match(fname)
+        if not match:
+            continue
+        ev_type, mem_id, month_str, day_str, year_str = match.groups()
+        member = FamilyMember.objects.filter(id=int(mem_id)).first()
+        if not member:
+            continue
+        spouse = None
+        if ev_type == 'wedding_anniversary':
+            rel = Relationship.objects.filter(from_member=member, relation_type__iexact='SPOUSE').first()
+            if rel:
+                spouse = rel.to_member
+            else:
+                rel2 = Relationship.objects.filter(to_member=member, relation_type__iexact='SPOUSE').first()
+                if rel2:
+                    spouse = rel2.from_member
+        try:
+            PosterGenerator.generate_poster(
+                member=member,
+                event_type=ev_type,
+                spouse=spouse,
+                custom_date_str=f"{month_str} {day_str}, {year_str}",
+            )
+        except Exception as e:
+            logger.error(f"Failed to repair missing poster {rel_path}: {e}")
 
 def run_daily_poster_generation(target_date=None, force=False, dry_run=False):
     """
@@ -112,6 +154,7 @@ def ensure_daily_posters(force=False):
         return
 
     try:
+        repair_missing_auto_posters()
         run_daily_poster_generation(target_date=today, force=force)
         # Cache for 24 hours (86400 seconds)
         cache.set(cache_key, "1", timeout=86400)

@@ -30,7 +30,7 @@ class AnniversaryDetector:
                 'member': member,
                 'spouse': None,
                 'date': target_date,
-                'title': f"🎂 Wishing a very Happy Birthday to {member.name}!",
+                'title': f"Wishing a very Happy Birthday to {member.name}!",
                 'description': f"Warmest birthday greetings to {member.name} ({member.branch or member.family.branch if member.family else ''}). May you be blessed with abundant joy, health, and peace!",
             })
 
@@ -59,7 +59,7 @@ class AnniversaryDetector:
 
             processed_couples.add(member.id)
 
-            display_title = f"💍 Happy Wedding Anniversary to {member.name}"
+            display_title = f"Happy Wedding Anniversary to {member.name}"
             if spouse:
                 display_title += f" & {spouse.name}"
             display_title += "!"
@@ -89,7 +89,7 @@ class AnniversaryDetector:
                 'member': member,
                 'spouse': None,
                 'date': target_date,
-                'title': f"🕊️ Remembering {member.name}{years_str}",
+                'title': f"Remembering {member.name}{years_str}",
                 'description': f"On this anniversary of the passing of {member.name}, we remember their cherished life, love, and legacy in the Kollamparampil family with solemn prayers.",
             })
 
