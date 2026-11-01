@@ -47,7 +47,7 @@
           <!-- Husband Details -->
           <div class="w-full md:w-1/2 p-6 md:p-10 flex flex-col items-center md:items-start overflow-y-auto custom-scrollbar">
             <span class="px-3 py-1 rounded-full bg-white text-slate-500 text-[10px] font-bold uppercase tracking-widest shadow-sm border border-slate-200 mb-4 inline-block">
-              {{ t('memberDetailsModal.labels.age') }}: {{ husband.age }}
+              {{ t('memberDetailsModal.labels.age') }}: {{ husband.age ?? t('memberDetailsModal.labels.notAvailable') }}
             </span>
             
               <div class="mb-6 flex gap-2 flex-wrap justify-center md:justify-start">
@@ -125,7 +125,7 @@
           <!-- Wife Details -->
           <div class="w-full md:w-1/2 p-6 md:p-10 flex flex-col items-center md:items-start overflow-y-auto custom-scrollbar">
             <span class="px-3 py-1 rounded-full bg-white text-slate-500 text-[10px] font-bold uppercase tracking-widest shadow-sm border border-slate-200 mb-4 inline-block">
-              {{ t('memberDetailsModal.labels.age') }}: {{ wife.age }}
+              {{ t('memberDetailsModal.labels.age') }}: {{ wife.age ?? t('memberDetailsModal.labels.notAvailable') }}
             </span>
             
               <div class="mb-6 flex gap-2 flex-wrap justify-center md:justify-start">

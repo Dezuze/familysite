@@ -41,19 +41,19 @@
                     >
                         <option value="overview">Tree Overview (All Branches)</option>
                         <option value="35">I 1 Chandy (Whole Tree)</option>
-                        <optgroup label="1. Thazhe (Lower) Branch">
+                        <optgroup label="1. Thazhe Branch">
                             <option value="33">II 1 Chandy Chandy (Thazhe Branch)</option>
                             <option value="196">III 1 Chandy Chandy (Kulathammakkal)</option>
                             <option value="31">III 2 Chandy Kurian (Thazhe Sub-branch)</option>
                         </optgroup>
-                        <optgroup label="2. Karottu (Upper) Branch">
+                        <optgroup label="2. Karottu Branch">
                             <option value="188">II 2 Chandy Kurian (Karottu Branch)</option>
                             <option value="akkare">III 4 Kurian Abraham (Akkare)</option>
                             <option value="218">III 5 Kurian Kora (Mulekkunnu)</option>
                             <option value="kuttikkal">III 6 Kurian Anthrayose (Kuttikkal)</option>
                             <option value="221">III 7 Kurian Chacko (Karottu Sub-branch)</option>
                         </optgroup>
-                        <optgroup label="3. Tharavadu (Ancestral Home) Branch">
+                        <optgroup label="3. Tharavadu Branch">
                             <option value="189">II 3 Chandy Kora (Tharavadu Branch)</option>
                             <option value="tharavadu-line-1">III 9 Kora Chandy (Tharavadu Line 1)</option>
                             <option value="224">III 12 Kora Kurian (Tharavadu Line 2)</option>
@@ -920,7 +920,7 @@ const thazheBranch = {
         romanId: 'II 1',
         name: 'Chandy Chandy',
         nameMl: 'ചാണ്ടി ചാണ്ടി',
-        title: 'Thazhe (Lower) Branch',
+        title: 'Thazhe Branch',
         titleMl: 'താഴെ ശാഖ',
         isBranchHead: true,
         memberCount: 76,
@@ -960,7 +960,7 @@ const karottuBranch = {
         romanId: 'II 2',
         name: 'Chandy Kurian',
         nameMl: 'ചാണ്ടി കുര്യൻ',
-        title: 'Karottu (Upper) Branch',
+        title: 'Karottu Branch',
         titleMl: 'കരോട്ട് ശാഖ',
         isBranchHead: true,
         memberCount: 61,
@@ -1020,7 +1020,7 @@ const tharavaduBranch = {
         romanId: 'II 3',
         name: 'Chandy Kora',
         nameMl: 'ചാണ്ടി കോര',
-        title: 'Tharavadu (Ancestral Home) Branch',
+        title: 'Tharavadu Branch',
         titleMl: 'തറവാട് ശാഖ',
         isBranchHead: true,
         memberCount: 26,
@@ -2319,7 +2319,9 @@ const selectedMemberForModal = computed(() => {
     const spouse = spouseId ? byId.get(spouseId) : null
     const householdMembers = selectedMemberHouseholdMembers.value
     const primaryMember = householdMembers[0] || member
-    const partnerMember = householdMembers[1] || spouse || null
+    const meta = historicalMetadata[Number(memberId)]
+    const fallbackSpouse = (!spouse && meta?.spouse) ? { id: `spouse-${memberId}`, member_id: member.member_id ? `${member.member_id} ${member.gender === 'F' ? 'h' : 'w'}` : null, name: meta.spouse, gender: member.gender === 'F' ? 'M' : 'F', is_deceased: Boolean(member.is_deceased ?? true), age: null } : null
+    const partnerMember = householdMembers[1] || spouse || fallbackSpouse || null
 
     const children = (links.value || [])
         .filter((l: any) => l.type === 'parent' && l.source === memberId)
@@ -3822,7 +3824,7 @@ const initGraph = () => {
                 .attr('font-size', '10px')
                 .attr('font-weight', '800')
                 .attr('letter-spacing', '0.04em')
-                .text(`LEVEL ${lvl + 1}`)
+                .text(`GEN ${lvl + 1}`)
         }
     }
 
