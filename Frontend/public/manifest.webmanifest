@@ -1,0 +1,26 @@
+{
+  "name": "Kollamparampil Family Heritage & Directory",
+  "short_name": "Kollamparampil",
+  "description": "Official Progressive Web App of the Kollamparampil Family. Receive birthday, wedding anniversary, and family event notifications.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#A08050",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
+

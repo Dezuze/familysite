@@ -1,11 +1,14 @@
+from datetime import datetime, date
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from django.utils import timezone
 from django.db.models import Q
 from .models import Post
 from .serializers import PostSerializer
 from .permissions import IsAuthorOrReadOnly
-from .services.daily_posters import ensure_daily_posters
+from .services.daily_posters import ensure_daily_posters, run_daily_poster_generation
 
 
 class EventsListView(ListAPIView):
@@ -33,6 +36,43 @@ class NewsListView(ListAPIView):
             Q(post_type='event', event_date__lt=now) |
             Q(post_type='event', event_date__isnull=True) # Fallback if no date set
         ).order_by('-created_at')
+
+
+class CelebrationNotificationsView(APIView):
+    """
+    Returns auto-generated birthday, wedding anniversary, and remembrance
+    celebration notifications for the PWA and in-app notification center.
+    Automatically ensures today's celebration posters have been generated.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        ensure_daily_posters()
+
+        target_date_str = request.query_params.get('date')
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, "%Y-%m-%d").date()
+                run_daily_poster_generation(target_date=target_date)
+            except ValueError:
+                pass
+
+        limit = int(request.query_params.get('limit', 12))
+        auto_posts = Post.objects.filter(is_auto_generated=True).order_by('-created_at')[:limit]
+        serializer = PostSerializer(auto_posts, many=True)
+
+        today_iso = date.today().isoformat()
+        today_count = Post.objects.filter(
+            is_auto_generated=True,
+            created_at__date=date.today()
+        ).count()
+
+        return Response({
+            'date': today_iso,
+            'today_count': today_count,
+            'total_recent': len(serializer.data),
+            'notifications': serializer.data,
+        })
 
 
 class NewsCreateView(ListCreateAPIView):

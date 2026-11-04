@@ -170,7 +170,7 @@
 <script setup lang="ts">
 import { useRuntimeConfig, useHead, ref, onMounted, onUnmounted, useRoute } from '#imports'
 import { useI18n } from 'vue-i18n'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import AddPostModal from '~/components/AddPostModal.vue'
 import { useAuthStore } from '~/stores/auth'
 
@@ -255,6 +255,19 @@ const resolveImage = (path: string) => {
     return `${apiBase}${cleanPath}`
 }
 
+const checkPostQuery = () => {
+  const postId = Number(route.query.post)
+  if (!postId || items.value.length === 0) return
+  const found = items.value.find((i) => i.id === postId)
+  if (found) {
+    openDetails(found)
+  }
+}
+
+watch(() => route.query.post, () => {
+  checkPostQuery()
+})
+
 const refreshData = async (loadMore = false) => {
     if (loadMore) {
         if (!hasMore.value || loadingMore.value) return
@@ -293,6 +306,7 @@ const refreshData = async (loadMore = false) => {
                 items.value = [...items.value, ...newItems]
                 if (newItems.length < 10) hasMore.value = false
             }
+            checkPostQuery()
         }
     } catch (e) {
         console.error("Failed to fetch news", e)

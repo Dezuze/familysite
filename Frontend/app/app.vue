@@ -20,6 +20,8 @@ useHead(() => ({
   },
   title: t('app.siteName'),
   link: [
+    { rel: 'manifest', href: '/manifest.webmanifest' },
+    { rel: 'apple-touch-icon', href: '/favicon.png?v=4' },
     { rel: 'icon', type: 'image/png', href: '/favicon.png?v=4' },
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=4' },
     { rel: 'shortcut icon', href: '/favicon.ico?v=4' },
@@ -35,6 +37,10 @@ useHead(() => ({
     { name: 'keywords', content: 'Kollamparampil, Family, Heritage, Association, Kerala, India' },
     { name: 'author', content: t('app.siteName') },
     { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
+    { name: 'mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+    { name: 'apple-mobile-web-app-title', content: t('app.siteName') },
     
     // Open Graph / Facebook
     { property: 'og:type', content: 'website' },
