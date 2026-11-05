@@ -86,16 +86,17 @@ class NewsCreateView(ListCreateAPIView):
         if member:
             post = serializer.save(creator=member)
             
-            # Handle Image Upload
-            if 'image' in self.request.FILES:
+            # Handle Single or Multiple Image Uploads
+            images = self.request.FILES.getlist('images') or self.request.FILES.getlist('image')
+            if images:
                 from .models import Media
-                image = self.request.FILES['image']
-                Media.objects.create(
-                    uploader=member,
-                    post=post,
-                    media_url=image,
-                    media_type='image'
-                )
+                for image in images:
+                    Media.objects.create(
+                        uploader=member,
+                        post=post,
+                        media_url=image,
+                        media_type='image'
+                    )
         else:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"error": "Your user account is not linked to a Family Member profile. Please contact an admin or complete your onboarding to post news."})

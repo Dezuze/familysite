@@ -3,6 +3,13 @@ from .models import Post, Media
 
 
 class MediaSerializer(serializers.ModelSerializer):
+    media_url = serializers.SerializerMethodField()
+
+    def get_media_url(self, obj):
+        if obj.media_url:
+            return obj.media_url.url
+        return None
+
     class Meta:
         model = Media
         fields = '__all__'

@@ -69,6 +69,7 @@
                 <input 
                   type="file" 
                   accept="image/*"
+                  multiple
                   @change="handleFileChange"
                   class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand-gold/10 file:text-brand-gold hover:file:bg-brand-gold/20 transition-all cursor-pointer"
                 />
@@ -123,7 +124,7 @@ const form = reactive({
   description: '',
   event_date: '',
   location: '',
-  image: null as File | null
+  images: [] as File[]
 })
 
 function resetForm() {
@@ -131,7 +132,7 @@ function resetForm() {
   form.description = ''
   form.event_date = ''
   form.location = ''
-  form.image = null
+  form.images = []
 }
 
 function close() {
@@ -141,8 +142,8 @@ function close() {
 
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    form.image = target.files[0]
+  if (target.files && target.files.length > 0) {
+    form.images = Array.from(target.files)
   }
 }
 
@@ -152,7 +153,7 @@ watch(() => props.isOpen, (newVal) => {
     form.description = props.initialData.description || ''
     form.event_date = props.initialData.event_date ? new Date(props.initialData.event_date).toISOString().slice(0, 16) : ''
     form.location = props.initialData.location || ''
-    form.image = null
+    form.images = []
   } else if (newVal) {
     // Fresh create mode: clear fields without emitting a close event.
     resetForm()
@@ -178,8 +179,10 @@ async function submit() {
       formData.append('location', form.location)
     }
     
-    if (form.image) {
-      formData.append('image', form.image)
+    if (form.images.length > 0) {
+      for (const img of form.images) {
+        formData.append('images', img)
+      }
     }
 
     if (props.isKudumbayogam) {

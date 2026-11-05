@@ -12,4 +12,8 @@ python manage.py collectstatic --noinput
 echo "Generating daily celebration posters..."
 python manage.py generate_daily_posters || true
 
+# Ensure 27th Kudumbayogam celebration news and photos are present
+echo "Seeding 27th Kudumbayogam news post..."
+python manage.py add_kudumbayogam_27_news || true
+
 exec "$@"

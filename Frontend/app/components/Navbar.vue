@@ -171,8 +171,8 @@ onUnmounted(() => {
   <nav 
     class="fixed top-0 left-0 w-full lg:w-200 z-50 bg-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
     :class="[ showNavbar ? 'translate-y-0' : '-translate-y-full' ]"
-    @mouseenter="onNavMouseEnter"
-    @mouseleave="onNavMouseLeave"
+
+
   >
       <!-- Desktop Navbar -->
       <div class="hidden bg-white lg:flex lg:rounded-br-[80px] lg:rounded-tr-[10px] lg:hover:rounded-br-[100px] lg:hover:rounded-tr-[10px] px-4 items-center relative h-15 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
@@ -204,7 +204,7 @@ onUnmounted(() => {
             </template>
 
             <!-- Downward indicator chevron & seamless dropdown when logged in -->
-            <div v-if="auth.isAuthenticated" class="relative flex items-center">
+            <div v-if="auth.isAuthenticated" class="relative flex items-center" @mouseenter="onNavMouseEnter" @mouseleave="onNavMouseLeave">
               <div 
                 class="px-1 py-2 text-slate-400 hover:text-brand-gold transition-colors flex items-center cursor-pointer"
                 title="More options"
