@@ -9,7 +9,7 @@ from .models import Post
 from .serializers import PostSerializer
 from .permissions import IsAuthorOrReadOnly
 from .services.daily_posters import ensure_daily_posters, run_daily_poster_generation
-
+ 
 
 class EventsListView(ListAPIView):
     serializer_class = PostSerializer
